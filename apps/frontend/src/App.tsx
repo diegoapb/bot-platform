@@ -5,11 +5,17 @@ import {
   SignInButton,
   useOrganization,
 } from "@clerk/clerk-react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
 import { Layout } from "@/components/Layout";
 import { BotsPage } from "@/pages/BotsPage";
 import { TeamPage } from "@/pages/TeamPage";
+import { AdminPage } from "@/pages/AdminPage";
+import { useMe } from "@/lib/useMe";
+
+function Centered({ children }: { children: ReactNode }) {
+  return <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">{children}</div>;
+}
 
 /** Pantalla de bienvenida / login. */
 function Landing() {
@@ -27,19 +33,19 @@ function Landing() {
 }
 
 /**
- * Si el usuario no tiene un tenant activo, le pedimos crear uno: al registrarse
- * crea su organización y queda como administrador (org:admin) automáticamente.
+ * Páginas que requieren tenant activo. Si no hay org: el super admin va al
+ * dashboard de plataforma; cualquier otro usuario crea su tenant (y queda admin).
  */
-function RequireTenant({ children }: { children: ReactNode }) {
+function TenantGate({ children }: { children: ReactNode }) {
   const { organization, isLoaded } = useOrganization();
+  const { data: me, isLoading } = useMe();
 
-  if (!isLoaded) {
-    return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Cargando…</div>;
-  }
+  if (!isLoaded || isLoading) return <Centered>Cargando…</Centered>;
 
   if (!organization) {
+    if (me?.isSuperAdmin) return <Navigate to="/admin" replace />;
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
+      <div className="flex flex-col items-center gap-6 py-10">
         <div className="text-center">
           <h1 className="text-2xl font-semibold">Crea tu tenant</h1>
           <p className="text-muted-foreground">
@@ -54,6 +60,14 @@ function RequireTenant({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/** Páginas exclusivas de super admin de plataforma. */
+function SuperAdminGate({ children }: { children: ReactNode }) {
+  const { data: me, isLoading } = useMe();
+  if (isLoading) return <Centered>Cargando…</Centered>;
+  if (!me?.isSuperAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 export default function App() {
   return (
     <>
@@ -61,14 +75,14 @@ export default function App() {
         <Landing />
       </SignedOut>
       <SignedIn>
-        <RequireTenant>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<BotsPage />} />
-              <Route path="/team" element={<TeamPage />} />
-            </Route>
-          </Routes>
-        </RequireTenant>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<TenantGate><BotsPage /></TenantGate>} />
+            <Route path="team" element={<TenantGate><TeamPage /></TenantGate>} />
+            <Route path="admin" element={<SuperAdminGate><AdminPage /></SuperAdminGate>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
       </SignedIn>
     </>
   );

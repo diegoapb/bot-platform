@@ -12,6 +12,13 @@ const envSchema = z.object({
   CLERK_SECRET_KEY: z.string().min(1),
   CLERK_PUBLISHABLE_KEY: z.string().min(1),
 
+  // Bootstrap de super admins: lista de Clerk user ids separados por coma.
+  // (También se reconoce publicMetadata.role="superadmin" en Clerk.)
+  SUPERADMIN_USER_IDS: z
+    .string()
+    .default("")
+    .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean)),
+
   EVOLUTION_API_URL: z.string().url(),
   EVOLUTION_API_KEY: z.string().min(1),
 

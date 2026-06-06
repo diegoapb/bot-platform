@@ -6,6 +6,8 @@ import type {
   TenantMember,
   BotAssignment,
   CreateAssignmentInput,
+  AdminTenant,
+  CreateTenantInput,
 } from "@bot/shared";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
@@ -59,6 +61,23 @@ export function createApi(getToken: () => Promise<string | null>) {
       }),
     deleteAssignment: (id: string) =>
       request<{ id: string }>(`/api/team/assignments/${id}`, { method: "DELETE" }),
+
+    // Plataforma (super admin)
+    listTenants: () => request<AdminTenant[]>("/api/admin/tenants"),
+    createTenant: (input: CreateTenantInput) =>
+      request<{ id: string; name: string }>("/api/admin/tenants", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    blockTenant: (id: string, reason?: string) =>
+      request<{ id: string; blocked: boolean }>(`/api/admin/tenants/${id}/block`, {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      }),
+    unblockTenant: (id: string) =>
+      request<{ id: string; blocked: boolean }>(`/api/admin/tenants/${id}/unblock`, {
+        method: "POST",
+      }),
   };
 }
 

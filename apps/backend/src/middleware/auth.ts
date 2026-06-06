@@ -1,6 +1,9 @@
 import type { MiddlewareHandler } from "hono";
+import { eq } from "drizzle-orm";
 import { env } from "../env.js";
 import { clerk } from "../lib/clerk.js";
+import { db } from "../db/client.js";
+import { tenants } from "../db/schema.js";
 
 export const ADMIN_ROLE = "org:admin";
 
@@ -11,6 +14,8 @@ declare module "hono" {
     tenantId: string | null;
     // Rol en el tenant activo ("org:admin" | "org:member" | ...). null sin org.
     tenantRole: string | null;
+    // Rol de plataforma (por encima de los tenants).
+    isSuperAdmin: boolean;
   }
 }
 
@@ -35,14 +40,53 @@ export const requireAuth: MiddlewareHandler = async (c, next) => {
   await next();
 };
 
-/** Exige que haya un tenant (organización) activo. Encadenar tras requireAuth. */
+/**
+ * Determina si un usuario es super admin de la plataforma:
+ *  1) está en la allowlist SUPERADMIN_USER_IDS (bootstrap), o
+ *  2) su user en Clerk tiene public/privateMetadata.role === "superadmin".
+ */
+export async function resolveSuperAdmin(userId: string): Promise<boolean> {
+  if (env.SUPERADMIN_USER_IDS.includes(userId)) return true;
+  try {
+    const u = await clerk.users.getUser(userId);
+    const role =
+      (u.publicMetadata as { role?: string } | null)?.role ??
+      (u.privateMetadata as { role?: string } | null)?.role;
+    return role === "superadmin";
+  } catch {
+    return false;
+  }
+}
+
+/** Exige rol de super admin de plataforma. Encadenar tras requireAuth. */
+export const requireSuperAdmin: MiddlewareHandler = async (c, next) => {
+  const ok = await resolveSuperAdmin(c.get("userId"));
+  if (!ok) return c.json({ ok: false, error: "Requiere super admin de plataforma" }, 403);
+  c.set("isSuperAdmin", true);
+  await next();
+};
+
+/**
+ * Exige que haya un tenant activo y que NO esté bloqueado. Encadenar tras
+ * requireAuth. El super admin no se ve afectado por el bloqueo.
+ */
 export const requireTenant: MiddlewareHandler = async (c, next) => {
-  if (!c.get("tenantId")) {
+  const tenantId = c.get("tenantId");
+  if (!tenantId) {
     return c.json(
       { ok: false, error: "Selecciona o crea un tenant (organización) primero" },
       403,
     );
   }
+
+  const [t] = await db
+    .select({ blocked: tenants.blocked })
+    .from(tenants)
+    .where(eq(tenants.id, tenantId));
+  if (t?.blocked) {
+    return c.json({ ok: false, error: "Este tenant está bloqueado por la plataforma" }, 403);
+  }
+
   await next();
 };
 

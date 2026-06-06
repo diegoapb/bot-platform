@@ -40,6 +40,8 @@ El tenant es una **Organización de Clerk**. No mantenemos tablas de usuarios/me
 
 ```mermaid
 flowchart TB
+  SA[Super Admin de plataforma] -->|crea / bloquea| T
+  SA -.->|acceso total + dashboard| T2[(otros tenants)]
   U[Usuario] -->|se registra y crea org| T[(Tenant = Clerk Organization)]
   T -->|org:admin| A[Administrador del tenant]
   T -->|org:member| M[Usuarios]
@@ -51,11 +53,15 @@ flowchart TB
 
 | Concepto | Implementación |
 |---|---|
+| **Super Admin** | rol de **plataforma** (por encima de los tenants): crea/bloquea organizaciones y tiene un dashboard de todos los tenants. Se designa por env `SUPERADMIN_USER_IDS` (bootstrap) o `publicMetadata.role="superadmin"` en Clerk |
 | **Tenant** | Organización de Clerk (`tenantId` = org id) |
 | **Admin del tenant** | rol Clerk `org:admin` — crea bots, gestiona usuarios y asignaciones |
 | **Usuario** | rol Clerk `org:member` — gestiona solo los bots que le asignen |
 | **Invitar/quitar usuarios** | UI nativa de Clerk (`OrganizationSwitcher` → *Manage organization*) |
 | **Asignación bot ↔ usuario** | tabla propia `bot_assignments` (Clerk no lo cubre) |
+| **Bloqueo de tenant** | tabla propia `tenants` (`blocked`); `requireTenant` rechaza el acceso si está bloqueado. No destructivo y reversible |
+
+El super admin **no necesita pertenecer a ninguna organización**: su dashboard vive en `/admin` y es accesible aunque no tenga tenant activo.
 
 Flujo: el middleware [`auth.ts`](apps/backend/src/middleware/auth.ts) verifica el token de Clerk y expone `userId`, `tenantId` (`org_id`) y `tenantRole` (`org_role`). `requireTenant` exige org activa y `requireAdmin` exige `org:admin`.
 
@@ -71,6 +77,8 @@ Flujo: el middleware [`auth.ts`](apps/backend/src/middleware/auth.ts) verifica e
 | `GET` | `/api/team/members` | solo admin — miembros del tenant (vía Clerk) |
 | `GET` `POST` | `/api/team/assignments` | solo admin — asignar bots a usuarios |
 | `DELETE` | `/api/team/assignments/:id` | solo admin |
+| `GET` `POST` | `/api/admin/tenants` | **solo super admin** — listar / crear tenants |
+| `POST` | `/api/admin/tenants/:id/block` · `/unblock` | **solo super admin** — bloquear / desbloquear tenant |
 
 ## Desarrollo local
 

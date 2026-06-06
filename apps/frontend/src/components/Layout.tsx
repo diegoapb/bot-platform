@@ -1,11 +1,14 @@
 import { OrganizationSwitcher, UserButton, useAuth } from "@clerk/clerk-react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Bot, Users } from "lucide-react";
+import { Bot, Users, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMe } from "@/lib/useMe";
 
 export function Layout() {
   const { orgRole } = useAuth();
+  const { data: me } = useMe();
   const isAdmin = orgRole === "org:admin";
+  const hasTenant = !!me?.tenantId;
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -19,12 +22,21 @@ export function Layout() {
         <div className="flex items-center gap-6">
           <span className="font-semibold">bot-plataform</span>
           <nav className="flex items-center gap-1">
-            <NavLink to="/" end className={linkClass}>
-              <Bot className="h-4 w-4" /> Bots
-            </NavLink>
-            {isAdmin && (
-              <NavLink to="/team" className={linkClass}>
-                <Users className="h-4 w-4" /> Equipo
+            {hasTenant && (
+              <>
+                <NavLink to="/" end className={linkClass}>
+                  <Bot className="h-4 w-4" /> Bots
+                </NavLink>
+                {isAdmin && (
+                  <NavLink to="/team" className={linkClass}>
+                    <Users className="h-4 w-4" /> Equipo
+                  </NavLink>
+                )}
+              </>
+            )}
+            {me?.isSuperAdmin && (
+              <NavLink to="/admin" className={linkClass}>
+                <Shield className="h-4 w-4" /> Plataforma
               </NavLink>
             )}
           </nav>

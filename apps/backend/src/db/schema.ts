@@ -1,7 +1,36 @@
-import { pgTable, uuid, text, integer, timestamp, pgEnum, unique, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  integer,
+  boolean,
+  timestamp,
+  pgEnum,
+  unique,
+  index,
+} from "drizzle-orm/pg-core";
 
 export const botChannel = pgEnum("bot_channel", ["whatsapp"]);
 export const botStatus = pgEnum("bot_status", ["draft", "active", "paused"]);
+
+/**
+ * Estado de plataforma de cada tenant (organización de Clerk). La membresía y
+ * los roles viven en Clerk; aquí solo guardamos flags que Clerk no cubre, como
+ * el bloqueo de un tenant por parte del super admin. Sin fila => no bloqueado.
+ */
+export const tenants = pgTable("tenants", {
+  // Clerk org id.
+  id: text("id").primaryKey(),
+  // Nombre cacheado (solo para mostrar; la fuente de verdad es Clerk).
+  name: text("name"),
+  blocked: boolean("blocked").notNull().default(false),
+  blockedReason: text("blocked_reason"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type TenantRow = typeof tenants.$inferSelect;
+export type NewTenantRow = typeof tenants.$inferInsert;
 
 /**
  * Multitenancy vía Clerk Organizations: el tenant es la organización de Clerk

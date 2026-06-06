@@ -21,6 +21,8 @@ export const meSchema = z.object({
   tenantId: z.string().nullable(),
   role: tenantRoleSchema.nullable(),
   isAdmin: z.boolean(),
+  // Rol de plataforma (por encima de los tenants): crea/bloquea organizaciones.
+  isSuperAdmin: z.boolean(),
 });
 export type Me = z.infer<typeof meSchema>;
 
@@ -33,6 +35,33 @@ export const tenantMemberSchema = z.object({
   imageUrl: z.string().nullable(),
 });
 export type TenantMember = z.infer<typeof tenantMemberSchema>;
+
+// --- Plataforma / super admin ------------------------------------------
+
+/** Vista de un tenant (organización) en el dashboard de super admin. */
+export const adminTenantSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string().nullable(),
+  imageUrl: z.string().nullable(),
+  membersCount: z.number().int(),
+  botsCount: z.number().int(),
+  blocked: z.boolean(),
+  blockedReason: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type AdminTenant = z.infer<typeof adminTenantSchema>;
+
+export const createTenantSchema = z.object({
+  name: z.string().min(1),
+  slug: z.string().optional(),
+});
+export type CreateTenantInput = z.infer<typeof createTenantSchema>;
+
+export const blockTenantSchema = z.object({
+  reason: z.string().optional(),
+});
+export type BlockTenantInput = z.infer<typeof blockTenantSchema>;
 
 // --- Bots ---------------------------------------------------------------
 
