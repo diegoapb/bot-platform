@@ -82,6 +82,8 @@ Flujo: el middleware [`auth.ts`](apps/backend/src/middleware/auth.ts) verifica e
 
 ## Desarrollo local
 
+> 📖 Guía completa de onboarding: [`docs/GETTING-STARTED.md`](docs/GETTING-STARTED.md) (Clerk, DB de dev en Dokploy vía túnel SSH, migraciones, primer arranque).
+
 ```bash
 pnpm install
 
