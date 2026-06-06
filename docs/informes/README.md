@@ -23,3 +23,5 @@ date "+%d%m%y-%H%M"
 | Fecha | Informe |
 |---|---|
 | 2026-06-05 20:44 | [Autenticación, multitenancy y super admin](./050626-2044-autenticacion-multitenant-superadmin.md) |
+| 2026-06-06 00:41 | [Entorno de desarrollo local (DB de dev + `.env`)](./060626-0041-entorno-dev-local-db-env.md) |
+| 2026-06-06 01:12 | [Claves Evolution/Chatwoot extraídas y Clerk Organizations activado](./060626-0112-claves-evolution-chatwoot-y-clerk-orgs.md) |
