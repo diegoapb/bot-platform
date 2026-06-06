@@ -54,7 +54,7 @@ flowchart LR
    ```
 2. **DNS** de `bots.diegop.com` y `api.bots.diegop.com` apuntando al host (Cloudflare).
 3. **GitHub provider** conectado en Dokploy (Settings → Git Providers) y el repo del submódulo `bot-plataform` accesible.
-4. **Clerk**: app creada, claves `sk_*` / `pk_*` a mano.
+4. **Clerk**: app creada, **Organizations habilitado** (Configure → Organizations) y claves `sk_*` / `pk_*` a mano. El multitenancy depende de Organizations.
 5. **Tokens**: `apikey` de Evolution API y `api_access_token` de Chatwoot.
 
 ## Pasos de despliegue (skill dokploy-api)

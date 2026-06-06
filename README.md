@@ -8,7 +8,7 @@ Plataforma de bots conversacionales sobre **Evolution API** (WhatsApp) y **Chatw
 |---|---|---|
 | **Backend** | [Hono](https://hono.dev) + TypeScript + [Drizzle ORM](https://orm.drizzle.team) | Ultraligero, rapidísimo, TS de punta a punta. |
 | **Frontend** | [Vite](https://vitejs.dev) + React + [shadcn/ui](https://ui.shadcn.com) + Tailwind | SPA simple y veloz para el dashboard. |
-| **Auth** | [Clerk](https://clerk.com) (managed) | Capa liviana, UI lista, MFA/social sin montar infra. |
+| **Auth** | [Clerk](https://clerk.com) (managed) + Organizations | Capa liviana + multitenancy nativa (tenant = organización). |
 | **DB** | Postgres `labs` compartido (Dokploy) | Reutiliza el recurso existente, DB `botplatform`. |
 | **Cache** | Redis compartido (Dokploy), db index `5` | Mismo patrón que Evolution/Chatwoot/Postiz. |
 | **Monorepo** | pnpm workspaces | Tipos compartidos entre backend y frontend. |
@@ -33,6 +33,44 @@ bot-plataform/
 └── infra/
     └── dokploy/        # docker-compose + dokploy.json + README de despliegue
 ```
+
+## Autenticación y multitenancy
+
+El tenant es una **Organización de Clerk**. No mantenemos tablas de usuarios/membresías propias: Clerk gestiona registro, login, invitaciones y roles; nosotros scopeamos los datos por `tenantId` (org id).
+
+```mermaid
+flowchart TB
+  U[Usuario] -->|se registra y crea org| T[(Tenant = Clerk Organization)]
+  T -->|org:admin| A[Administrador del tenant]
+  T -->|org:member| M[Usuarios]
+  A -->|crea/gestiona| B1[Bot A]
+  A -->|crea/gestiona| B2[Bot B]
+  A -. asigna .-> M
+  M -->|gestiona solo asignados| B2
+```
+
+| Concepto | Implementación |
+|---|---|
+| **Tenant** | Organización de Clerk (`tenantId` = org id) |
+| **Admin del tenant** | rol Clerk `org:admin` — crea bots, gestiona usuarios y asignaciones |
+| **Usuario** | rol Clerk `org:member` — gestiona solo los bots que le asignen |
+| **Invitar/quitar usuarios** | UI nativa de Clerk (`OrganizationSwitcher` → *Manage organization*) |
+| **Asignación bot ↔ usuario** | tabla propia `bot_assignments` (Clerk no lo cubre) |
+
+Flujo: el middleware [`auth.ts`](apps/backend/src/middleware/auth.ts) verifica el token de Clerk y expone `userId`, `tenantId` (`org_id`) y `tenantRole` (`org_role`). `requireTenant` exige org activa y `requireAdmin` exige `org:admin`.
+
+> ⚠️ **Habilita Organizations en el dashboard de Clerk** (Configure → Organizations) o el registro de tenants no funcionará.
+
+### Endpoints
+
+| Método | Ruta | Acceso |
+|---|---|---|
+| `GET` | `/api/me` | autenticado — identidad + tenant + rol |
+| `GET` | `/api/bots` | admin: todos los del tenant · member: solo asignados |
+| `POST` `PATCH` `DELETE` | `/api/bots[/:id]` | solo admin |
+| `GET` | `/api/team/members` | solo admin — miembros del tenant (vía Clerk) |
+| `GET` `POST` | `/api/team/assignments` | solo admin — asignar bots a usuarios |
+| `DELETE` | `/api/team/assignments/:id` | solo admin |
 
 ## Desarrollo local
 
