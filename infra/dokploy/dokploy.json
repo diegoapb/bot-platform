@@ -1,0 +1,87 @@
+{
+  "_comment": "Snapshot de IDs y metadatos del proyecto bot-plataform en Dokploy. NO contiene secretos. Los campos TBD se rellenan tras crear el proyecto/compose/dominios con la skill dokploy-api.",
+  "host": "https://dokploy.diegop.com",
+  "project": {
+    "projectId": "TBD",
+    "name": "bot-plataform",
+    "description": "Plataforma de bots sobre Evolution API (WhatsApp) + Chatwoot"
+  },
+  "environment": {
+    "environmentId": "TBD",
+    "name": "production"
+  },
+  "compose": {
+    "composeId": "TBD",
+    "name": "bot-plataform",
+    "sourceType": "github",
+    "composeType": "docker-compose",
+    "composePath": "./infra/dokploy/docker-compose.yml",
+    "autoDeploy": true,
+    "triggerType": "push",
+    "_note": "Origen GitHub: requiere conectar el repo del submódulo. Alternativa: sourceType=raw pegando el compose, pero el build necesita el contexto del monorepo, así que GitHub es lo recomendado."
+  },
+  "services": [
+    { "serviceName": "backend", "port": 3000, "description": "Hono API" },
+    { "serviceName": "frontend", "port": 80, "description": "React SPA (nginx)" }
+  ],
+  "domains": [
+    {
+      "domainId": "TBD",
+      "host": "bots.diegop.com",
+      "https": true,
+      "port": 80,
+      "serviceName": "frontend",
+      "certificateType": "letsencrypt",
+      "domainType": "compose"
+    },
+    {
+      "domainId": "TBD",
+      "host": "api.bots.diegop.com",
+      "https": true,
+      "port": 3000,
+      "serviceName": "backend",
+      "certificateType": "letsencrypt",
+      "domainType": "compose"
+    }
+  ],
+  "external_dependencies": {
+    "_comment": "Recursos reutilizados desde el proyecto 'databases' vía la red Docker interna 'dokploy-network', y servicios Dokploy consumidos por HTTPS.",
+    "postgres": {
+      "postgresId": "WgL72uS6QfLnl5AfozN_k",
+      "name": "labs",
+      "appName": "databases-labs-bkbvsy",
+      "internal_host": "databases-labs-bkbvsy",
+      "internal_port": 5432,
+      "dockerImage": "postgres:15",
+      "database_used": "botplatform",
+      "user_used": "botplatform",
+      "extensions_required": [],
+      "_setup": "CREATE USER botplatform WITH PASSWORD '...'; CREATE DATABASE botplatform OWNER botplatform; GRANT ALL PRIVILEGES ON DATABASE botplatform TO botplatform;"
+    },
+    "redis": {
+      "redisId": "Q-MmIZ-Q5tKwFe-asy0pp",
+      "name": "Redis",
+      "appName": "databases-redis-vlzs7g",
+      "internal_host": "databases-redis-vlzs7g",
+      "internal_port": 6379,
+      "dockerImage": "redis:7.2",
+      "db_index_used": 5,
+      "_note": "Índices en uso: Postiz=2, Chatwoot=3, Evolution=4, bot-plataform=5."
+    },
+    "evolution_api": {
+      "projectId": "bdibASwiGw75OdxbEjImd",
+      "composeId": "1H2YPyc4ma1GNlZ26XgQN",
+      "public_url": "https://evolutionapi.diegop.com",
+      "auth": "header apikey",
+      "_note": "WhatsApp gateway. Se consume por HTTPS. Registrar webhook entrante -> https://api.bots.diegop.com/webhooks/evolution?secret=WEBHOOK_SECRET"
+    },
+    "chatwoot": {
+      "projectId": "7e_WSizxJ9WeDi9dgRngn",
+      "composeId": "u6mZVHhqYlHghqVaycUsw",
+      "public_url": "https://chatwoot.diegop.com",
+      "auth": "header api_access_token",
+      "_note": "Atención humana. Se consume por HTTPS (Application API). Registrar webhook -> https://api.bots.diegop.com/webhooks/chatwoot?secret=WEBHOOK_SECRET"
+    }
+  },
+  "networks": ["dokploy-network"]
+}

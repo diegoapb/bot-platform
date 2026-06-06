@@ -1,0 +1,51 @@
+# ===========================================================================
+# bot-plataform — compose para Dokploy.
+# Despliega backend (Hono) + frontend (nginx) en la red compartida
+# 'dokploy-network' para alcanzar el Postgres "labs" y el Redis compartidos,
+# y hablar con Evolution API / Chatwoot (vía sus dominios públicos).
+#
+# Build context = raíz del repo (../../ respecto a este archivo).
+# Dokploy enruta los dominios a los servicios vía Traefik (ver dokploy.json).
+# ===========================================================================
+
+services:
+  backend:
+    build:
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+      CLERK_PUBLISHABLE_KEY: ${CLERK_PUBLISHABLE_KEY}
+      EVOLUTION_API_URL: ${EVOLUTION_API_URL}
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
+      CHATWOOT_API_URL: ${CHATWOOT_API_URL}
+      CHATWOOT_API_TOKEN: ${CHATWOOT_API_TOKEN}
+      CHATWOOT_ACCOUNT_ID: ${CHATWOOT_ACCOUNT_ID}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+    networks:
+      - dokploy-network
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true
