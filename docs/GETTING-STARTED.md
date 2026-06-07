@@ -118,7 +118,8 @@ cp apps/frontend/.env.example apps/frontend/.env
 ```ini
 NODE_ENV=development
 PORT=3000
-CORS_ORIGIN=http://localhost:5173
+# Coma-separados. Añade el host del túnel si vas a usar el paso 9 (probar desde celular).
+CORS_ORIGIN=http://localhost:5173,https://bot-dev.tusolvex.com
 # La boca local del túnel SSH (paso 6) — Opción A:
 DATABASE_URL=postgresql://botplatform:<pwd>@localhost:5432/botplatform
 # (Opción B: .../botplatform_dev)
@@ -175,7 +176,33 @@ curl http://localhost:3000/health/ready  # {"ok":true,"db":"up"}  ← confirma l
 
 ---
 
-## 8. (Opcional) Webhooks entrantes en local
+## 8. (Opcional) Probar desde el celular con HMR en vivo
+
+Túnel público al **frontend Vite** vía Cloudflare Tunnel, con subdominio fijo (`bot-dev.tusolvex.com`). El backend no se tuneliza: el proxy `/api` de Vite lo expone a través del mismo túnel.
+
+**Requisitos una vez:**
+
+1. `brew install cloudflared`.
+2. El tunnel `bot-plataform-dev` y el CNAME `bot-dev.tusolvex.com` ya están creados en Cloudflare (cuenta `Dap465@gmail.com`, zona `tusolvex.com`). Credenciales locales en `~/.cloudflared/`.
+3. **Clerk dashboard** (instancia dev) → *Domains* → añadir `bot-dev.tusolvex.com`. Sin esto, el login no completa.
+4. **Backend `.env`** debe incluir el host en `CORS_ORIGIN` (ver paso 5). Se usa también para `authorizedParties` de Clerk; sin esto los requests autenticados dan **401**.
+
+**Cada vez:**
+
+```bash
+pnpm dev:mobile      # arranca backend + frontend + cloudflared en paralelo
+# o en terminales separadas:
+pnpm dev
+pnpm tunnel
+```
+
+Abre <https://bot-dev.tusolvex.com> desde el celular o cualquier red.
+
+> El `vite.config.ts` ya tiene `host: true`, `allowedHosts` y HMR sobre `wss://bot-dev.tusolvex.com:443`, así que los cambios se ven en vivo.
+
+---
+
+## 9. (Opcional) Webhooks entrantes en local
 
 Evolution/Chatwoot no pueden alcanzar `localhost`. Para probar recepción de mensajes, expón tu backend con un túnel público y registra esa URL:
 
@@ -206,3 +233,5 @@ cloudflared tunnel --url http://localhost:3000
 | "Selecciona o crea un tenant" en toda la API | No has creado tu organización en Clerk (paso 7) |
 | No aparece `/admin` | Tu `user_…` no está en `SUPERADMIN_USER_IDS` |
 | 401 en `/api/*` | Token de Clerk no enviado / claves `pk`/`sk` cruzadas entre apps |
+| 401 al entrar por `bot-dev.tusolvex.com` | Falta el host en `CORS_ORIGIN` (alimenta `authorizedParties` de Clerk) — ver paso 8 |
+| Login en `bot-dev.tusolvex.com` se queda tras la contraseña | Host no autorizado en el dashboard de Clerk (*Domains*) |
