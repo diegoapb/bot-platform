@@ -34,9 +34,9 @@ id: US-001
   - Archivos: `apps/frontend/src/lib/api.ts`
   - Commits: `cf6beee`
 
-## Informes generados por agentes
+## Research consultada
 
-_(ninguno)_
+_(ninguna)_
 
 ## Notes
 

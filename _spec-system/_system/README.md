@@ -1,6 +1,6 @@
 # `_spec-system/_system` — Automatización de la spec
 
-Carpeta para todo lo que **opera sobre la spec** (épicas, historias, ciclos, informes) sin ser contenido de producto. Pensada para integraciones con agentes (Claude Code y similares) y mantenimiento del propio sistema de especificación.
+Carpeta para todo lo que **opera sobre la spec** (épicas, historias, ciclos, research) sin ser contenido de producto. Pensada para integraciones con agentes (Claude Code y similares) y mantenimiento del propio sistema de especificación.
 
 ## Estructura
 

@@ -20,13 +20,25 @@ _spec-system/
 │       ├── index.md          # frontmatter maestro + índice + descripción corta
 │       ├── requirements.md   # criterios de aceptación Gherkin
 │       ├── design.md         # diagramas y specs técnicas
-│       └── tasks.md          # tareas, commits, informes
+│       └── tasks.md          # tareas, commits, research consultada
 ├── cycles/
 │   ├── README.md
 │   └── C0X-slug.md       # ciclo (sprint) con fechas y stories inscritas
-├── informes/
+├── research/
 │   ├── README.md
-│   └── YYYY-MM-DD-slug.md   # frontmatter referencia la historia
+│   └── YYYY-MM-DD-slug.md   # investigación que apoya decisiones
+├── knowledge-base/        # material crudo: artículos, links, papers, chats, notas
+│   ├── README.md
+│   ├── articulos/
+│   ├── links/
+│   ├── papers/
+│   ├── chats/
+│   ├── notas/
+│   └── adjuntos/
+├── sessions/              # bitácora: un reporte por sesión, con conversación incluida
+│   ├── README.md
+│   └── YYYY-MM-DD/
+│       └── HHMM-{EPIC}-{titulo-sesion}.md
 └── _system/              # automatización de la spec (ver _system/README.md)
     ├── skills/
     ├── hooks/
@@ -43,9 +55,11 @@ _spec-system/
   1. `index.md` — **frontmatter maestro** + índice + descripción corta. Es el único lugar donde se cambia el `status`.
   2. `requirements.md` — qué hay que entregar. Criterios de aceptación en **Gherkin** (`Dado / Cuando / Entonces`).
   3. `design.md` — cómo se construye. Diagramas, contratos, modelos de datos.
-  4. `tasks.md` — desglose en tareas, con enlaces a commits e informes generados por agentes.
+  4. `tasks.md` — desglose en tareas, con enlaces a commits y a research consultada.
 - **Ciclos (sprints)**: rangos de tiempo en los que se inscriben Stories. Una historia pertenece a **un solo ciclo** (o a ninguno mientras está en backlog).
-- **Informes**: salidas de los agentes. Carpeta `informes/`. Cada informe declara en su frontmatter a qué historia se relaciona.
+- **Research (investigaciones)**: documentos que apoyan la toma de decisiones al crear épicas o implementar código. Viven en `research/`. Pueden relacionarse con una épica, una historia, ambas, o ninguna.
+- **Knowledge base (conocimiento crudo)**: material en bruto (artículos, links, papers, chats, notas) que alimenta a `research/` pero aún no está purgado ni sintetizado. Vive en `knowledge-base/`.
+- **Sessions (bitácora)**: un reporte por sesión de trabajo en `sessions/YYYY-MM-DD/HHMM-{EPIC}-{titulo}.md`, con resumen, decisiones, cambios y la **conversación completa** transcrita para trazabilidad.
 - **Roadmap**: documento auto-generado que recorre todos los frontmatters de historias e imprime estado, épica y ciclo.
 
 ## Frontmatter de Historia (`stories/US-00X-slug/index.md`)
@@ -102,14 +116,17 @@ goal: Frase con el objetivo del ciclo
 ---
 ```
 
-## Frontmatter de Informe (`informes/YYYY-MM-DD-slug.md`)
+## Frontmatter de Research (`research/YYYY-MM-DD-slug.md`)
 
 ```yaml
 ---
 date: 2026-06-07
-story: US-00X             # historia a la que se relaciona
-agent: nombre-del-agente
-title: Título del informe
+title: Título descriptivo
+author: @diego           # o el nombre del agente
+epic: E0X                # opcional — solo si apoya una épica concreta
+story: US-00X            # opcional — solo si apoya una historia concreta
+tags: [whatsapp, baileys, evaluacion]  # opcional
+status: draft            # draft | final | obsoleto
 ---
 ```
 

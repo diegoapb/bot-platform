@@ -127,10 +127,10 @@ Conforme se ejecutan, dejar el SHA junto a la tarea:
 - T1 — `abc1234`
 - T2 — `def5678`
 
-## Informes generados por agentes
+## Research consultada
 
-- `informes/2026-06-10-investigacion-baileys.md` — relevante para T2.
-- `informes/2026-06-12-revision-seguridad.md` — relevante para T4.
+- `research/2026-06-10-baileys-vs-cloud-api.md` — fundamentó T2.
+- `research/2026-06-12-revision-seguridad.md` — fundamentó T4.
 
 ## Notes
 

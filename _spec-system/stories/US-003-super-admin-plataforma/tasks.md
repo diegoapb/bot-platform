@@ -42,9 +42,9 @@ id: US-003
   - Archivos: `apps/frontend/src/components/Layout.tsx`
   - Commits: `5df0202`
 
-## Informes generados por agentes
+## Research consultada
 
-_(ninguno)_
+_(ninguna)_
 
 ## Notes
 

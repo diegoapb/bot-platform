@@ -24,9 +24,9 @@ id: US-004
   - Archivos: `apps/backend/.env.example`, `apps/frontend/.env.example`
   - Commits: `1f81eda`
 
-## Informes generados por agentes
+## Research consultada
 
-_(ninguno)_
+_(ninguna)_
 
 ## Notes
 

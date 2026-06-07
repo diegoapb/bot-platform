@@ -2,13 +2,19 @@
 
 > Entrada nueva arriba. Formato: `## YYYY-MM-DD — título corto`.
 
-## 2026-06-07 — Modelo de spec definido (épicas/historias/ciclos/informes)
+## 2026-06-07 — Renombrado `informes/` → `research/`
 
-- Historia = **carpeta** con 3 docs: `requirements.md` (frontmatter + Gherkin), `design.md`, `tasks.md`.
+- Propósito reenfocado: **apoyar decisiones** al crear épicas o implementar código (antes era solo "salidas de agentes").
+- Frontmatter más flexible: `epic` y `story` opcionales; añadidos `author`, `tags`, `status: draft|final|obsoleto`.
+- Plantillas y referencias actualizadas en todo el spec system.
+
+## 2026-06-07 — Modelo de spec definido (épicas/historias/ciclos/research)
+
+- Historia = **carpeta** con 4 docs: `index.md` (frontmatter), `requirements.md`, `design.md`, `tasks.md`.
 - Relación 1:N épica ↔ historia. Una historia, **un solo** ciclo (o ninguno).
 - Estados de historia: lista cerrada (de "Levantamiento de requerimientos" a "En producción").
-- Carpetas nuevas: `cycles/`, `informes/`, `scripts/`.
-- `roadmap.md` ahora se **autogenera** con `node _spec-system/scripts/roadmap.mjs`. El script valida estados y referencias.
+- Carpetas nuevas: `cycles/`, `research/`, `_system/scripts/`.
+- `roadmap.md` ahora se **autogenera** con `node _spec-system/_system/scripts/roadmap.mjs`. El script valida estados y referencias.
 
 ## 2026-06-07 — Spec system inicializada
 

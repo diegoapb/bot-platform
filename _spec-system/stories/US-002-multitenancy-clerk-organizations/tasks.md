@@ -46,9 +46,9 @@ id: US-002
   - Archivos: `apps/frontend/src/pages/TeamPage.tsx`
   - Commits: `cc9d0a9`
 
-## Informes generados por agentes
+## Research consultada
 
-_(ninguno)_
+_(ninguna)_
 
 ## Notes
 
