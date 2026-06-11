@@ -193,14 +193,15 @@ export const chatwoot = {
     conversationId: number,
     content: string,
     messageType: "incoming" | "outgoing",
-    opts?: { private?: boolean },
-  ) =>
+    opts?: { private?: boolean; contentAttributes?: Record<string, unknown> },
+  ): Promise<{ id: number }> =>
     app(accountId, `/conversations/${conversationId}/messages`, {
       method: "POST",
       body: JSON.stringify({
         content,
         message_type: messageType,
         private: opts?.private ?? false,
+        ...(opts?.contentAttributes ? { content_attributes: opts.contentAttributes } : {}),
       }),
     }),
 };

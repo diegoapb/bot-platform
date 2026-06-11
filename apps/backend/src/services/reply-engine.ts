@@ -16,6 +16,7 @@ import { generate, textOf, type LlmMessage, type LlmTool } from "../integrations
 import { buildContext } from "./context-builder.js";
 import { searchCatalog } from "./catalog.js";
 import { acquireLock, releaseLock, setMode } from "./conversation-state.js";
+import { tryMarkProcessed } from "./message-sync.js";
 
 /**
  * Motor de respuesta automática (US-011) + handoff (US-012).
@@ -245,9 +246,24 @@ async function deliver(
     }
   }
   if (info.accountId && info.cwConversationId) {
-    await chatwoot
-      .createMessage(info.accountId, info.cwConversationId, text, "outgoing")
-      .catch((e) => console.warn("[engine] registro en Chatwoot falló:", e?.message ?? e));
+    try {
+      // from_bot evita que el webhook message_created rebote esta respuesta a
+      // WhatsApp (anti-loop); el dedupe por id cubre el caso de que Chatwoot
+      // no eche de vuelta los content_attributes.
+      const created = await chatwoot.createMessage(
+        info.accountId,
+        info.cwConversationId,
+        text,
+        "outgoing",
+        { contentAttributes: { from_bot: true } },
+      );
+      if (created?.id) await tryMarkProcessed(bot, "chatwoot", String(created.id));
+    } catch (e) {
+      console.warn(
+        "[engine] registro en Chatwoot falló:",
+        e instanceof Error ? e.message : e,
+      );
+    }
   }
 }
 

@@ -13,7 +13,7 @@ import { onInboundMessage } from "./reply-engine.js";
  */
 
 /** Inserta el id en processed_messages; false si ya estaba (duplicado). */
-async function tryMarkProcessed(
+export async function tryMarkProcessed(
   bot: BotRow,
   source: "evolution" | "chatwoot",
   externalId: string,
@@ -117,8 +117,10 @@ export async function handleAgentReply(bot: BotRow, evt: any): Promise<void> {
   if (!messageId || !conversationId || !content || !bot.evolutionInstance) return;
 
   // Mensajes que el propio backend creó vía API no deben rebotar a WhatsApp.
-  // Chatwoot no marca el origen, así que filtramos por sender ausente (API).
-  if (!evt?.sender?.id) return;
+  // OJO: Chatwoot SÍ les pone sender (el dueño de CHATWOOT_API_TOKEN), así
+  // que el origen se marca explícitamente con content_attributes.from_bot al
+  // crearlos (reply-engine); el dedupe por id en deliver() es segunda barrera.
+  if (evt?.content_attributes?.from_bot) return;
 
   if (!(await tryMarkProcessed(bot, "chatwoot", messageId))) return;
 
