@@ -3,6 +3,7 @@ import { db } from "../db/client.js";
 import { bots, channelLinks, processedMessages, tenants, type BotRow } from "../db/schema.js";
 import { chatwoot } from "../integrations/chatwoot.js";
 import { evolution } from "../integrations/evolution.js";
+import { provisionChatwoot } from "./chatwoot-provisioning.js";
 import { ensureConversation } from "./conversation-state.js";
 import { onInboundMessage } from "./reply-engine.js";
 
@@ -48,11 +49,37 @@ export async function handleInbound(bot: BotRow, data: any): Promise<void> {
   // Ecos del propio número y grupos quedan fuera del MVP.
   if (key.fromMe || remoteJid.endsWith("@g.us")) return;
 
-  const accountId = await accountIdFor(bot);
-  if (!accountId || !bot.chatwootInboxId) {
-    console.warn(`[sync] bot ${bot.id} sin Chatwoot provisionado; mensaje ignorado`);
-    return;
+  // Solo chats nuevos: al vincular, WhatsApp empuja mensajes no leídos previos
+  // como MESSAGES_UPSERT. Descartamos todo lo anterior a la conexión del bot
+  // para no inyectar historial en Chatwoot. messageTimestamp viene en segundos.
+  if (bot.lastConnectedAt) {
+    const ts = Number(data?.messageTimestamp);
+    if (Number.isFinite(ts) && ts * 1000 < bot.lastConnectedAt.getTime()) {
+      return;
+    }
   }
+
+  let accountId = await accountIdFor(bot);
+  if (!accountId || !bot.chatwootInboxId) {
+    // Auto-reparación: el bot quedó conectado sin inbox (alta a medias). En vez
+    // de descartar el mensaje, provisionamos Chatwoot on-demand (idempotente) y
+    // recargamos el bot. Si la provisión falla, recién ahí descartamos.
+    try {
+      const result = await provisionChatwoot(bot);
+      accountId = result.accountId;
+      const [fresh] = await db.select().from(bots).where(eq(bots.id, bot.id));
+      if (fresh) bot = fresh;
+    } catch (e) {
+      console.warn(
+        `[sync] bot ${bot.id} sin Chatwoot y la provisión on-demand falló; mensaje ignorado`,
+        e,
+      );
+      return;
+    }
+  }
+  // Tras la provisión el inbox está garantizado; este guard reasegura el tipo.
+  const inboxId = bot.chatwootInboxId;
+  if (!accountId || inboxId == null) return;
 
   const phone = jidToE164(remoteJid);
   if (!phone) {
@@ -71,7 +98,7 @@ export async function handleInbound(bot: BotRow, data: any): Promise<void> {
     const contact =
       (await chatwoot.searchContact(accountId, phone)) ??
       (await chatwoot.createContact(accountId, data?.pushName || phone, phone));
-    const convo = await chatwoot.createConversation(accountId, bot.chatwootInboxId, contact.id);
+    const convo = await chatwoot.createConversation(accountId, inboxId, contact.id);
     const inserted = await db
       .insert(channelLinks)
       .values({

@@ -132,6 +132,20 @@ botsRoutes.post("/:id/connection", requireAdmin, async (c) => {
   try {
     let instance = bot.evolutionInstance;
     if (!instance) {
+      // Aseguramos el inbox de Chatwoot ANTES de conectar WhatsApp: así ningún
+      // bot queda "conectado pero sin provisionar" (sus mensajes se descartarían
+      // en message-sync). Es idempotente; si Chatwoot falla, abortamos la
+      // conexión con un error visible en vez de dejar el alta a medias.
+      try {
+        await provisionChatwoot(bot);
+      } catch (e) {
+        console.error("[chatwoot:provision] (al conectar)", e);
+        return c.json(
+          { ok: false, error: "Chatwoot no disponible; reintenta antes de conectar WhatsApp." },
+          502,
+        );
+      }
+
       // 1 bot = 1 instancia; nombre determinístico para no duplicar (P3).
       instance = `bot-${bot.id}`;
       const webhookUrl = `${env.PUBLIC_WEBHOOK_BASE_URL}/webhooks/evolution/${instance}`;
