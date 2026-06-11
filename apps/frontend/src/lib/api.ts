@@ -8,6 +8,11 @@ import type {
   CreateAssignmentInput,
   AdminTenant,
   CreateTenantInput,
+  BotConnection,
+  ChatwootProvision,
+  IdentityType,
+  IdentityDoc,
+  IdentityVersion,
 } from "@bot/shared";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
@@ -50,6 +55,44 @@ export function createApi(getToken: () => Promise<string | null>) {
       request<Bot>(`/api/bots/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
     deleteBot: (id: string) =>
       request<{ id: string }>(`/api/bots/${id}`, { method: "DELETE" }),
+    getBot: (id: string) => request<Bot>(`/api/bots/${id}`),
+
+    // Conexión WhatsApp (E02)
+    startConnection: (botId: string) =>
+      request<BotConnection>(`/api/bots/${botId}/connection`, { method: "POST" }),
+    getConnection: (botId: string) =>
+      request<BotConnection>(`/api/bots/${botId}/connection`),
+    disconnect: (botId: string) =>
+      request<{ status: string }>(`/api/bots/${botId}/connection`, { method: "DELETE" }),
+
+    // Chatwoot (E03)
+    getChatwoot: (botId: string) =>
+      request<{ accountId: number | null; inboxId: number | null; dashboardUrl: string | null }>(
+        `/api/bots/${botId}/chatwoot`,
+      ),
+    provisionChatwoot: (botId: string) =>
+      request<ChatwootProvision>(`/api/bots/${botId}/chatwoot/provision`, { method: "POST" }),
+    addChatwootAgent: (botId: string, userId: string) =>
+      request<{ userId: number }>(`/api/bots/${botId}/chatwoot/agents`, {
+        method: "POST",
+        body: JSON.stringify({ userId }),
+      }),
+
+    // Identidad del agente (E04)
+    getIdentity: (botId: string) =>
+      request<Record<IdentityType, IdentityDoc | null>>(`/api/bots/${botId}/identity`),
+    saveIdentity: (botId: string, type: IdentityType, content: string) =>
+      request<{ version: number }>(`/api/bots/${botId}/identity/${type}`, {
+        method: "PUT",
+        body: JSON.stringify({ content }),
+      }),
+    listIdentityVersions: (botId: string, type: IdentityType) =>
+      request<IdentityVersion[]>(`/api/bots/${botId}/identity/${type}/versions`),
+    restoreIdentityVersion: (botId: string, type: IdentityType, version: number) =>
+      request<{ version: number }>(
+        `/api/bots/${botId}/identity/${type}/versions/${version}/restore`,
+        { method: "POST" },
+      ),
 
     // Equipo (admin)
     listMembers: () => request<TenantMember[]>("/api/team/members"),

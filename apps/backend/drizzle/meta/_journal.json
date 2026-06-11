@@ -15,6 +15,13 @@
       "when": 1780705827510,
       "tag": "0001_quiet_mimic",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781156259932,
+      "tag": "0002_shallow_manta",
+      "breakpoints": true
     }
   ]
 }

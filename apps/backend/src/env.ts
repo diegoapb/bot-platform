@@ -21,10 +21,19 @@ const envSchema = z.object({
 
   EVOLUTION_API_URL: z.string().url(),
   EVOLUTION_API_KEY: z.string().min(1),
+  // Token que Evolution manda en cada webhook (header x-webhook-token).
+  EVOLUTION_WEBHOOK_TOKEN: z.string().min(1),
+  // Base pública de este backend, alcanzable desde Evolution/Chatwoot (túnel en dev).
+  PUBLIC_WEBHOOK_BASE_URL: z.string().url(),
 
   CHATWOOT_API_URL: z.string().url(),
   CHATWOOT_API_TOKEN: z.string().min(1),
+  // Token del Platform API de Chatwoot (provisión de cuentas/usuarios).
+  CHATWOOT_PLATFORM_TOKEN: z.string().min(1),
   CHATWOOT_ACCOUNT_ID: z.coerce.number().default(1),
+  // User id del dueño de CHATWOOT_API_TOKEN. Se adjunta como administrator a
+  // cada cuenta de tenant para que el Application API pueda operarla.
+  CHATWOOT_ADMIN_USER_ID: z.coerce.number().int().positive(),
 
   WEBHOOK_SECRET: z.string().min(1),
 });

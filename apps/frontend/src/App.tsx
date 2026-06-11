@@ -9,6 +9,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
 import { Layout } from "@/components/Layout";
 import { BotsPage } from "@/pages/BotsPage";
+import { BotDetailPage } from "@/pages/bots/BotDetailPage";
 import { TeamPage } from "@/pages/TeamPage";
 import { AdminPage } from "@/pages/AdminPage";
 import { useMe } from "@/lib/useMe";
@@ -78,6 +79,7 @@ export default function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<TenantGate><BotsPage /></TenantGate>} />
+            <Route path="bots/:botId" element={<TenantGate><BotDetailPage /></TenantGate>} />
             <Route path="team" element={<TenantGate><TeamPage /></TenantGate>} />
             <Route path="admin" element={<SuperAdminGate><AdminPage /></SuperAdminGate>} />
             <Route path="*" element={<Navigate to="/" replace />} />

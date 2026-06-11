@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/clerk-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useApi } from "@/lib/useApi";
 
 export function BotsPage() {
@@ -61,14 +62,17 @@ export function BotsPage() {
 
       <ul className="space-y-2">
         {bots?.map((bot) => (
-          <li key={bot.id} className="rounded-lg border p-4">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">{bot.name}</span>
-              <span className="text-xs uppercase text-muted-foreground">{bot.status}</span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {bot.channel} · instancia: {bot.evolutionInstance ?? "—"}
-            </p>
+          <li key={bot.id} className="rounded-lg border p-4 hover:bg-muted/50">
+            <Link to={`/bots/${bot.id}`} className="block">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">{bot.name}</span>
+                <span className="text-xs uppercase text-muted-foreground">{bot.status}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {bot.channel} · instancia: {bot.evolutionInstance ?? "—"} · conexión:{" "}
+                {bot.connectionStatus}
+              </p>
+            </Link>
           </li>
         ))}
         {bots?.length === 0 && (

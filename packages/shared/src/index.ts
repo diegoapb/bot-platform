@@ -82,6 +82,9 @@ export const botSchema = z.object({
   status: botStatusSchema,
   // Nombre de la instancia en Evolution API que atiende este bot.
   evolutionInstance: z.string().nullable(),
+  // Estado de la conexión WhatsApp de la instancia.
+  connectionStatus: z.enum(["disconnected", "qr", "connected"]),
+  lastConnectedAt: z.string().nullable(),
   // ID del inbox de Chatwoot asociado (si se enruta a soporte humano).
   chatwootInboxId: z.number().int().nullable(),
   createdAt: z.string(),
@@ -142,3 +145,57 @@ export type InboundMessage = z.infer<typeof inboundMessageSchema>;
 export type ApiOk<T> = { ok: true; data: T };
 export type ApiErr = { ok: false; error: string };
 export type ApiResult<T> = ApiOk<T> | ApiErr;
+
+// --- Conexión WhatsApp (E02) ---------------------------------------------
+
+export const connectionStatusSchema = z.enum(["disconnected", "qr", "connected"]);
+export type ConnectionStatus = z.infer<typeof connectionStatusSchema>;
+
+/** Estado de conexión del bot que consume el frontend (QR efímero, no se persiste). */
+export const botConnectionSchema = z.object({
+  status: connectionStatusSchema,
+  qr: z.string().nullable(),
+  lastConnectedAt: z.string().nullable(),
+});
+export type BotConnection = z.infer<typeof botConnectionSchema>;
+
+// --- Chatwoot (E03) -------------------------------------------------------
+
+export const chatwootProvisionSchema = z.object({
+  accountId: z.number().int(),
+  inboxId: z.number().int(),
+  dashboardUrl: z.string(),
+});
+export type ChatwootProvision = z.infer<typeof chatwootProvisionSchema>;
+
+export const addChatwootAgentSchema = z.object({
+  userId: z.string().min(1),
+});
+export type AddChatwootAgentInput = z.infer<typeof addChatwootAgentSchema>;
+
+// --- Identidad del agente (E04) --------------------------------------------
+
+export const IDENTITY_TYPES = ["SOUL", "IDENTITY", "GUARDRAILS"] as const;
+export const identityTypeSchema = z.enum(IDENTITY_TYPES);
+export type IdentityType = z.infer<typeof identityTypeSchema>;
+
+export const IDENTITY_MAX_CHARS = 20_000;
+
+export const saveIdentitySchema = z.object({
+  content: z.string().max(IDENTITY_MAX_CHARS),
+});
+export type SaveIdentityInput = z.infer<typeof saveIdentitySchema>;
+
+export const identityDocSchema = z.object({
+  type: identityTypeSchema,
+  version: z.number().int(),
+  content: z.string(),
+  createdBy: z.string(),
+  createdAt: z.string(),
+});
+export type IdentityDoc = z.infer<typeof identityDocSchema>;
+
+export const identityVersionSchema = identityDocSchema.omit({ type: true });
+export type IdentityVersion = z.infer<typeof identityVersionSchema>;
+
+export { IDENTITY_TEMPLATES } from "./identity-templates.js";

@@ -9,6 +9,7 @@ import { botsRoutes } from "./routes/bots.js";
 import { teamRoutes } from "./routes/team.js";
 import { adminRoutes } from "./routes/admin.js";
 import { webhooks } from "./routes/webhooks.js";
+import { identityRoutes } from "./routes/identity.js";
 
 const app = new Hono();
 
@@ -26,6 +27,7 @@ app.use(
 app.route("/health", health);
 app.route("/api/me", meRoutes);
 app.route("/api/bots", botsRoutes);
+app.route("/api/bots", identityRoutes);
 app.route("/api/team", teamRoutes);
 app.route("/api/admin", adminRoutes);
 app.route("/webhooks", webhooks);
