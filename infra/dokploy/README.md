@@ -96,10 +96,26 @@ python3 <skill>/tail_deployment.py --compose-id <COMPOSE_ID> --watch
 
 ## Webhooks entrantes
 
-Registrar en cada servicio apuntando al backend con el `WEBHOOK_SECRET`:
+No hay que registrarlos a mano: el backend los configura al provisionar cada
+bot usando `PUBLIC_WEBHOOK_BASE_URL` (debe ser `https://api.bots.diegop.com`):
 
-- **Evolution API** → `https://api.bots.diegop.com/webhooks/evolution?secret=<WEBHOOK_SECRET>`
-- **Chatwoot** → `https://api.bots.diegop.com/webhooks/chatwoot?secret=<WEBHOOK_SECRET>`
+- **Evolution API** → `POST /webhooks/evolution/:instance`, autenticado con el
+  header `x-webhook-token` = `EVOLUTION_WEBHOOK_TOKEN` (se configura al crear
+  la instancia del bot).
+- **Chatwoot** → `POST /webhooks/chatwoot/:botId?token=<token-por-bot>`, con un
+  token generado por bot durante la provisión del inbox.
+
+> Si cambias `PUBLIC_WEBHOOK_BASE_URL` después de provisionar bots, hay que
+> recrear instancia/inbox (o actualizar las URLs en Evolution/Chatwoot a mano).
+
+## Smoke test post-deploy
+
+```bash
+node scripts/smoke-prod.mjs --backend https://api.bots.diegop.com --frontend https://bots.diegop.com
+```
+
+Valida: health extendido (db/evolution/chatwoot), frontend servido, y que los
+webhooks rechazan tokens inválidos (401).
 
 ## Operación
 

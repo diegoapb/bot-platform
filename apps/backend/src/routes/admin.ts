@@ -1,12 +1,12 @@
 import { Hono } from "hono";
-import { sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import {
   createTenantSchema,
   blockTenantSchema,
   type AdminTenant,
 } from "@bot/shared";
 import { db } from "../db/client.js";
-import { bots, tenants } from "../db/schema.js";
+import { bots, generations, tenants } from "../db/schema.js";
 import { clerk } from "../lib/clerk.js";
 import { requireAuth, requireSuperAdmin } from "../middleware/auth.js";
 
@@ -113,4 +113,36 @@ adminRoutes.post("/tenants/:id/unblock", async (c) => {
   }
 
   return c.json({ ok: true, data: { id, blocked: false } });
+});
+
+/**
+ * Trazas de generaciones de cualquier tenant (US-014 3.3). Solo super admin;
+ * filtro opcional ?tenantId=…
+ */
+adminRoutes.get("/generations", async (c) => {
+  const tenantId = c.req.query("tenantId");
+  const limit = Math.min(Number(c.req.query("limit") ?? 50), 200);
+  const rows = await db
+    .select()
+    .from(generations)
+    .where(tenantId ? eq(generations.tenantId, tenantId) : undefined)
+    .orderBy(desc(generations.createdAt))
+    .limit(limit);
+  return c.json({
+    ok: true,
+    data: rows.map((g) => ({
+      id: g.id,
+      tenantId: g.tenantId,
+      botId: g.botId,
+      conversationId: g.conversationId,
+      model: g.model,
+      responsePreview: g.response ? g.response.slice(0, 120) : null,
+      inputTokens: g.inputTokens,
+      outputTokens: g.outputTokens,
+      latencyMs: g.latencyMs,
+      ok: g.error === null,
+      error: g.error,
+      createdAt: g.createdAt.toISOString(),
+    })),
+  });
 });

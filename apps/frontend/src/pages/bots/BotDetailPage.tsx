@@ -10,6 +10,7 @@ import { KnowledgeManager } from "./KnowledgeManager";
 import { CatalogManager } from "./CatalogManager";
 import { ConversationsPanel } from "./ConversationsPanel";
 import { ContactsPanel } from "./ContactsPanel";
+import { GenerationsLog } from "./GenerationsLog";
 
 const TABS = [
   { key: "whatsapp", label: "WhatsApp" },
@@ -19,6 +20,7 @@ const TABS = [
   { key: "catalog", label: "Catálogo" },
   { key: "conversations", label: "Conversaciones" },
   { key: "contacts", label: "Contactos" },
+  { key: "generations", label: "Trazas", adminOnly: true },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -53,7 +55,7 @@ export function BotDetailPage() {
       </header>
 
       <nav className="mb-6 flex gap-1 border-b">
-        {TABS.map((t) => (
+        {TABS.filter((t) => !("adminOnly" in t && t.adminOnly) || isAdmin).map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
@@ -73,6 +75,7 @@ export function BotDetailPage() {
       {tab === "catalog" && <CatalogManager botId={bot.id} isAdmin={isAdmin} />}
       {tab === "conversations" && <ConversationsPanel botId={bot.id} isAdmin={isAdmin} />}
       {tab === "contacts" && <ContactsPanel botId={bot.id} isAdmin={isAdmin} />}
+      {tab === "generations" && isAdmin && <GenerationsLog botId={bot.id} />}
     </section>
   );
 }

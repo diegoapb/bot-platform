@@ -161,7 +161,15 @@ export const chatwoot = {
     accountId: number,
     conversationId: number,
   ): Promise<
-    Array<{ id: number; content: string | null; message_type: number; private: boolean }>
+    Array<{
+      id: number;
+      content: string | null;
+      message_type: number;
+      private: boolean;
+      created_at: number;
+      content_attributes?: Record<string, unknown> | null;
+      sender?: { id?: number; name?: string; type?: string } | null;
+    }>
   > => {
     const res = await app(accountId, `/conversations/${conversationId}/messages`);
     return res.payload ?? [];

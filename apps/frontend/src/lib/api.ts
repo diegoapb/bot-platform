@@ -183,6 +183,31 @@ export function createApi(getToken: () => Promise<string | null>) {
     // Conversaciones (E06)
     listConversations: (botId: string) =>
       request<ConversationSummary[]>(`/api/bots/${botId}/conversations`),
+    listAllConversations: (opts?: {
+      cursor?: string;
+      botId?: string;
+      mode?: ConversationMode;
+    }) => {
+      const params = new URLSearchParams();
+      if (opts?.cursor) params.set("cursor", opts.cursor);
+      if (opts?.botId) params.set("botId", opts.botId);
+      if (opts?.mode) params.set("mode", opts.mode);
+      const qs = params.toString();
+      return request<{
+        items: Array<ConversationSummary & { botName: string }>;
+        nextCursor: string | null;
+      }>(`/api/conversations${qs ? `?${qs}` : ""}`);
+    },
+    getConversationMessages: (conversationId: string) =>
+      request<
+        Array<{
+          id: number;
+          content: string;
+          origin: "cliente" | "bot" | "agente";
+          senderName: string | null;
+          createdAt: string;
+        }>
+      >(`/api/conversations/${conversationId}/messages`),
     listTransitions: (conversationId: string) =>
       request<ConversationTransition[]>(`/api/conversations/${conversationId}/transitions`),
     setConversationMode: (conversationId: string, mode: ConversationMode) =>
@@ -190,6 +215,47 @@ export function createApi(getToken: () => Promise<string | null>) {
         `/api/conversations/${conversationId}/mode`,
         { method: "POST", body: JSON.stringify({ mode }) },
       ),
+
+    // Métricas y trazas (E08)
+    getMetrics: (range: "7d" | "30d") =>
+      request<{
+        range: string;
+        inbound: number;
+        botReplies: number;
+        handoffs: number;
+        activeConversations: number;
+        daily: Array<{ day: string; inbound: number; botReplies: number }>;
+      }>(`/api/metrics?range=${range}`),
+    listGenerations: (botId: string, cursor?: string) =>
+      request<{
+        items: Array<{
+          id: string;
+          conversationId: string;
+          phoneE164: string;
+          model: string;
+          responsePreview: string | null;
+          inputTokens: number | null;
+          outputTokens: number | null;
+          latencyMs: number | null;
+          ok: boolean;
+          error: string | null;
+          createdAt: string;
+        }>;
+        nextCursor: string | null;
+      }>(`/api/bots/${botId}/generations${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`),
+    getGeneration: (id: string) =>
+      request<{
+        id: string;
+        conversationId: string;
+        model: string;
+        prompt: unknown;
+        response: string | null;
+        inputTokens: number | null;
+        outputTokens: number | null;
+        latencyMs: number | null;
+        error: string | null;
+        createdAt: string;
+      }>(`/api/generations/${id}`),
 
     // Contactos y memoria (E07)
     listContacts: (botId: string) => request<ContactSummary[]>(`/api/bots/${botId}/contacts`),

@@ -27,7 +27,7 @@ Demostrar el flujo completo de valor: un tenant conecta su número de WhatsApp, 
 
 ## Historias inscritas (10)
 
-**Progreso:** 0/10 en producción (0%) · Pendiente desarrollo: 5 · Pendiente de pruebas: 5
+**Progreso:** 0/10 en producción (0%) · Pendiente desarrollo: 4 · En implementación: 1 · Pendiente de pruebas: 5
 
 | ID | Título | Épica | Estado | Prioridad |
 | --- | --- | --- | --- | --- |
@@ -40,6 +40,6 @@ Demostrar el flujo completo de valor: un tenant conecta su número de WhatsApp, 
 | [US-011](../stories/US-011-pipeline-respuesta/index.md) | Pipeline de respuesta automática | E06 | Pendiente de pruebas | P0 |
 | [US-012](../stories/US-012-handoff-humano/index.md) | Handoff bot ↔ agente humano | E06 | Pendiente de pruebas | P1 |
 | [US-013](../stories/US-013-memoria-cliente/index.md) | Memoria persistente por cliente | E07 | Pendiente de pruebas | P1 |
-| [US-014](../stories/US-014-panel-operacion/index.md) | Panel de operación y despliegue MVP | E08 | Pendiente desarrollo | P1 |
+| [US-014](../stories/US-014-panel-operacion/index.md) | Panel de operación y despliegue MVP | E08 | En implementación | P1 |
 
 <!-- DASHBOARD:END -->

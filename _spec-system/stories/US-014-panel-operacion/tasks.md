@@ -10,35 +10,35 @@ Endpoints de lectura (T1–T2), health extendido (T3), vistas UI (T4), métricas
 
 ## Tasks
 
-- [ ] **T1 — Endpoints conversaciones + mensajes paginados**
+- [x] **T1 — Endpoints conversaciones + mensajes paginados**
   - Archivos: `apps/backend/src/routes/conversations.ts`
   - PASS si: cursor estable; filtros bot/modo; member ve solo bots asignados.
   - FAIL si: duplicados al paginar con actividad concurrente.
   - Properties: P1, P3
   - Requirements: 1.1, 1.2
 
-- [ ] **T2 — Endpoints métricas + generaciones (tenant y admin)**
+- [x] **T2 — Endpoints métricas + generaciones (tenant y admin)**
   - Archivos: `apps/backend/src/routes/metrics.ts`, `apps/backend/src/routes/generations.ts`, `apps/backend/src/routes/admin.ts`
   - PASS si: agregaciones correctas con seed conocido; super admin accede vía /admin; tenant aislado.
   - FAIL si: cifras incluyen datos de otro tenant.
   - Properties: P1, P2
   - Requirements: 2.1, 2.2, 3.1, 3.2, 3.3
 
-- [ ] **T3 — Healthcheck extendido con cache**
+- [x] **T3 — Healthcheck extendido con cache**
   - Archivos: `apps/backend/src/routes/health.ts`
   - PASS si: ok ⇔ 3 checks; timeout 2s; cache 30s.
   - FAIL si: health tarda >3s con dependencia caída.
   - Properties: P4
   - Requirements: 4.3, 4.4
 
-- [ ] **T4 — UI: lista de conversaciones + vista de conversación**
+- [x] **T4 — UI: lista de conversaciones + vista de conversación**
   - Archivos: `apps/frontend/src/pages/conversations/ConversationsList.tsx`, `ConversationView.tsx`
   - PASS si: refetch 10s; historial con origen de cada mensaje; acciones de modo (US-012) integradas.
   - FAIL si: cambio de modo no se refleja tras la acción.
   - Properties: P3
   - Requirements: 1.1, 1.2, 1.3, 1.4
 
-- [ ] **T5 — UI: métricas + log de generaciones**
+- [x] **T5 — UI: métricas + log de generaciones**
   - Archivos: `apps/frontend/src/pages/metrics/MetricsDashboard.tsx`, `apps/frontend/src/pages/bots/GenerationsLog.tsx`
   - PASS si: rango 7/30d, gráficos con recharts, traza expandible con prompt/respuesta.
   - FAIL si: trazas muestran datos de otros bots del mismo tenant sin permiso.

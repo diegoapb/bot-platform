@@ -32,10 +32,10 @@ Cerrar el círculo operativo: panel para ver conversaciones y métricas por tena
 
 ## Historias de la épica (1)
 
-**Progreso:** 0/1 en producción (0%) · Pendiente desarrollo: 1
+**Progreso:** 0/1 en producción (0%) · En implementación: 1
 
 | ID | Título | Ciclo | Estado | Prioridad |
 | --- | --- | --- | --- | --- |
-| [US-014](../stories/US-014-panel-operacion/index.md) | Panel de operación y despliegue MVP | C01 | Pendiente desarrollo | P1 |
+| [US-014](../stories/US-014-panel-operacion/index.md) | Panel de operación y despliegue MVP | C01 | En implementación | P1 |
 
 <!-- DASHBOARD:END -->

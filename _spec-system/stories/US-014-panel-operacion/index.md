@@ -3,7 +3,7 @@ id: US-014
 title: Panel de operación y despliegue MVP
 epic: E08
 cycle: C01
-status: Pendiente desarrollo
+status: En implementación
 priority: P1
 estimate: L
 owner: @diego

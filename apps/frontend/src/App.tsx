@@ -12,6 +12,9 @@ import { BotsPage } from "@/pages/BotsPage";
 import { BotDetailPage } from "@/pages/bots/BotDetailPage";
 import { TeamPage } from "@/pages/TeamPage";
 import { AdminPage } from "@/pages/AdminPage";
+import { ConversationsList } from "@/pages/conversations/ConversationsList";
+import { ConversationView } from "@/pages/conversations/ConversationView";
+import { MetricsDashboard } from "@/pages/metrics/MetricsDashboard";
 import { useMe } from "@/lib/useMe";
 
 function Centered({ children }: { children: ReactNode }) {
@@ -80,6 +83,9 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<TenantGate><BotsPage /></TenantGate>} />
             <Route path="bots/:botId" element={<TenantGate><BotDetailPage /></TenantGate>} />
+            <Route path="conversations" element={<TenantGate><ConversationsList /></TenantGate>} />
+            <Route path="conversations/:conversationId" element={<TenantGate><ConversationView /></TenantGate>} />
+            <Route path="metrics" element={<TenantGate><MetricsDashboard /></TenantGate>} />
             <Route path="team" element={<TenantGate><TeamPage /></TenantGate>} />
             <Route path="admin" element={<SuperAdminGate><AdminPage /></SuperAdminGate>} />
             <Route path="*" element={<Navigate to="/" replace />} />

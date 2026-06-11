@@ -14,6 +14,8 @@ import { knowledgeRoutes } from "./routes/knowledge.js";
 import { catalogRoutes } from "./routes/catalog.js";
 import { conversationsRoutes } from "./routes/conversations.js";
 import { contactsRoutes } from "./routes/contacts.js";
+import { metricsRoutes } from "./routes/metrics.js";
+import { generationsRoutes } from "./routes/generations.js";
 import { startMemoryConsolidationJob } from "./jobs/memory-consolidation.js";
 
 const app = new Hono();
@@ -37,6 +39,8 @@ app.route("/api/bots", knowledgeRoutes);
 app.route("/api/bots", catalogRoutes);
 app.route("/api", conversationsRoutes);
 app.route("/api", contactsRoutes);
+app.route("/api", generationsRoutes);
+app.route("/api/metrics", metricsRoutes);
 app.route("/api/team", teamRoutes);
 app.route("/api/admin", adminRoutes);
 app.route("/webhooks", webhooks);

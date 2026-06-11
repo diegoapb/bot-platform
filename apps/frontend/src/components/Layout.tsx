@@ -1,6 +1,6 @@
 import { OrganizationSwitcher, UserButton, useAuth } from "@clerk/clerk-react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Bot, Users, Shield } from "lucide-react";
+import { Bot, Users, Shield, MessagesSquare, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMe } from "@/lib/useMe";
 
@@ -27,6 +27,14 @@ export function Layout() {
                 <NavLink to="/" end className={linkClass}>
                   <Bot className="h-4 w-4" /> Bots
                 </NavLink>
+                <NavLink to="/conversations" className={linkClass}>
+                  <MessagesSquare className="h-4 w-4" /> Conversaciones
+                </NavLink>
+                {isAdmin && (
+                  <NavLink to="/metrics" className={linkClass}>
+                    <BarChart3 className="h-4 w-4" /> Métricas
+                  </NavLink>
+                )}
                 {isAdmin && (
                   <NavLink to="/team" className={linkClass}>
                     <Users className="h-4 w-4" /> Equipo
