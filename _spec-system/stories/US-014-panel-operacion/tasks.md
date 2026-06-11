@@ -74,7 +74,7 @@ Endpoints de lectura (T1–T2), health extendido (T3), vistas UI (T4), métricas
 
 ## Commits
 
-_(SHAs al ejecutar)_
+- `66be7bf` — panel de operación + métricas + trazas + scaffolding prod
 
 ## Research consultada
 
