@@ -21,6 +21,9 @@ export default defineConfig({
     proxy: {
       // En dev, proxy al backend Hono local.
       "/api": "http://localhost:3000",
+      // Webhooks entrantes (Evolution/Chatwoot) hacia el backend, vía la URL
+      // pública bot-dev.tusolvex.com (PUBLIC_WEBHOOK_BASE_URL).
+      "/webhooks": "http://localhost:3000",
     },
   },
 });
