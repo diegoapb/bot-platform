@@ -25,6 +25,8 @@ import type {
   ConversationMode,
   ContactSummary,
   ContactMemory,
+  PhoneRule,
+  CreatePhoneRuleInput,
 } from "@bot/shared";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
@@ -108,6 +110,17 @@ export function createApi(getToken: () => Promise<string | null>) {
         method: "POST",
         body: JSON.stringify({ userId }),
       }),
+
+    // Audiencia: lista blanca / negra de teléfonos
+    listPhoneRules: (botId: string) =>
+      request<PhoneRule[]>(`/api/bots/${botId}/phone-rules`),
+    addPhoneRule: (botId: string, input: CreatePhoneRuleInput) =>
+      request<PhoneRule>(`/api/bots/${botId}/phone-rules`, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    deletePhoneRule: (botId: string, ruleId: string) =>
+      request<{ id: string }>(`/api/bots/${botId}/phone-rules/${ruleId}`, { method: "DELETE" }),
 
     // Identidad del agente (E04)
     getIdentity: (botId: string) =>

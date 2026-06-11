@@ -87,6 +87,8 @@ export const botSchema = z.object({
   lastConnectedAt: z.string().nullable(),
   // ID del inbox de Chatwoot asociado (si se enruta a soporte humano).
   chatwootInboxId: z.number().int().nullable(),
+  // Lista blanca activa: el bot solo atiende números con regla `allow`.
+  whitelistEnabled: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -106,9 +108,33 @@ export const updateBotSchema = z
     status: botStatusSchema,
     evolutionInstance: z.string().nullable(),
     chatwootInboxId: z.number().int().nullable(),
+    whitelistEnabled: z.boolean(),
   })
   .partial();
 export type UpdateBotInput = z.infer<typeof updateBotSchema>;
+
+// --- Reglas de audiencia: lista blanca / negra de teléfonos ------------------
+
+export const phoneRuleKindSchema = z.enum(["allow", "block"]);
+export type PhoneRuleKind = z.infer<typeof phoneRuleKindSchema>;
+
+export const phoneRuleSchema = z.object({
+  id: z.string().uuid(),
+  botId: z.string().uuid(),
+  phoneE164: z.string(),
+  kind: phoneRuleKindSchema,
+  note: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type PhoneRule = z.infer<typeof phoneRuleSchema>;
+
+/** Alta de regla: `phone` se normaliza a E.164 en el backend. */
+export const createPhoneRuleSchema = z.object({
+  phone: z.string().min(7).max(20),
+  kind: phoneRuleKindSchema,
+  note: z.string().max(200).optional(),
+});
+export type CreatePhoneRuleInput = z.infer<typeof createPhoneRuleSchema>;
 
 // --- Asignaciones bot ↔ usuario ----------------------------------------
 

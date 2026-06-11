@@ -5,6 +5,7 @@ import { Link, useParams } from "react-router-dom";
 import { useApi } from "@/lib/useApi";
 import { ConnectWhatsApp } from "./ConnectWhatsApp";
 import { ChatwootSettings } from "./ChatwootSettings";
+import { AudienceSettings } from "./AudienceSettings";
 import { IdentityEditor } from "./IdentityEditor";
 import { KnowledgeManager } from "./KnowledgeManager";
 import { CatalogManager } from "./CatalogManager";
@@ -15,6 +16,7 @@ import { GenerationsLog } from "./GenerationsLog";
 const TABS = [
   { key: "whatsapp", label: "WhatsApp" },
   { key: "chatwoot", label: "Chatwoot" },
+  { key: "audience", label: "Audiencia" },
   { key: "identity", label: "Identidad" },
   { key: "knowledge", label: "Conocimiento" },
   { key: "catalog", label: "Catálogo" },
@@ -70,6 +72,7 @@ export function BotDetailPage() {
 
       {tab === "whatsapp" && <ConnectWhatsApp botId={bot.id} isAdmin={isAdmin} />}
       {tab === "chatwoot" && <ChatwootSettings botId={bot.id} isAdmin={isAdmin} />}
+      {tab === "audience" && <AudienceSettings botId={bot.id} isAdmin={isAdmin} />}
       {tab === "identity" && <IdentityEditor botId={bot.id} isAdmin={isAdmin} />}
       {tab === "knowledge" && <KnowledgeManager botId={bot.id} isAdmin={isAdmin} />}
       {tab === "catalog" && <CatalogManager botId={bot.id} isAdmin={isAdmin} />}

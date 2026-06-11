@@ -35,6 +35,7 @@ export const catalogAvailability = pgEnum("catalog_availability", [
 ]);
 export const conversationMode = pgEnum("conversation_mode", ["bot", "human", "paused"]);
 export const factOrigin = pgEnum("fact_origin", ["bot", "human"]);
+export const phoneRuleKind = pgEnum("phone_rule_kind", ["allow", "block"]);
 
 /**
  * Estado de plataforma de cada tenant (organización de Clerk). La membresía y
@@ -84,6 +85,9 @@ export const bots = pgTable(
     chatwootInboxIdentifier: text("chatwoot_inbox_identifier"),
     // Token por bot para validar el webhook entrante de Chatwoot.
     chatwootWebhookToken: text("chatwoot_webhook_token"),
+    // Si está activo, el bot solo atiende a números con regla `allow` (lista
+    // blanca). Si está inactivo, atiende a todos salvo los `block` (lista negra).
+    whitelistEnabled: boolean("whitelist_enabled").notNull().default(false),
     // Plantilla que el bot envía al cliente cuando transfiere a un humano (E06/US-012).
     handoffMessage: text("handoff_message")
       .notNull()
@@ -117,6 +121,33 @@ export const botAssignments = pgTable(
     byUser: index("bot_assignments_user_idx").on(t.tenantId, t.userId),
   }),
 );
+
+/**
+ * Reglas de audiencia por bot: lista blanca (`allow`) y lista negra (`block`)
+ * de teléfonos en E.164. La negra siempre aplica; la blanca solo cuando el bot
+ * tiene `whitelistEnabled`. Un número tiene a lo sumo una regla (unique por bot).
+ */
+export const phoneRules = pgTable(
+  "phone_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    phoneE164: text("phone_e164").notNull(),
+    kind: phoneRuleKind("kind").notNull(),
+    note: text("note"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqBotPhone: unique("phone_rules_bot_phone_uq").on(t.botId, t.phoneE164),
+    byBot: index("phone_rules_bot_idx").on(t.botId, t.kind),
+  }),
+);
+
+export type PhoneRuleRow = typeof phoneRules.$inferSelect;
 
 /** Eventos crudos recibidos por webhook (auditoría), scopeados por tenant. */
 export const webhookEvents = pgTable(

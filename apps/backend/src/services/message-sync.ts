@@ -1,6 +1,13 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { bots, channelLinks, processedMessages, tenants, type BotRow } from "../db/schema.js";
+import {
+  bots,
+  channelLinks,
+  phoneRules,
+  processedMessages,
+  tenants,
+  type BotRow,
+} from "../db/schema.js";
 import { chatwoot } from "../integrations/chatwoot.js";
 import { evolution } from "../integrations/evolution.js";
 import { provisionChatwoot } from "./chatwoot-provisioning.js";
@@ -39,6 +46,22 @@ async function accountIdFor(bot: BotRow): Promise<number | null> {
   return tenant?.chatwootAccountId ?? null;
 }
 
+/**
+ * Decide si un teléfono queda fuera de la audiencia del bot:
+ *  - regla `block` para ese número → bloqueado siempre;
+ *  - `whitelistEnabled` y sin regla `allow` → bloqueado (no está en la blanca).
+ */
+async function isPhoneBlocked(bot: BotRow, phone: string): Promise<boolean> {
+  const [rule] = await db
+    .select()
+    .from(phoneRules)
+    .where(and(eq(phoneRules.botId, bot.id), eq(phoneRules.phoneE164, phone)));
+
+  if (rule?.kind === "block") return true;
+  if (bot.whitelistEnabled && rule?.kind !== "allow") return true;
+  return false;
+}
+
 /** Mensaje entrante de WhatsApp (webhook Evolution `messages.upsert`) → Chatwoot. */
 export async function handleInbound(bot: BotRow, data: any): Promise<void> {
   const key = data?.key ?? {};
@@ -57,6 +80,20 @@ export async function handleInbound(bot: BotRow, data: any): Promise<void> {
     if (Number.isFinite(ts) && ts * 1000 < bot.lastConnectedAt.getTime()) {
       return;
     }
+  }
+
+  const phone = jidToE164(remoteJid);
+  if (!phone) {
+    console.warn(`[sync] jid no normalizable: ${remoteJid}`);
+    return;
+  }
+
+  // Lista blanca / negra de audiencia. Bloqueado = ignorar por completo: no se
+  // sincroniza a Chatwoot ni se responde. La negra siempre aplica; la blanca
+  // solo cuando el bot la tiene activada.
+  if (await isPhoneBlocked(bot, phone)) {
+    console.info(`[sync] bot ${bot.id}: ${phone} fuera de audiencia; mensaje ignorado`);
+    return;
   }
 
   let accountId = await accountIdFor(bot);
@@ -80,12 +117,6 @@ export async function handleInbound(bot: BotRow, data: any): Promise<void> {
   // Tras la provisión el inbox está garantizado; este guard reasegura el tipo.
   const inboxId = bot.chatwootInboxId;
   if (!accountId || inboxId == null) return;
-
-  const phone = jidToE164(remoteJid);
-  if (!phone) {
-    console.warn(`[sync] jid no normalizable: ${remoteJid}`);
-    return;
-  }
 
   if (!(await tryMarkProcessed(bot, "evolution", messageId))) return;
 

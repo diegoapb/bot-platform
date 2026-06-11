@@ -1,9 +1,14 @@
 import { Hono } from "hono";
 import { eq, and } from "drizzle-orm";
-import { createBotSchema, updateBotSchema, addChatwootAgentSchema } from "@bot/shared";
+import {
+  createBotSchema,
+  updateBotSchema,
+  addChatwootAgentSchema,
+  createPhoneRuleSchema,
+} from "@bot/shared";
 import type { BotConnection } from "@bot/shared";
 import { db } from "../db/client.js";
-import { bots, botAssignments, tenants, type BotRow } from "../db/schema.js";
+import { bots, botAssignments, phoneRules, tenants, type BotRow } from "../db/schema.js";
 import { requireAuth, requireTenant, requireAdmin, ADMIN_ROLE } from "../middleware/auth.js";
 import { evolution, mapConnectionState, EvolutionError } from "../integrations/evolution.js";
 import { provisionChatwoot, provisionAgent } from "../services/chatwoot-provisioning.js";
@@ -283,4 +288,91 @@ botsRoutes.post("/:id/chatwoot/agents", requireAdmin, async (c) => {
     console.error("[chatwoot:agents]", e);
     return c.json({ ok: false, error: "Chatwoot no disponible. Reintenta." }, 502);
   }
+});
+
+// --- Audiencia: lista blanca / negra de teléfonos --------------------------
+
+/** Normaliza un teléfono a E.164 (`+` + 7..15 dígitos). null si no es válido. */
+function normalizePhone(input: string): string | null {
+  const digits = input.replace(/\D/g, "");
+  if (!/^\d{7,15}$/.test(digits)) return null;
+  return `+${digits}`;
+}
+
+/** Lista las reglas de audiencia del bot. Admin o miembro asignado. */
+botsRoutes.get("/:id/phone-rules", async (c) => {
+  const bot = await getTenantBot(c, c.req.param("id"));
+  if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+  const rows = await db.select().from(phoneRules).where(eq(phoneRules.botId, bot.id));
+  return c.json({
+    ok: true,
+    data: rows.map((r) => ({
+      id: r.id,
+      botId: r.botId,
+      phoneE164: r.phoneE164,
+      kind: r.kind,
+      note: r.note,
+      createdAt: r.createdAt.toISOString(),
+    })),
+  });
+});
+
+/** Agrega (o reemplaza) una regla para un teléfono. Solo admin. */
+botsRoutes.post("/:id/phone-rules", requireAdmin, async (c) => {
+  const bot = await getTenantBot(c, c.req.param("id"));
+  if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+
+  const body = await c.req.json().catch(() => null);
+  const parsed = createPhoneRuleSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ ok: false, error: "Payload inválido", issues: parsed.error.issues }, 400);
+  }
+  const phoneE164 = normalizePhone(parsed.data.phone);
+  if (!phoneE164) {
+    return c.json({ ok: false, error: "Teléfono inválido (usa formato internacional)" }, 400);
+  }
+
+  // Un número tiene una sola regla: si ya existe, se actualiza su tipo/nota.
+  const [row] = await db
+    .insert(phoneRules)
+    .values({
+      tenantId: bot.tenantId,
+      botId: bot.id,
+      phoneE164,
+      kind: parsed.data.kind,
+      note: parsed.data.note ?? null,
+      createdBy: c.get("userId"),
+    })
+    .onConflictDoUpdate({
+      target: [phoneRules.botId, phoneRules.phoneE164],
+      set: { kind: parsed.data.kind, note: parsed.data.note ?? null },
+    })
+    .returning();
+
+  return c.json(
+    {
+      ok: true,
+      data: {
+        id: row!.id,
+        botId: row!.botId,
+        phoneE164: row!.phoneE164,
+        kind: row!.kind,
+        note: row!.note,
+        createdAt: row!.createdAt.toISOString(),
+      },
+    },
+    201,
+  );
+});
+
+/** Elimina una regla de audiencia. Solo admin. */
+botsRoutes.delete("/:id/phone-rules/:ruleId", requireAdmin, async (c) => {
+  const bot = await getTenantBot(c, c.req.param("id"));
+  if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+  const [row] = await db
+    .delete(phoneRules)
+    .where(and(eq(phoneRules.id, c.req.param("ruleId")), eq(phoneRules.botId, bot.id)))
+    .returning({ id: phoneRules.id });
+  if (!row) return c.json({ ok: false, error: "Regla no encontrada" }, 404);
+  return c.json({ ok: true, data: { id: row.id } });
 });
