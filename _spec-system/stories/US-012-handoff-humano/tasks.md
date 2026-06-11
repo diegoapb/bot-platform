@@ -67,7 +67,7 @@ Estado y auditoría (T1–T2), tool del LLM (T3), control manual API+webhook (T4
 
 ## Commits
 
-_(SHAs al ejecutar)_
+- `2416ed2` — implementación E05/E06/E07 (código + UI + migraciones)
 
 ## Research consultada
 

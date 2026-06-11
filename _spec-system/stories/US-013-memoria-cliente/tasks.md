@@ -67,7 +67,7 @@ Modelo (T1), servicio de memoria (T2), extracción LLM + job (T3), inyección al
 
 ## Commits
 
-_(SHAs al ejecutar)_
+- `2416ed2` — implementación E05/E06/E07 (código + UI + migraciones)
 
 ## Research consultada
 

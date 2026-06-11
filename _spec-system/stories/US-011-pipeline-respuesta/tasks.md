@@ -75,7 +75,7 @@ Modelo de conversaciones/trazas (T1), cliente LLM (T2), contextBuilder (T3), rep
 
 ## Commits
 
-_(SHAs al ejecutar)_
+- `2416ed2` — implementación E05/E06/E07 (código + UI + migraciones)
 
 ## Research consultada
 

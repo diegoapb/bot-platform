@@ -67,7 +67,7 @@ Modelo con tsvector (T1), servicio (T2), import CSV (T3), rutas (T4), UI (T5), t
 
 ## Commits
 
-_(SHAs al ejecutar)_
+- `2416ed2` — implementación E05/E06/E07 (código + UI + migraciones)
 
 ## Research consultada
 
