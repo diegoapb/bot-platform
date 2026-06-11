@@ -1,0 +1,156 @@
+<!doctype html>
+<!-- @dsCard group="Brand" name="Brand · Logo · Lockup & clear space" subtitle="Wordmark lockup, clear-space, sizing scale" viewport="880x400" -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="_card.css">
+  <style>
+    .stack { display: flex; flex-direction: column; gap: 14px; }
+    .row { display: flex; gap: 12px; }
+
+    /* — wordmark lockup — */
+    .lockup {
+      flex: 1.4; background: var(--forest);
+      border-radius: 14px;
+      padding: 30px 28px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .lockup .mark { width: 48px; height: 48px; display: block; }
+    .lockup .wm {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: 26px;
+      color: #F5F1E8;
+      letter-spacing: -0.018em;
+      line-height: 1;
+    }
+    .lockup .wm em { font-style: normal; color: #00FF88; }
+    .lockup .meta {
+      margin-left: auto;
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(245,241,232,0.45);
+      line-height: 1.5;
+    }
+    .lockup .meta b { color: #00FF88; font-weight: 500; }
+
+    /* — clear-space diagram — */
+    .clear {
+      flex: 1;
+      background: var(--beige-paper);
+      border: 1px solid rgba(31,41,55,0.10);
+      border-radius: 14px;
+      padding: 22px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .clear .frame {
+      position: relative;
+      width: 168px; height: 168px;
+      display: grid; place-items: center;
+    }
+    .clear .frame::before {
+      content: "";
+      position: absolute; inset: 0;
+      border: 1px dashed rgba(31,41,55,0.30);
+      border-radius: 8px;
+    }
+    .clear .frame::after {
+      content: "";
+      position: absolute; inset: 28px;
+      border: 1px dashed rgba(0,204,110,0.55);
+      border-radius: 999px;
+    }
+    .clear .frame img { width: 112px; height: 112px; position: relative; z-index: 1; }
+    .clear .tick {
+      position: absolute;
+      font-family: var(--font-mono); font-size: 9px;
+      letter-spacing: 0.06em; color: var(--graphite-3);
+    }
+    .clear .tick.top { top: 18px; left: 50%; transform: translateX(-50%); }
+    .clear .tick.bot { bottom: 18px; left: 50%; transform: translateX(-50%); }
+    .clear .tick.lft { left: 18px; top: 50%; transform: translateY(-50%) rotate(-90deg); transform-origin: left center; }
+    .clear .tick.rgt { right: 18px; top: 50%; transform: translateY(-50%) rotate(90deg); transform-origin: right center; }
+
+    /* — sizing scale — */
+    .sizes {
+      background: var(--beige-paper);
+      border: 1px solid rgba(31,41,55,0.10);
+      border-radius: 14px;
+      padding: 22px 26px 18px;
+      display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
+    }
+    .size {
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .size img { display: block; }
+    .size .px {
+      font-family: var(--font-mono); font-size: 10px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--graphite-3);
+    }
+    .size .px b { color: var(--graphite); font-weight: 500; }
+    .size.min { position: relative; }
+    .size.min::after {
+      content: "MIN";
+      position: absolute; top: -8px; right: -12px;
+      background: #00FF88; color: #0D2818;
+      font-family: var(--font-mono); font-size: 8.5px; font-weight: 500;
+      letter-spacing: 0.06em;
+      padding: 2px 5px; border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="pad">
+  <div class="lbl" style="margin-bottom:14px;">Logo · wordmark · clear-space · sizing</div>
+
+  <div class="stack">
+    <div class="row">
+      <!-- Wordmark lockup -->
+      <div class="lockup">
+        <img class="mark" src="../assets/logo-on-forest.svg" alt="">
+        <div class="wm">Open <em>Solvex</em></div>
+        <div class="meta">
+          MARK <b>48&nbsp;PX</b><br>
+          WORDMARK <b>SPACE&nbsp;GROTESK&nbsp;500</b><br>
+          GAP <b>16&nbsp;PX</b>
+        </div>
+      </div>
+
+      <!-- Clear space -->
+      <div class="clear">
+        <div class="frame">
+          <span class="tick top">¼ &nbsp;mark</span>
+          <span class="tick bot">¼ &nbsp;mark</span>
+          <span class="tick lft">¼ &nbsp;mark</span>
+          <span class="tick rgt">¼ &nbsp;mark</span>
+          <img src="../assets/logo-forest-on-light.svg" alt="">
+        </div>
+      </div>
+    </div>
+
+    <!-- Sizing scale -->
+    <div class="sizes">
+      <div class="size">
+        <img src="../assets/logo-forest-on-light.svg" width="80" height="80" alt="">
+        <span class="px">DISPLAY · <b>80&thinsp;+</b></span>
+      </div>
+      <div class="size">
+        <img src="../assets/logo-forest-on-light.svg" width="48" height="48" alt="">
+        <span class="px">DEFAULT · <b>48</b></span>
+      </div>
+      <div class="size">
+        <img src="../assets/logo-forest-on-light.svg" width="32" height="32" alt="">
+        <span class="px">NAV · <b>32</b></span>
+      </div>
+      <div class="size min">
+        <img src="../assets/logo-forest-on-light.svg" width="24" height="24" alt="">
+        <span class="px">FAVICON · <b>24</b></span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

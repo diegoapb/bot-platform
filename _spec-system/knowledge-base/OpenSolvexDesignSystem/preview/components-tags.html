@@ -1,0 +1,83 @@
+<!doctype html>
+<!-- @dsCard group="Brand" name="Components · Tags & chips" subtitle="Status dots · mono labels" viewport="760x200" --><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .section { padding-top:14px; margin-top:14px; border-top:1px solid rgba(31,41,55,0.10); }
+  .section:first-of-type { padding-top:0; margin-top:0; border:0; }
+  .lbl-row { margin-bottom:10px; }
+
+  /* Base tag */
+  .tag {
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--font-mono); font-size:11px;
+    padding:4px 8px; border-radius:6px;
+    letter-spacing:0.02em;
+    border:1px solid transparent;
+  }
+  .tag .dot { width:6px; height:6px; border-radius:50%; }
+
+  /* — Light surface variants — */
+  .tag-neutral { background:#E2DBC7; color:#374151; }
+  .tag-lime    { background:rgba(0,204,110,0.14); color:#00A85A; border-color:rgba(0,204,110,0.4); }
+  .tag-lime-solid { background:#00FF88; color:#0D2818; font-weight:500; }
+  .tag-forest  { background:#0D2818; color:#F5F1E8; }
+  .tag-forest-outline { background:#FFFDF7; color:#0D2818; border-color:#0D2818; }
+
+  /* — Dark surface variants — */
+  .tag-d-neutral     { background:rgba(245,241,232,0.10); color:rgba(245,241,232,0.85); }
+  .tag-d-lime-solid  { background:#00FF88; color:#0D2818; font-weight:500; }
+  .tag-d-lime-ghost  { background:rgba(0,255,136,0.12); color:#00FF88; border-color:rgba(0,255,136,0.4); }
+  .tag-d-beige       { background:#F5F1E8; color:#0D2818; }
+
+  /* Sector chip — outline */
+  .sector {
+    display:inline-block; font-family:var(--font-mono); font-size:11px;
+    letter-spacing:0.06em; text-transform:uppercase; color:#6B7280;
+    padding:5px 10px; border:1px solid rgba(31,41,55,0.14); border-radius:5px;
+  }
+</style>
+</head>
+<body class="pad">
+
+  <div class="section">
+    <div class="lbl lbl-row">Neutral · default · beige-3 chip</div>
+    <div class="row-tight" style="gap:6px;">
+      <span class="tag tag-neutral">react</span>
+      <span class="tag tag-neutral">next.js</span>
+      <span class="tag tag-neutral">supabase</span>
+      <span class="tag tag-neutral">whatsapp api</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="lbl lbl-row">Acento · lima &amp; forest sobre fondo claro</div>
+    <div class="row-tight" style="gap:6px;">
+      <span class="tag tag-lime"><span class="dot" style="background:#00CC6E;"></span>activo</span>
+      <span class="tag tag-lime">+38% mom</span>
+      <span class="tag tag-lime-solid">nuevo</span>
+      <span class="tag tag-forest">premium</span>
+      <span class="tag tag-forest-outline">os</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="lbl lbl-row">Sector · outline + tracking ampliado</div>
+    <div class="row-tight" style="gap:8px;">
+      <span class="sector">HOTELERÍA</span>
+      <span class="sector">RETAIL</span>
+      <span class="sector">SALUD</span>
+      <span class="sector">LOGÍSTICA</span>
+    </div>
+  </div>
+
+  <div style="margin-top:14px; background:#0D2818; padding:18px 20px; border-radius:14px;">
+    <div style="font-family:var(--font-mono); font-size:10px; letter-spacing:0.05em; text-transform:uppercase; color:rgba(245,241,232,0.78); margin-bottom:12px;">— EN FOREST · misma anatomía, lima primario brilla</div>
+    <div class="row-tight" style="gap:6px;">
+      <span class="tag tag-d-neutral">react</span>
+      <span class="tag tag-d-neutral">supabase</span>
+      <span class="tag tag-d-lime-ghost"><span class="dot" style="background:#00FF88; box-shadow:0 0 0 3px rgba(0,255,136,0.22);"></span>activo</span>
+      <span class="tag tag-d-lime-solid">nuevo</span>
+      <span class="tag tag-d-beige">premium</span>
+    </div>
+  </div>
+
+</body></html>

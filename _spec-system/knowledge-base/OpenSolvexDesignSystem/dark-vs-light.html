@@ -1,0 +1,265 @@
+<!doctype html>
+<!-- @dsCard group="Brand" name="Analysis · Dark vs Light" subtitle="Mode comparison + recommendations" viewport="1480x2400" -->
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Open Solvex · Dark vs Light · Análisis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="colors_and_type.css" />
+  <style>
+    body { background: var(--beige); color: var(--graphite); margin: 0; padding: 0; }
+    .wrap { max-width: 1480px; margin: 0 auto; padding: 64px 48px 96px; }
+
+    header.intro { padding: 80px 0 56px; border-bottom: 1px solid var(--line-light); margin-bottom: 56px; }
+    header.intro .eyebrow { margin-bottom: 22px; }
+    header.intro h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(36px, 4.4vw, 60px); line-height: 1.02; letter-spacing: -0.022em; margin: 0; max-width: 22ch; }
+    header.intro h1 em { font-style: normal; color: var(--lime); }
+    header.intro p { margin-top: 22px; max-width: 60ch; }
+
+    .verdict {
+      margin-top: 36px;
+      padding: 26px 28px;
+      background: var(--forest);
+      color: var(--beige);
+      border-radius: var(--r-lg);
+      display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: start;
+    }
+    .verdict .badge {
+      font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--forest);
+      background: var(--lime); padding: 6px 12px; border-radius: 999px;
+      align-self: center;
+    }
+    .verdict h2 { font-family: var(--font-display); font-weight: 500; font-size: 22px; line-height: 1.2; letter-spacing: -0.012em; margin: 0 0 6px; color: var(--beige); }
+    .verdict p { color: rgba(245,241,232,0.78); margin: 0; font-size: 15px; line-height: 1.55; }
+
+    section.cmp { margin-top: 80px; }
+    section.cmp > .head { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 22px; align-items: end; }
+    section.cmp > .head .meta { padding-top: 4px; }
+    section.cmp > .head h2 {
+      font-family: var(--font-display); font-weight: 500; font-size: 28px; letter-spacing: -0.018em; margin: 0;
+      grid-column: 1 / -1;
+    }
+    section.cmp > .head .eyebrow { margin-bottom: 12px; grid-column: 1 / -1; }
+
+    .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+    figure { margin: 0; }
+    figure .tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono); font-size: 11px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 5px 10px; border-radius: 999px;
+      margin-bottom: 10px;
+    }
+    figure.dark .tag { background: var(--forest); color: var(--lime); border: 1px solid rgba(0,255,136,0.3); }
+    figure.light .tag { background: var(--beige-paper); color: var(--graphite); border: 1px solid var(--line-light); }
+    figure img {
+      width: 100%; display: block; border-radius: var(--r);
+      border: 1px solid var(--line-light);
+      background: var(--beige-paper);
+    }
+    figure .notes {
+      margin-top: 14px;
+      display: grid; grid-template-columns: 1fr; gap: 8px;
+      font-size: 14px; color: var(--graphite-2); line-height: 1.5;
+    }
+    figure .notes .n {
+      display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: baseline;
+    }
+    figure .notes .marker { font-family: var(--font-mono); font-size: 11px; color: var(--lime-dim); letter-spacing: 0.04em; }
+    figure .notes .marker.warn { color: #c2410c; }
+    figure .notes .marker.good { color: var(--lime-dim); }
+
+    /* Recommendations card */
+    .recs { margin-top: 96px; }
+    .recs h2 { font-family: var(--font-display); font-weight: 500; font-size: 32px; letter-spacing: -0.018em; margin: 0 0 8px; }
+    .recs > p.lede { max-width: 60ch; margin-bottom: 32px; }
+    .rec-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    @media (max-width: 1020px) { .rec-grid { grid-template-columns: 1fr; } }
+    .rec {
+      background: var(--beige-paper); border: 1px solid var(--line-light); border-radius: var(--r-lg);
+      padding: 26px 26px 28px; min-height: 260px;
+      display: flex; flex-direction: column;
+    }
+    .rec .step { font-family: var(--font-mono); font-size: 12px; color: var(--graphite-3); letter-spacing: 0.04em; }
+    .rec h3 { font-family: var(--font-display); font-weight: 500; font-size: 21px; letter-spacing: -0.012em; margin: 14px 0 10px; }
+    .rec h3 em { font-style: normal; color: var(--lime-dim); }
+    .rec p { font-size: 14.5px; line-height: 1.55; color: var(--graphite-2); margin: 0 0 12px; }
+    .rec ul { list-style: none; padding: 0; margin: auto 0 0; display: flex; flex-direction: column; gap: 8px; }
+    .rec ul li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: baseline; font-size: 13.5px; color: var(--graphite-2); }
+    .rec ul li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--lime); margin-top: 6px; }
+
+    .cta {
+      margin-top: 64px; padding: 30px 32px;
+      background: var(--graphite); color: var(--beige);
+      border-radius: var(--r-lg);
+      display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center;
+    }
+    .cta h3 { font-family: var(--font-display); font-weight: 500; font-size: 22px; margin: 0 0 6px; color: var(--beige); letter-spacing: -0.012em; }
+    .cta p { margin: 0; color: rgba(245,241,232,0.72); font-size: 14.5px; }
+    .cta a {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--lime); color: var(--forest);
+      padding: 12px 20px; border-radius: 999px;
+      font-family: var(--font-body); font-weight: 500; font-size: 14.5px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body data-screen-label="04 Dark vs Light analysis">
+  <div class="wrap">
+
+    <header class="intro">
+      <div class="eyebrow"><span class="num">01</span>&nbsp;&nbsp;ANÁLISIS · MODO OSCURO vs MODO CLARO</div>
+      <h1>Donde el <em>modo oscuro</em> impone marca, el claro pierde dramatismo.</h1>
+      <p class="lede">Tres secciones de la landing IA, lado a lado, mostrando lo que cada modo gana y pierde. La pregunta no es cuál usar — es <strong>cuándo</strong> usar cada uno.</p>
+
+      <div class="verdict">
+        <span class="badge">Recomendación</span>
+        <div>
+          <h2>Mantener <em style="color:#00FF88; font-style:normal;">oscuro</em> como modo canónico. Activar el claro sólo en contextos específicos.</h2>
+          <p>El brand de Open Solvex vive en el contraste forest + lime. Cambiar a claro reduce la intensidad un 60–70 % y deja huecos visuales (botones fantasma desaparecen, las cifras de resultados pierden su glow). El modo claro tiene su lugar — en docs, dashboards y trabajo continuo — pero no como cara principal de la marca.</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- ───── Hero ───── -->
+    <section class="cmp">
+      <div class="head">
+        <div class="eyebrow"><span class="num">02</span>&nbsp;&nbsp;HERO · INICIO</div>
+        <h2>Hero — donde más se nota la diferencia.</h2>
+      </div>
+      <div class="pair">
+        <figure class="dark">
+          <span class="tag"><span style="width:7px;height:7px;border-radius:50%;background:#00FF88;box-shadow:0 0 0 3px rgba(0,255,136,0.25);"></span> Modo oscuro · default</span>
+          <img src="screenshots/01-mode.jpg" alt="Hero en modo oscuro" />
+          <div class="notes">
+            <div class="n"><span class="marker good">✓</span><span>La red neuronal animada se ve nítida sobre el forest. Da sensación de "stack vivo".</span></div>
+            <div class="n"><span class="marker good">✓</span><span><strong>"crecer"</strong> en lime brilla contra el verde oscuro — es la firma de la marca.</span></div>
+            <div class="n"><span class="marker good">✓</span><span>Las cuatro KPIs glowan en lime. El pulso de la badge "Aceptando proyectos" es legible.</span></div>
+          </div>
+        </figure>
+        <figure class="light">
+          <span class="tag"><span style="width:7px;height:7px;border-radius:50%;background:#0D2818;"></span> Modo claro</span>
+          <img src="screenshots/02-mode.jpg" alt="Hero en modo claro" />
+          <div class="notes">
+            <div class="n"><span class="marker warn">!</span><span><strong>"Iniciar sesión" desaparece</strong> — el botón ghost-light tiene borde transparente sobre fondo claro. Bug visual.</span></div>
+            <div class="n"><span class="marker warn">!</span><span><strong>"Ver casos" también desaparece</strong> por la misma razón. Sólo queda el CTA primario visible.</span></div>
+            <div class="n"><span class="marker warn">!</span><span>Red neuronal apenas visible — los puntos beige sobre beige se pierden.</span></div>
+            <div class="n"><span class="marker good">✓</span><span>Las KPIs cambian a forest (no a lime) — decisión inteligente: lime sobre beige tiene poco contraste.</span></div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ───── Results ───── -->
+    <section class="cmp">
+      <div class="head">
+        <div class="eyebrow"><span class="num">03</span>&nbsp;&nbsp;RESULTADOS · KPIs</div>
+        <h2>Las cifras pierden glow pero ganan elegancia.</h2>
+      </div>
+      <div class="pair">
+        <figure class="dark">
+          <span class="tag"><span style="width:7px;height:7px;border-radius:50%;background:#00FF88;"></span> Oscuro · "P&L" lime sobre forest</span>
+          <img src="screenshots/03-mode.jpg" alt="Resultados en modo oscuro" />
+          <div class="notes">
+            <div class="n"><span class="marker good">✓</span><span>+38 %, −42 %, 3.2x en lime — dramático, casi una pantalla de Bloomberg verde.</span></div>
+            <div class="n"><span class="marker good">✓</span><span>El glow radial detrás de la sección refuerza la sensación premium.</span></div>
+          </div>
+        </figure>
+        <figure class="light">
+          <span class="tag"><span style="width:7px;height:7px;border-radius:50%;background:#0D2818;"></span> Claro · KPIs en forest</span>
+          <img src="screenshots/04-mode.jpg" alt="Resultados en modo claro" />
+          <div class="notes">
+            <div class="n"><span class="marker good">✓</span><span>Cifras en forest verde oscuro — legibles, calmadas, no agresivas.</span></div>
+            <div class="n"><span class="marker good">✓</span><span><strong>"P&L"</strong> en el headline mantiene el lime como acento aislado — funciona.</span></div>
+            <div class="n"><span class="marker warn">!</span><span>Pierde el sentido de "métrica que importa" — se siente más como un reporte interno que un sales pitch.</span></div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ───── CTA / form ───── -->
+    <section class="cmp">
+      <div class="head">
+        <div class="eyebrow"><span class="num">04</span>&nbsp;&nbsp;CTA · FORMULARIO</div>
+        <h2>Aquí el modo claro funciona mejor — los inputs son obvios.</h2>
+      </div>
+      <div class="pair">
+        <figure class="dark">
+          <span class="tag"><span style="width:7px;height:7px;border-radius:50%;background:#00FF88;"></span> Oscuro · glass form sobre forest</span>
+          <img src="screenshots/05-mode.jpg" alt="CTA en modo oscuro" />
+          <div class="notes">
+            <div class="n"><span class="marker good">✓</span><span>Form translucent con backdrop-filter — luce sofisticado.</span></div>
+            <div class="n"><span class="marker warn">!</span><span>Inputs un poco difíciles de ubicar — el contraste entre field y panel es bajo.</span></div>
+            <div class="n"><span class="marker good">✓</span><span>El botón "Solicitar diagnóstico" con su glow lime es el CTA más fuerte de la página.</span></div>
+          </div>
+        </figure>
+        <figure class="light">
+          <span class="tag"><span style="width:7px;height:7px;border-radius:50%;background:#0D2818;"></span> Claro · paper form</span>
+          <img src="screenshots/06-mode.jpg" alt="CTA en modo claro" />
+          <div class="notes">
+            <div class="n"><span class="marker good">✓</span><span>Form blanco sobre beige — exactamente lo que un usuario espera de un formulario serio.</span></div>
+            <div class="n"><span class="marker good">✓</span><span>Los inputs siguen visibles, los placeholders se leen mejor.</span></div>
+            <div class="n"><span class="marker warn">!</span><span>Los inputs internos (#FAF6EC sobre #FFFDF7) tienen contraste demasiado bajo — falta un borde más marcado.</span></div>
+            <div class="n"><span class="marker good">✓</span><span>El CTA lime sigue dominando como debe.</span></div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ───── Recomendaciones ───── -->
+    <section class="cmp recs">
+      <div class="eyebrow" style="margin-bottom:16px;"><span class="num">05</span>&nbsp;&nbsp;CÓMO ENMARCAR LA DECISIÓN</h2>
+      </div>
+      <h2>Tres reglas para que el sistema soporte ambos modos sin perder identidad.</h2>
+      <p class="lede">El brief original ya tiene un toggle "Modo oscuro" en el panel de Tweaks. La decisión es de uso y de fixes — no hay que reescribir tokens.</p>
+
+      <div class="rec-grid">
+        <article class="rec">
+          <span class="step">REGLA 01</span>
+          <h3>Oscuro = marca. Claro = <em>trabajo</em>.</h3>
+          <p>El modo oscuro es la cara pública del producto: landing, propuestas, decks, redes. El claro es para superficies donde el usuario pasa &gt; 10 min: dashboards, docs internos, panel de admin del cliente.</p>
+          <ul>
+            <li>Default <strong>oscuro</strong> en marketing y comercial</li>
+            <li>Default <strong>claro</strong> en herramientas internas</li>
+            <li>El toggle existe para preferencia, no para personalidad</li>
+          </ul>
+        </article>
+
+        <article class="rec">
+          <span class="step">REGLA 02</span>
+          <h3>Arreglar los <em>3 huecos</em> del modo claro.</h3>
+          <p>El claro tiene tres bugs visuales detectables sin entrar a especificar — los CSS overrides existen pero quedan a medias. Una sesión de pulido los resuelve.</p>
+          <ul>
+            <li>Botones ghost necesitan borde &gt; 0.18 en claro</li>
+            <li>Inputs deberían tener borde más marcado sobre paper</li>
+            <li>La red neuronal en claro: bajar densidad y subir contraste o reemplazar por curva</li>
+          </ul>
+        </article>
+
+        <article class="rec">
+          <span class="step">REGLA 03</span>
+          <h3>Mantener <em>secciones alternadas</em> dentro de un solo modo.</h3>
+          <p>La landing actual ya mezcla forest y beige por secciones — esa es la pieza más fuerte del sistema. Un toggle no debería romperlo: forzar todo a claro pierde el ritmo visual.</p>
+          <ul>
+            <li>Hero oscuro → pillars claro → results oscuro → cases claro → CTA oscuro</li>
+            <li>El "modo claro" debería ser: ALTERNANCIA SUAVE (beige + beige-2) en vez de forzar todo a claro</li>
+            <li>Considera renombrar el toggle: <em>"Tema oscuro / tema documento"</em></li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="cta">
+        <div>
+          <h3>¿Avanzamos en alguna de estas?</h3>
+          <p>Puedo (1) arreglar los tres huecos del modo claro hoy, (2) construir el "modo documento" alterno descrito en la regla 03, o (3) dejar el sistema como está y sólo documentar la regla 01.</p>
+        </div>
+        <a href="#" onclick="alert('Cuéntame en el chat cuál quieres y empiezo.'); return false;">Decidir &nbsp;→</a>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="bg" cx="80%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#00FF88" stop-opacity="0.12"></stop>
+      <stop offset="100%" stop-color="#0D2818" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="bg2" cx="10%" cy="90%" r="60%">
+      <stop offset="0%" stop-color="#00FF88" stop-opacity="0.06"></stop>
+      <stop offset="100%" stop-color="#0D2818" stop-opacity="0"></stop>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="360" fill="#0D2818"></rect>
+  <rect width="800" height="360" fill="url(#bg)"></rect>
+  <rect width="800" height="360" fill="url(#bg2)"></rect>
+  <g stroke="#00FF88" stroke-opacity="0.35" stroke-width="0.8" fill="none">
+    <line x1="120" y1="80" x2="260" y2="140"></line>
+    <line x1="260" y1="140" x2="180" y2="240"></line>
+    <line x1="260" y1="140" x2="420" y2="100"></line>
+    <line x1="260" y1="140" x2="400" y2="220"></line>
+    <line x1="420" y1="100" x2="560" y2="180"></line>
+    <line x1="400" y1="220" x2="560" y2="180"></line>
+    <line x1="400" y1="220" x2="540" y2="290"></line>
+    <line x1="560" y1="180" x2="700" y2="120"></line>
+    <line x1="560" y1="180" x2="680" y2="240"></line>
+    <line x1="180" y1="240" x2="100" y2="310"></line>
+    <line x1="120" y1="80" x2="60" y2="180"></line>
+  </g>
+  <g fill="#F5F1E8">
+    <circle cx="120" cy="80" r="2.6"></circle>
+    <circle cx="260" cy="140" r="3.2"></circle>
+    <circle cx="180" cy="240" r="2.6"></circle>
+    <circle cx="420" cy="100" r="3.0"></circle>
+    <circle cx="400" cy="220" r="2.6"></circle>
+    <circle cx="560" cy="180" r="3.4"></circle>
+    <circle cx="700" cy="120" r="2.6"></circle>
+    <circle cx="680" cy="240" r="2.6"></circle>
+    <circle cx="540" cy="290" r="2.4"></circle>
+    <circle cx="100" cy="310" r="2.2"></circle>
+    <circle cx="60" cy="180" r="2.2"></circle>
+  </g>
+  <g fill="#00FF88">
+    <circle cx="260" cy="140" r="4" opacity="0.6"></circle>
+    <circle cx="560" cy="180" r="4" opacity="0.6"></circle>
+  </g>
+</svg>

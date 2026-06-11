@@ -1,0 +1,191 @@
+<!doctype html>
+<!-- @dsCard group="Brand" name="Components · Process timeline" subtitle="4-step lime line on scroll" viewport="760x260" --><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  :root {
+    --node-size: 44px;
+    --rail-y: 22px;       /* node center vertically */
+    --rail-edge: 12.5%;   /* (100% / steps) / 2  →  centers rail on first/last node */
+  }
+
+  .timeline {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);   /* 4 equal columns → rail edge math holds */
+    column-gap: 0;
+    padding: 28px 0 8px;
+  }
+
+  /* Connector rail — top aligned to node CENTER, spans first-node-center to last-node-center */
+  .rail {
+    position: absolute;
+    top: calc(28px + var(--rail-y) - 1px);
+    left: var(--rail-edge);
+    right: var(--rail-edge);
+    height: 2px;
+    background-image: repeating-linear-gradient(90deg, rgba(31,41,55,0.22) 0 4px, transparent 4px 10px);
+  }
+  .rail-fill {
+    position: absolute;
+    top: calc(28px + var(--rail-y) - 1px);
+    left: var(--rail-edge);
+    height: 2px;
+    background: linear-gradient(90deg, #00CC6E 0%, #00FF88 100%);
+    border-radius: 2px;
+    /* fill from first-node-center to ACTIVE-node-center.
+       For 4 steps, segment = (100% - 2 × edge) / (N - 1) = 75% / 3 = 25%.
+       active = step index 2 (zero-indexed) → 2 × 25% = 50% */
+    width: 50%;
+  }
+  .rail-fill::after {
+    content: "";
+    position: absolute;
+    right: -3px; top: 50%;
+    width: 8px; height: 8px;
+    background: #00FF88;
+    border-radius: 2px;
+    transform: translate(50%, -50%) rotate(45deg);
+    box-shadow: 0 0 0 4px rgba(0,255,136,0.18);
+  }
+
+  /* Each step centered in its column so node-center === column-center === rail anchor */
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 12px;
+  }
+
+  .node {
+    width: var(--node-size);
+    height: var(--node-size);
+    border-radius: 12px;
+    background: #FFFDF7;
+    border: 1px solid rgba(31,41,55,0.14);
+    display: grid; place-items: center;
+    font-family: var(--font-mono); font-weight: 600;
+    font-size: 13px;
+    color: #6B7280;
+    letter-spacing: 0.02em;
+    position: relative;
+    z-index: 2;
+    transition: all .3s ease;
+  }
+  .node::before {
+    content: "";
+    position: absolute; inset: -4px;
+    border-radius: 14px;
+    border: 1px solid rgba(31,41,55,0.06);
+    transition: all .3s ease;
+  }
+  .step.done .node {
+    background: #0D2818;
+    color: #00FF88;
+    border-color: #0D2818;
+  }
+  .step.done .node::before { border-color: rgba(13,40,24,0.14); }
+
+  .step.active .node {
+    background: #00FF88;
+    color: #0D2818;
+    border-color: #00FF88;
+    box-shadow: 0 12px 24px -10px rgba(0,255,136,0.45);
+  }
+  .step.active .node::before {
+    border-color: rgba(0,255,136,0.4);
+    inset: -8px;
+    border-radius: 18px;
+  }
+
+  /* Drop tick — exact same vertical line everywhere */
+  .drop {
+    width: 1px; height: 18px;
+    background: rgba(31,41,55,0.14);
+    margin: 6px 0 10px;
+  }
+  .step.active .drop { background: linear-gradient(180deg, #00FF88 0%, rgba(0,255,136,0) 100%); }
+
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: #6B7280;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .step.active .meta { color: #00A85A; }
+  .dur {
+    display: inline-block;
+    padding: 2px 7px;
+    border: 1px solid rgba(31,41,55,0.14);
+    border-radius: 4px;
+    font-size: 10px;
+    color: #6B7280;
+    letter-spacing: 0.04em;
+  }
+  .step.active .dur {
+    border-color: rgba(0,168,90,0.4);
+    color: #00A85A;
+    background: rgba(0,255,136,0.06);
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.15;
+    letter-spacing: -0.012em;
+    color: #1F2937;
+    margin: 4px 0 4px;
+  }
+  p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #6B7280;
+    max-width: 22ch;
+  }
+</style>
+</head>
+<body class="pad">
+  <div class="timeline">
+    <div class="rail"></div>
+    <div class="rail-fill"></div>
+
+    <div class="step done">
+      <div class="node">01</div>
+      <div class="drop"></div>
+      <div class="meta"><span>FASE 01</span><span class="dur">1–2 SEM</span></div>
+      <h3>Diagnóstico</h3>
+      <p>Workshops y métricas baseline.</p>
+    </div>
+
+    <div class="step done">
+      <div class="node">02</div>
+      <div class="drop"></div>
+      <div class="meta"><span>FASE 02</span><span class="dur">2–3 SEM</span></div>
+      <h3>Diseño</h3>
+      <p>Arquitectura y prototipos.</p>
+    </div>
+
+    <div class="step active">
+      <div class="node">03</div>
+      <div class="drop"></div>
+      <div class="meta"><span>● ACTIVO</span><span class="dur">4–8 SEM</span></div>
+      <h3>Construcción</h3>
+      <p>Sprints semanales, deploy continuo.</p>
+    </div>
+
+    <div class="step">
+      <div class="node">04</div>
+      <div class="drop"></div>
+      <div class="meta"><span>FASE 04</span><span class="dur">CONTINUO</span></div>
+      <h3>Operación</h3>
+      <p>Lanzamiento y soporte.</p>
+    </div>
+  </div>
+</body></html>

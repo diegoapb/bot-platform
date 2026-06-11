@@ -1,0 +1,101 @@
+<!doctype html>
+<!-- @dsCard group="Brand" name="Components · Stack card" subtitle="Open-source tool tile (Hotelería)" viewport="760x280" --><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+  .stack {
+    background:#FFFDF7;
+    border:1px solid rgba(31,41,55,0.10);
+    border-radius:20px;
+    padding:20px 20px 22px;
+    display:flex; flex-direction:column;
+  }
+  .stack-dark {
+    background:#133123;
+    border:1px solid rgba(245,241,232,0.10);
+    color:#F5F1E8;
+  }
+
+  .head { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .logo {
+    width:38px; height:38px; border-radius:10px;
+    background:#0D2818; color:#00FF88;
+    display:grid; place-items:center;
+    font-family:var(--font-mono); font-weight:700; font-size:13px;
+    flex-shrink:0;
+  }
+  .stack-dark .logo { background:#00FF88; color:#0D2818; }
+
+  .name {
+    font-family:var(--font-display); font-weight:500; font-size:16px;
+    letter-spacing:-0.012em; line-height:1.1;
+    color:#1F2937;
+  }
+  .stack-dark .name { color:#F5F1E8; }
+  .cat {
+    font-family:var(--font-mono); font-size:10.5px;
+    letter-spacing:0.04em; color:#6B7280; margin-top:3px;
+  }
+  .stack-dark .cat { color:rgba(245,241,232,0.62); }
+
+  /* OS badge — light variant uses lime-dim with proper contrast */
+  .os {
+    margin-left:auto;
+    font-family:var(--font-mono); font-size:10px; font-weight:600;
+    letter-spacing:0.08em;
+    padding:4px 8px; border-radius:5px;
+    background:rgba(0,204,110,0.16);
+    border:1px solid #00CC6E;
+    color:#00A85A;
+  }
+  .stack-dark .os {
+    background:rgba(0,255,136,0.14);
+    border:1px solid rgba(0,255,136,0.5);
+    color:#00FF88;
+  }
+
+  p { margin:0; font-size:13.5px; line-height:1.55; color:#374151; }
+  .stack-dark p { color:rgba(245,241,232,0.78); }
+
+  .foot {
+    margin-top:18px;
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--font-mono); font-size:11.5px;
+    color:#6B7280; letter-spacing:0.02em;
+  }
+  .stack-dark .foot { color:rgba(245,241,232,0.55); }
+  .foot .arrow { color:#00CC6E; }
+  .stack-dark .foot .arrow { color:#00FF88; }
+</style>
+</head>
+<body class="pad">
+  <div class="grid">
+
+    <article class="stack">
+      <div class="head">
+        <div class="logo">Cal</div>
+        <div style="flex:1; min-width:0;">
+          <div class="name">Cal.com</div>
+          <div class="cat">RESERVAS</div>
+        </div>
+        <span class="os">OS</span>
+      </div>
+      <p>Motor de reservas auto-hospedado. Sin comisiones, conectado a tu calendario y CRM.</p>
+      <div class="foot"><span class="arrow">→</span> docs.cal.com</div>
+    </article>
+
+    <article class="stack stack-dark">
+      <div class="head">
+        <div class="logo">Lis</div>
+        <div style="flex:1; min-width:0;">
+          <div class="name">Listmonk</div>
+          <div class="cat">EMAIL</div>
+        </div>
+        <span class="os">OS</span>
+      </div>
+      <p>Newsletter y campañas transaccionales que tú controlas, sin cuotas por contacto.</p>
+      <div class="foot"><span class="arrow">→</span> listmonk.app</div>
+    </article>
+
+  </div>
+</body></html>

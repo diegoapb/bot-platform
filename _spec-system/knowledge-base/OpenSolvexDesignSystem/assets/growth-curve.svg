@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="line" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00FF88" stop-opacity="0"></stop>
+      <stop offset="60%" stop-color="#00FF88" stop-opacity="1"></stop>
+      <stop offset="100%" stop-color="#00FF88" stop-opacity="1"></stop>
+    </linearGradient>
+    <linearGradient id="fillg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00FF88" stop-opacity="0.16"></stop>
+      <stop offset="100%" stop-color="#00FF88" stop-opacity="0"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="360" fill="#0D2818"></rect>
+  <g stroke="rgba(245,241,232,0.08)" stroke-width="1">
+    <line x1="0" y1="60" x2="800" y2="60"></line>
+    <line x1="0" y1="140" x2="800" y2="140"></line>
+    <line x1="0" y1="220" x2="800" y2="220"></line>
+    <line x1="0" y1="300" x2="800" y2="300"></line>
+  </g>
+  <path d="M 40 310 C 200 300, 280 280, 360 240 S 540 110, 760 50 L 760 360 L 40 360 Z" fill="url(#fillg)"></path>
+  <path d="M 40 310 C 200 300, 280 280, 360 240 S 540 110, 760 50" fill="none" stroke="url(#line)" stroke-width="2.4" stroke-linecap="round"></path>
+  <g fill="#00FF88">
+    <circle cx="40" cy="310" r="3"></circle>
+    <circle cx="200" cy="300" r="3"></circle>
+    <circle cx="360" cy="240" r="3.6"></circle>
+    <circle cx="540" cy="140" r="3.6"></circle>
+    <circle cx="760" cy="50" r="4.4"></circle>
+  </g>
+</svg>

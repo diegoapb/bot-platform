@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tu Solvex · Design System — Logo</title>
+  <meta name="description" content="Componente Logo del design system Tu Solvex. Descargas en SVG y PNG, variantes lockup / mark / wordmark, fondos forest / beige / mono." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* ──────────────────────────────────────────────
+       Design System — sólo páginas de DS, no afecta a la landing
+       ────────────────────────────────────────────── */
+    body { background: var(--beige); color: var(--graphite); }
+
+    .ds-shell { min-height: 100vh; padding: 64px 0 120px; }
+    .ds-eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--graphite-3); margin: 0 0 16px;
+    }
+    .ds-eyebrow::before {
+      content: ""; width: 22px; height: 1px; background: var(--lime);
+    }
+    .ds-h1 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: clamp(40px, 5vw, 68px); line-height: 1.0;
+      letter-spacing: -0.025em; margin: 0 0 18px; text-wrap: balance;
+    }
+    .ds-h1 em { font-style: normal; color: var(--lime-dim); }
+    .ds-lede { color: var(--graphite-2); max-width: 60ch; line-height: 1.5; font-size: 17px; }
+
+    .ds-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 28px; border-bottom: 1px solid var(--line-light);
+      margin-bottom: 56px;
+    }
+    .ds-topbar a.brand { color: var(--graphite); }
+    .ds-back {
+      font-family: var(--font-mono); font-size: 12px; color: var(--graphite-3);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .ds-back:hover { color: var(--graphite); }
+
+    /* ── Section ── */
+    .ds-section { margin-top: 88px; }
+    .ds-section-head {
+      display: flex; align-items: end; justify-content: space-between; gap: 32px;
+      margin-bottom: 28px; padding-bottom: 14px; border-bottom: 1px solid var(--line-light);
+    }
+    .ds-h2 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: 28px; letter-spacing: -0.018em; margin: 0;
+    }
+    .ds-meta { font-family: var(--font-mono); font-size: 12px; color: var(--graphite-3); }
+
+    /* ── Hero card (mark grande) ── */
+    .ds-hero {
+      display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px;
+      margin-top: 32px;
+    }
+    @media (max-width: 880px) { .ds-hero { grid-template-columns: 1fr; } }
+
+    .ds-hero-mark {
+      background: var(--forest); border-radius: 20px;
+      min-height: 460px; display: grid; place-items: center;
+      position: relative; overflow: hidden;
+    }
+    .ds-hero-mark::before {
+      content: ""; position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,136,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,136,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+    }
+    .ds-hero-mark .ds-floater { position: relative; z-index: 1; }
+
+    .ds-hero-meta {
+      background: #fff; border: 1px solid var(--line-light);
+      border-radius: 20px; padding: 32px;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .ds-meta-row {
+      display: flex; justify-content: space-between; gap: 16px;
+      padding: 14px 0; border-bottom: 1px dashed var(--line-light);
+      font-family: var(--font-mono); font-size: 13px;
+    }
+    .ds-meta-row:last-child { border-bottom: none; }
+    .ds-meta-row .k { color: var(--graphite-3); text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; }
+    .ds-meta-row .v { color: var(--graphite); }
+
+    /* ── Variant grid ── */
+    .ds-grid {
+      display: grid; gap: 20px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (max-width: 720px) { .ds-grid { grid-template-columns: 1fr; } }
+    .ds-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 980px) { .ds-grid.cols-3 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .ds-grid.cols-3 { grid-template-columns: 1fr; } }
+
+    .ds-card {
+      border: 1px solid var(--line-light);
+      border-radius: 18px; overflow: hidden; background: #fff;
+      display: flex; flex-direction: column;
+    }
+    .ds-card-stage {
+      min-height: 180px; padding: 36px;
+      display: grid; place-items: center;
+      position: relative;
+    }
+    .ds-card-stage[data-bg="forest"]    { background: var(--forest); }
+    .ds-card-stage[data-bg="beige"]     { background: var(--beige); }
+    .ds-card-stage[data-bg="lime"]      { background: var(--lime); }
+    .ds-card-stage[data-bg="graphite"]  { background: var(--graphite); }
+    .ds-card-stage[data-bg="white"]     { background: #fff; }
+    .ds-card-stage[data-bg="checkered"] {
+      background:
+        linear-gradient(45deg, #ECE6D7 25%, transparent 25%),
+        linear-gradient(-45deg, #ECE6D7 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #ECE6D7 75%),
+        linear-gradient(-45deg, transparent 75%, #ECE6D7 75%);
+      background-size: 18px 18px;
+      background-position: 0 0, 0 9px, 9px -9px, -9px 0;
+      background-color: var(--beige);
+    }
+    .ds-card-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 14px 18px; border-top: 1px solid var(--line-light);
+      background: #fff;
+    }
+    .ds-card-label {
+      font-family: var(--font-mono); font-size: 11.5px;
+      color: var(--graphite-3); text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .ds-card-label strong { color: var(--graphite); font-weight: 500; }
+
+    .ds-actions { display: inline-flex; gap: 6px; }
+    .ds-iconbtn {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--line-light);
+      display: inline-grid; place-items: center;
+      font-family: var(--font-mono); font-size: 10.5px; font-weight: 600;
+      color: var(--graphite-2); background: #fff;
+      transition: all .18s ease; letter-spacing: 0.04em;
+    }
+    .ds-iconbtn:hover {
+      border-color: var(--forest); color: var(--forest);
+      transform: translateY(-1px);
+    }
+    .ds-iconbtn.primary {
+      background: var(--forest); color: var(--lime); border-color: var(--forest);
+    }
+    .ds-iconbtn.primary:hover { background: var(--graphite); color: var(--lime); }
+
+    .ds-dl-row {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .ds-dl-row .sep { width: 1px; height: 18px; background: var(--line-light); margin: 0 2px; }
+
+    /* ── Color & Type quick reference ── */
+    .ds-swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 720px) { .ds-swatches { grid-template-columns: repeat(2, 1fr); } }
+    .ds-swatch {
+      border-radius: 14px; overflow: hidden; border: 1px solid var(--line-light);
+      background: #fff;
+    }
+    .ds-swatch-chip { height: 110px; }
+    .ds-swatch-meta { padding: 12px 14px; font-family: var(--font-mono); font-size: 12px; }
+    .ds-swatch-meta .name { color: var(--graphite); margin-bottom: 4px; font-weight: 500; }
+    .ds-swatch-meta .hex { color: var(--graphite-3); }
+
+    .ds-type-row {
+      display: grid; grid-template-columns: 200px 1fr; gap: 24px;
+      padding: 22px 0; border-bottom: 1px dashed var(--line-light);
+      align-items: baseline;
+    }
+    .ds-type-row:last-child { border-bottom: none; }
+    .ds-type-row .label {
+      font-family: var(--font-mono); font-size: 12px; color: var(--graphite-3);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .ds-type-row .label small { display: block; color: var(--graphite); text-transform: none; letter-spacing: 0; margin-top: 4px; font-size: 13px; }
+
+    /* ── Clear-space + min-size guides ── */
+    .ds-guides { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 880px) { .ds-guides { grid-template-columns: 1fr; } }
+    .ds-clearspace {
+      background: var(--beige-2); border-radius: 18px; padding: 40px;
+      display: grid; place-items: center; min-height: 280px; position: relative;
+    }
+    .ds-clearspace::before {
+      content: ""; position: absolute; inset: 28px;
+      border: 1px dashed rgba(31,41,55,0.25); border-radius: 12px;
+    }
+    .ds-min {
+      background: #fff; border: 1px solid var(--line-light); border-radius: 18px;
+      padding: 32px; display: flex; flex-direction: column; gap: 20px; min-height: 280px;
+    }
+    .ds-min .row { display: flex; align-items: center; gap: 18px; }
+    .ds-min .row .lbl { font-family: var(--font-mono); font-size: 11px; color: var(--graphite-3); text-transform: uppercase; letter-spacing: 0.06em; min-width: 60px; }
+
+    /* Bulk download CTA */
+    .ds-bulk {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; padding: 22px 28px; border-radius: 16px;
+      background: var(--forest); color: var(--beige);
+      margin-top: 32px;
+    }
+    .ds-bulk h4 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 20px; }
+    .ds-bulk p { margin: 0; color: rgba(245,241,232,0.65); font-size: 14px; }
+    .ds-bulk .btn { background: var(--lime); color: var(--forest); height: 44px; padding: 0 20px; font-weight: 600; }
+
+    /* Toast */
+    .ds-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--forest); color: var(--lime);
+      font-family: var(--font-mono); font-size: 13px;
+      padding: 12px 18px; border-radius: 999px; opacity: 0;
+      transition: all .25s ease; pointer-events: none; z-index: 100;
+      box-shadow: 0 12px 30px -10px rgba(0,0,0,0.25);
+    }
+    .ds-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="logo.jsx"></script>
+  <script type="text/babel" src="fb-banner.jsx"></script>
+  <script type="text/babel" src="ds-page.jsx"></script>
+</body>
+</html>

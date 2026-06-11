@@ -1,0 +1,251 @@
+/* hospitality.css — sub-landing specific styles, layered on top of styles.css */
+
+.hot-hero { min-height: 720px; }
+
+/* Stack grid */
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+@media (max-width: 1020px) { .stack-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .stack-grid { grid-template-columns: 1fr; } }
+
+.stack-card {
+  background: #FFFDF7;
+  border: 1px solid var(--line-light);
+  border-radius: var(--r-lg);
+  padding: 22px 22px 24px;
+  display: flex; flex-direction: column;
+  transition: border-color .3s ease, transform .3s ease, box-shadow .3s ease;
+  min-height: 200px;
+}
+.stack-card:hover {
+  border-color: var(--lime);
+  box-shadow: 0 0 0 1px var(--lime), 0 18px 40px -28px rgba(0,255,136,0.4);
+  transform: translateY(-2px);
+}
+.stack-head {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.stack-logo {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: var(--forest); color: var(--lime);
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-weight: 700; font-size: 14px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+.stack-name {
+  font-family: var(--font-display); font-weight: 500; font-size: 17px;
+  color: var(--graphite); letter-spacing: -0.012em;
+  line-height: 1.1;
+}
+.stack-cat {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--graphite-3); letter-spacing: 0.04em;
+  margin-top: 3px;
+}
+.stack-os {
+  margin-left: auto;
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--lime); letter-spacing: 0.06em;
+  padding: 3px 7px; border-radius: 5px;
+  background: rgba(0,255,136,0.10);
+  border: 1px solid rgba(0,255,136,0.25);
+}
+.stack-card p {
+  margin: 0; color: var(--graphite-2);
+  font-size: 14px; line-height: 1.55;
+}
+
+.stack-foot {
+  margin-top: 32px;
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--graphite-3); letter-spacing: 0.02em;
+}
+.stack-foot .marker { color: var(--lime); }
+
+/* Cases — alternating big-format */
+.hot-cases-list {
+  display: flex; flex-direction: column; gap: 28px;
+}
+.hot-case {
+  background: #FFFDF7;
+  border: 1px solid var(--line-light);
+  border-radius: var(--r-lg);
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  overflow: hidden;
+  transition: border-color .3s ease, box-shadow .3s ease;
+}
+.hot-case:hover {
+  border-color: var(--graphite);
+  box-shadow: 0 22px 50px -30px rgba(31,41,55,0.3);
+}
+.hot-case:nth-child(even) { grid-template-columns: 1.15fr 0.85fr; }
+.hot-case:nth-child(even) .hot-case-visual { order: 2; }
+.hot-case:nth-child(even) .hot-case-body { order: 1; }
+@media (max-width: 880px) {
+  .hot-case, .hot-case:nth-child(even) { grid-template-columns: 1fr; }
+  .hot-case:nth-child(even) .hot-case-visual { order: 0; }
+  .hot-case:nth-child(even) .hot-case-body { order: 0; }
+}
+
+.hot-case-visual {
+  background: var(--forest);
+  position: relative;
+  min-height: 320px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hot-case-visual::before {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(60% 70% at 30% 30%, rgba(0,255,136,0.18), transparent 65%),
+    radial-gradient(50% 60% at 80% 80%, rgba(0,255,136,0.08), transparent 60%);
+}
+.hot-case-num {
+  position: absolute; top: 22px; left: 22px;
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--lime); letter-spacing: 0.06em;
+  z-index: 2;
+}
+.hot-case-pattern {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(0deg, rgba(245,241,232,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,241,232,0.04) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(70% 100% at 50% 50%, black 30%, transparent 80%);
+}
+.hot-case-visual[data-img="lomas"]::after {
+  content: "";
+  position: absolute; inset: 0;
+  background:
+    /* abstract building silhouettes */
+    linear-gradient(to top, rgba(0,255,136,0.0) 0, rgba(0,255,136,0.0) 30%, transparent 30.1%),
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(245,241,232,0.05) 22px 23px);
+}
+.hot-case-visual[data-img="bahia"] {
+  background: linear-gradient(160deg, #0D2818 0%, #0A1F12 60%, #133123 100%);
+}
+.hot-case-visual[data-img="posada"] {
+  background: linear-gradient(180deg, #0D2818 0%, #0A1F12 100%);
+}
+
+/* Iconographic decorations layered on visuals */
+.hot-case-visual[data-img="lomas"] .hot-case-pattern::before {
+  content: "💬"; position: absolute; right: 32px; bottom: 28px; font-size: 80px;
+  filter: grayscale(1) brightness(2); opacity: 0.18;
+}
+.hot-case-visual[data-img="bahia"] .hot-case-pattern::before {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 220px; height: 220px; border-radius: 50%;
+  border: 1px dashed rgba(0,255,136,0.4);
+}
+.hot-case-visual[data-img="bahia"] .hot-case-pattern::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px; height: 140px; border-radius: 50%;
+  border: 1px solid rgba(0,255,136,0.6);
+  box-shadow: 0 0 60px rgba(0,255,136,0.3);
+}
+.hot-case-visual[data-img="posada"] .hot-case-pattern::after {
+  content: ""; position: absolute; right: 30px; bottom: 30px;
+  width: 180px; height: 100px;
+  background:
+    linear-gradient(180deg, transparent 60%, rgba(0,255,136,0.05) 60%, rgba(0,255,136,0.05) 65%, transparent 65%),
+    repeating-linear-gradient(90deg, transparent 0 12px, rgba(245,241,232,0.06) 12px 13px);
+  border-left: 1px solid rgba(245,241,232,0.12);
+  border-bottom: 1px solid rgba(245,241,232,0.12);
+}
+
+.hot-case-body {
+  padding: 36px 36px 32px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+@media (max-width: 560px) { .hot-case-body { padding: 26px 22px; } }
+.hot-case-tag {
+  display: inline-block;
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--graphite-3);
+  padding: 4px 9px; border: 1px solid var(--line-light); border-radius: 5px;
+}
+.hot-case-stack {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-top: 20px;
+}
+.hot-case-stack .tag {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 5px 10px; border-radius: 6px;
+  background: var(--beige-3); color: var(--graphite-2);
+  letter-spacing: 0.02em;
+}
+.hot-case-kpis {
+  margin-top: 24px;
+  display: flex; gap: 32px; flex-wrap: wrap;
+  padding-top: 22px;
+  border-top: 1px dashed var(--line-light);
+}
+.hot-case-kpi .v {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 30px; line-height: 1; letter-spacing: -0.02em;
+  color: var(--graphite);
+}
+.hot-case-kpi .l {
+  margin-top: 6px;
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--graphite-3); letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Solutions list */
+.hot-solutions {
+  padding: 110px 0 120px;
+  background: var(--beige);
+}
+.hot-sol-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+}
+@media (max-width: 880px) { .hot-sol-grid { grid-template-columns: 1fr; } }
+.hot-sol-col {
+  background: #FFFDF7;
+  border: 1px solid var(--line-light);
+  border-radius: var(--r-lg);
+  padding: 28px 28px 30px;
+}
+.hot-sol-head {
+  display: flex; align-items: baseline; gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line-light);
+  margin-bottom: 18px;
+}
+.hot-sol-num {
+  font-family: var(--font-mono); font-size: 12px;
+  color: var(--lime); letter-spacing: 0.06em;
+}
+.hot-sol-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.hot-sol-list li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 14.5px; line-height: 1.5; color: var(--graphite-2);
+}
+.hot-sol-list .bullet {
+  flex-shrink: 0;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(0,255,136,0.15); color: var(--forest);
+  display: grid; place-items: center;
+  margin-top: 1px;
+}
+
+/* Light mode overrides reuse styles.css */
+body.light-mode .hot-case-visual { background: var(--beige-2); }
+body.light-mode .hot-case-num { color: var(--forest); }
+body.light-mode .hot-case-visual::before {
+  background:
+    radial-gradient(60% 70% at 30% 30%, rgba(13,40,24,0.10), transparent 65%);
+}

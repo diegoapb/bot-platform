@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Open Solvex — Software & IA que hace crecer tu negocio</title>
+  <meta name="description" content="Consultoría de software e inteligencia artificial. Diseñamos soluciones a medida para impulsar ventas, atraer clientes y elevar la calidad del servicio." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-screen-label="01 IA Landing">
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="icons.jsx"></script>
+  <script type="text/babel" src="neural-network.jsx"></script>
+  <script type="text/babel" src="sections.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "dark": true,
+      "heroVariant": "neural"
+    }/*EDITMODE-END*/;
+
+    // Honour ?mode=light|dark from URL so a comparison page can pin each iframe.
+    const URL_MODE = new URLSearchParams(location.search).get('mode');
+    if (URL_MODE === 'light') TWEAK_DEFAULTS.dark = false;
+    if (URL_MODE === 'dark')  TWEAK_DEFAULTS.dark = true;
+
+    function App() {
+      const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+      React.useEffect(() => {
+        document.body.classList.toggle('light-mode', !t.dark);
+      }, [t.dark]);
+
+      return (
+        <React.Fragment>
+          <Nav />
+          <Hero variant={t.heroVariant} />
+          <Pillars />
+          <Services />
+          <Results />
+          <Process />
+          <Cases />
+          <Sectors />
+          <CTAForm />
+          <Footer />
+
+          <TweaksPanel>
+            <TweakSection label="Tema" />
+            <TweakToggle label="Modo oscuro" value={t.dark} onChange={(v) => setTweak('dark', v)} />
+            <TweakSection label="Hero" />
+            <TweakRadio
+              label="Visual"
+              value={t.heroVariant}
+              options={[
+                { value: 'neural', label: 'Red neuronal' },
+                { value: 'growth', label: 'Curva crecimiento' },
+              ]}
+              onChange={(v) => setTweak('heroVariant', v)}
+            />
+          </TweaksPanel>
+        </React.Fragment>
+      );
+    }
+
+    function mount() {
+      if (typeof Nav === 'undefined' || typeof TweaksPanel === 'undefined' ||
+          typeof NeuralNetwork === 'undefined' || typeof Ico === 'undefined') {
+        return setTimeout(mount, 50);
+      }
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    }
+    mount();
+  </script>
+</body>
+</html>

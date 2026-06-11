@@ -1,0 +1,218 @@
+/* ============================================================
+   Open Solvex — Foundational tokens
+   Crecimiento Verde · Forest + Lime + Beige + Graphite
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap");
+
+:root {
+  /* ── Brand palette ────────────────────────────────── */
+  --forest:        #0D2818;   /* primary dark surface */
+  --forest-2:      #0A1F12;   /* deepest forest */
+  --forest-soft:   #133123;   /* raised dark surface */
+
+  --lime:          #00FF88;   /* primary accent */
+  --lime-dim:      #00CC6E;   /* hover / pressed accent */
+
+  --beige:         #F5F1E8;   /* primary light surface */
+  --beige-2:       #ECE6D7;   /* secondary light surface */
+  --beige-3:       #E2DBC7;   /* tertiary light surface / chip bg */
+  --beige-paper:   #FFFDF7;   /* "paper" — card / panel bg on light */
+
+  --graphite:      #1F2937;   /* fg on light, dark surface alt */
+  --graphite-2:    #374151;   /* secondary fg */
+  --graphite-3:    #6B7280;   /* tertiary fg / muted */
+
+  /* ── Semantic foreground / background (light default) ─ */
+  --bg:        var(--beige);
+  --bg-elev:   var(--beige-paper);
+  --bg-soft:   var(--beige-2);
+  --bg-chip:   var(--beige-3);
+
+  --fg1:       var(--graphite);
+  --fg2:       var(--graphite-2);
+  --fg3:       var(--graphite-3);
+
+  --accent:        var(--lime);
+  --accent-hover:  var(--lime-dim);
+  --on-accent:     var(--forest);
+
+  /* ── Lines / hairlines ────────────────────────────── */
+  --line-light: rgba(31, 41, 55, 0.10);    /* on light bg */
+  --line-dark:  rgba(245, 241, 232, 0.10); /* on dark bg */
+
+  /* ── Type ─────────────────────────────────────────── */
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body:    "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono:    "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Display sizes – clamp() for fluid scaling */
+  --fs-display:  clamp(40px, 6.4vw, 88px);
+  --fs-h1:       clamp(32px, 4.4vw, 56px);
+  --fs-h2:       clamp(28px, 3.4vw, 40px);
+  --fs-h3:       22px;
+  --fs-h4:       19px;
+  --fs-lede:     clamp(16px, 1.4vw, 19px);
+  --fs-body:     15px;
+  --fs-small:    14px;
+  --fs-caption:  12px;
+  --fs-mono-eyebrow: 12px;
+
+  --lh-display: 0.98;
+  --lh-heading: 1.10;
+  --lh-body:    1.55;
+
+  --ls-display: -0.025em;
+  --ls-heading: -0.018em;
+  --ls-eyebrow:  0.04em;
+
+  /* ── Radius ───────────────────────────────────────── */
+  --r-sm:  8px;
+  --r:     14px;
+  --r-lg:  20px;
+  --r-pill: 999px;
+
+  /* ── Spacing scale (8-pt with 4 + 2) ──────────────── */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-8:  32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+  --s-28: 112px;
+
+  /* ── Elevation ────────────────────────────────────── */
+  --shadow-1: 0 6px 18px -10px rgba(31, 41, 55, 0.18);
+  --shadow-2: 0 18px 40px -28px rgba(31, 41, 55, 0.25);
+  --shadow-3: 0 22px 50px -30px rgba(31, 41, 55, 0.30);
+  --glow-lime: 0 0 0 6px rgba(0, 255, 136, 0.18), 0 12px 30px -12px rgba(0, 255, 136, 0.55);
+
+  /* ── Layout container ─────────────────────────────── */
+  --maxw:  1240px;
+  --pad-x: clamp(20px, 4vw, 48px);
+
+  /* ── Easing ───────────────────────────────────────── */
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --t-fast: 200ms;
+  --t-base: 250ms;
+  --t-slow: 350ms;
+}
+
+/* ── Dark surface override (apply to a section or body) ── */
+.surface-dark,
+[data-surface="dark"] {
+  --bg:      var(--forest);
+  --bg-elev: var(--forest-soft);
+  --bg-soft: var(--forest-2);
+  --bg-chip: rgba(245, 241, 232, 0.08);
+
+  --fg1: #E9F4ED;
+  --fg2: rgba(245, 241, 232, 0.78);
+  --fg3: rgba(245, 241, 232, 0.55);
+
+  background: var(--bg);
+  color: var(--fg1);
+}
+
+/* ============================================================
+   Element-level semantic styles
+   ============================================================ */
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--fg1);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* Display / hero headline */
+.h-display, h1.display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+  margin: 0;
+  text-wrap: balance;
+}
+.h-display em, h1.display em {
+  font-style: normal;
+  color: var(--accent);
+  font-family: inherit;
+  font-weight: 500;
+}
+
+/* Section headline */
+h1, h2, .h-section {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--fs-h1);
+  line-height: 1.02;
+  letter-spacing: -0.022em;
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+.h-section em, h2 em { font-style: normal; color: var(--accent); }
+
+h3, .h-card {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--fs-h3);
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  margin: 0;
+}
+
+/* Lede — intro paragraph */
+.lede {
+  font-size: var(--fs-lede);
+  line-height: 1.5;
+  color: var(--fg2);
+  max-width: 56ch;
+  text-wrap: pretty;
+}
+
+/* Body */
+p, .p {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--fg2);
+  margin: 0;
+}
+
+/* Eyebrow — monospace label with lime tick */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--fg3);
+}
+.eyebrow::before {
+  content: "";
+  width: 22px; height: 1px;
+  background: var(--accent);
+  display: inline-block;
+}
+.eyebrow .num { color: var(--accent); }
+
+/* Mono inline / code */
+code, .code, .mono {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+/* Links */
+a { color: inherit; text-decoration: none; }
+a.link-accent { color: var(--accent); }
+a.link-accent:hover { color: var(--accent-hover); }

@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- @dsCard group="Brand" name="Components · Buttons" subtitle="Primary glow · Ghost light · Ghost dark" viewport="760x220" --><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .btn { display:inline-flex; align-items:center; gap:10px; height:50px; padding:0 22px; border-radius:999px; font-family:var(--font-body); font-weight:500; font-size:15px; letter-spacing:-0.005em; white-space:nowrap; position:relative; cursor:pointer; border:0; }
+  .btn-primary { background:#00FF88; color:#0D2818; box-shadow:0 0 0 6px rgba(0,255,136,0.18), 0 12px 30px -12px rgba(0,255,136,0.55); }
+  .btn-ghost-light { background:transparent; color:#F5F1E8; border:1px solid rgba(245,241,232,0.32); }
+  .btn-ghost-dark { background:transparent; color:#1F2937; border:1px solid rgba(31,41,55,0.18); }
+  .arr { width:14px; height:14px; }
+</style>
+</head>
+<body class="pad" style="background:#0D2818;">
+  <div class="lbl" style="color:rgba(245,241,232,0.55); margin-bottom:18px;">Buttons · pill · 50px height · DM Sans 500 · 15px</div>
+  <div class="row-tight" style="gap:14px">
+    <button class="btn btn-primary">Agendar diagnóstico
+      <svg class="arr" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </button>
+    <button class="btn btn-ghost-light">Ver casos</button>
+    <button class="btn btn-ghost-dark" style="background:#F5F1E8; border-color:rgba(31,41,55,0.18);">Hablar con experto</button>
+  </div>
+  <div class="row-tight" style="gap:14px; margin-top:14px;">
+    <div style="font-family:var(--font-mono); font-size:11px; color:rgba(245,241,232,0.55); width:120px;">primary · glow</div>
+    <div style="font-family:var(--font-mono); font-size:11px; color:rgba(245,241,232,0.55); width:120px;">ghost-light</div>
+    <div style="font-family:var(--font-mono); font-size:11px; color:rgba(245,241,232,0.55); width:120px;">ghost-dark</div>
+  </div>
+</body></html>

@@ -1,0 +1,17 @@
+/* preview cards shared styles */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap");
+@import url("../colors_and_type.css");
+
+html, body { margin: 0; padding: 0; background: var(--beige); color: var(--graphite); font-family: var(--font-body); }
+body.pad { padding: 22px 24px; }
+body.pad-tight { padding: 18px 22px; }
+body.dark { background: var(--forest); color: #E9F4ED; }
+
+.row { display: flex; align-items: stretch; gap: 14px; flex-wrap: wrap; }
+.row-tight { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.col { display: flex; flex-direction: column; gap: 8px; }
+
+.lbl { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.05em; color: var(--graphite-3); text-transform: uppercase; }
+.lbl.dark { color: rgba(245,241,232,0.55); }
+.lbl.lime { color: var(--lime-dim); }
+.title-sm { font-family: var(--font-display); font-weight: 500; font-size: 14.5px; letter-spacing: -0.012em; color: var(--graphite); margin: 0; }

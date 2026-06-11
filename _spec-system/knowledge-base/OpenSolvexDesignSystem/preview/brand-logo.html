@@ -1,0 +1,66 @@
+<!doctype html>
+<!-- @dsCard group="Brand" name="Brand · Logo" subtitle="4 official lockups (oficiales)" viewport="880x240" -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="_card.css">
+  <style>
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+    .tile {
+      border-radius: 14px;
+      padding: 30px 22px 18px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 18px;
+      min-height: 168px;
+      position: relative;
+    }
+    .tile img { width: 88px; height: 88px; display: block; }
+    .tile .name {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .tile.on-forest { background: #0D2818; }
+    .tile.on-forest .name { color: rgba(245,241,232,0.55); }
+    .tile.on-lime { background: #00FF88; }
+    .tile.on-lime .name { color: rgba(13,40,24,0.6); }
+    .tile.on-light { background: #F5F5F5; border: 1px solid rgba(31,41,55,0.08); }
+    .tile.on-light .name { color: var(--graphite-3); }
+    .tile .badge {
+      position: absolute; top: 10px; left: 12px;
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 7px; border-radius: 4px;
+    }
+    .tile.on-forest .badge { background: rgba(0,255,136,0.14); color: #00FF88; }
+    .tile.on-lime .badge { background: rgba(13,40,24,0.12); color: #0D2818; }
+    .tile.on-light .badge { background: rgba(13,40,24,0.06); color: var(--graphite-2); }
+  </style>
+</head>
+<body class="pad">
+  <div class="lbl" style="margin-bottom:14px;">Logo · 4 official lockups (oficiales)</div>
+  <div class="grid">
+    <div class="tile on-forest">
+      <span class="badge">PRIMARY · DARK</span>
+      <img src="../assets/logo-on-forest.svg" alt="Logo lime sobre forest">
+      <span class="name">on-forest</span>
+    </div>
+    <div class="tile on-lime">
+      <span class="badge">ACCENT · LIME</span>
+      <img src="../assets/logo-on-lime.svg" alt="Logo forest sobre lime">
+      <span class="name">on-lime</span>
+    </div>
+    <div class="tile on-light">
+      <span class="badge">PRIMARY · LIGHT</span>
+      <img src="../assets/logo-forest-on-light.svg" alt="Logo forest sobre claro">
+      <span class="name">forest-on-light</span>
+    </div>
+    <div class="tile on-light">
+      <span class="badge">ALT · LIGHT</span>
+      <img src="../assets/logo-lime-on-light.svg" alt="Logo lime sobre claro">
+      <span class="name">lime-on-light</span>
+    </div>
+  </div>
+</body>
+</html>

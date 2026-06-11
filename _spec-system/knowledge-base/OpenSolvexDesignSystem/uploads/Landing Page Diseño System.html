@@ -1,0 +1,1497 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tu Solvex · Design System</title>
+  <meta name="description" content="Design system Tu Solvex — foundations, color, tipografía, espaciado, sombras y componentes." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* ──────────────────────────────────────────────
+       Design System index — sólo páginas DS
+       ────────────────────────────────────────────── */
+    body { background: var(--beige); color: var(--graphite); }
+
+    /* shell + topbar (igual al diseño Logo page para parallelismo) */
+    .ds-shell { min-height: 100vh; padding: 64px 0 140px; }
+    .ds-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 28px; border-bottom: 1px solid var(--line-light);
+      margin-bottom: 56px;
+    }
+    .ds-topbar a.brand { color: var(--graphite); }
+    .ds-back {
+      font-family: var(--font-mono); font-size: 12px; color: var(--graphite-3);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .ds-back:hover { color: var(--graphite); }
+
+    .ds-eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--graphite-3); margin: 0 0 16px;
+    }
+    .ds-eyebrow::before {
+      content: ""; width: 22px; height: 1px; background: var(--lime);
+    }
+    .ds-h1 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: clamp(40px, 5vw, 68px); line-height: 1.0;
+      letter-spacing: -0.025em; margin: 0 0 18px; text-wrap: balance;
+    }
+    .ds-h1 em { font-style: normal; color: var(--lime-dim); }
+    .ds-lede { color: var(--graphite-2); max-width: 64ch; line-height: 1.5; font-size: 17px; }
+
+    /* hero meta */
+    .ds-hero-meta-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      margin-top: 48px;
+      background: var(--line-light); border-radius: 16px; overflow: hidden;
+      border: 1px solid var(--line-light);
+    }
+    @media (max-width: 880px) { .ds-hero-meta-grid { grid-template-columns: repeat(2, 1fr); } }
+    .ds-hero-meta-cell {
+      background: #fff; padding: 22px 22px 24px;
+    }
+    .ds-hero-meta-cell .k {
+      font-family: var(--font-mono); font-size: 11px; color: var(--graphite-3);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .ds-hero-meta-cell .v {
+      font-family: var(--font-display); font-weight: 500; font-size: 22px;
+      letter-spacing: -0.012em; margin-top: 8px; color: var(--graphite);
+    }
+
+    /* section */
+    .ds-section { margin-top: 96px; }
+    .ds-section-head {
+      display: flex; align-items: end; justify-content: space-between; gap: 32px;
+      margin-bottom: 32px; padding-bottom: 14px; border-bottom: 1px solid var(--line-light);
+    }
+    .ds-h2 {
+      font-family: var(--font-display); font-weight: 500;
+      font-size: 28px; letter-spacing: -0.018em; margin: 0;
+    }
+    .ds-meta { font-family: var(--font-mono); font-size: 12px; color: var(--graphite-3); }
+    .ds-sub-h {
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+      color: var(--graphite-3); text-transform: uppercase;
+      margin: 28px 0 14px;
+    }
+    .ds-sub-h strong { color: var(--graphite); font-weight: 500; }
+
+    /* ── Index nav ── */
+    .ds-index {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+      background: var(--line-light); border: 1px solid var(--line-light);
+      border-radius: 16px; overflow: hidden;
+      margin-top: 48px;
+    }
+    @media (max-width: 880px) { .ds-index { grid-template-columns: 1fr; } }
+    .ds-index a {
+      background: #fff;
+      padding: 22px 22px;
+      display: flex; align-items: baseline; gap: 14px;
+      transition: background .2s ease;
+    }
+    .ds-index a:hover { background: var(--beige-2); }
+    .ds-index a .num {
+      font-family: var(--font-mono); font-size: 12px; color: var(--lime-dim);
+      letter-spacing: 0.04em; min-width: 36px;
+    }
+    .ds-index a .ttl {
+      font-family: var(--font-display); font-weight: 500; font-size: 18px;
+      letter-spacing: -0.012em; color: var(--graphite);
+    }
+    .ds-index a .desc {
+      font-family: var(--font-mono); font-size: 11.5px; color: var(--graphite-3);
+      letter-spacing: 0.03em; margin-top: 4px; display: block;
+    }
+    .ds-index a .arr {
+      margin-left: auto; color: var(--graphite-3);
+      font-family: var(--font-mono); font-size: 13px;
+    }
+    .ds-index a:hover .arr { color: var(--lime-dim); }
+
+    /* ── Color swatches ── */
+    .ds-swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 880px) { .ds-swatches { grid-template-columns: repeat(2, 1fr); } }
+    .ds-swatch {
+      border-radius: 14px; overflow: hidden; border: 1px solid var(--line-light);
+      background: #fff;
+    }
+    .ds-swatch-chip { height: 130px; position: relative; }
+    .ds-swatch-chip .tag {
+      position: absolute; top: 12px; left: 14px;
+      font-family: var(--font-mono); font-size: 10.5px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 3px 7px; border-radius: 4px;
+      background: rgba(255,255,255,0.18); color: #fff;
+      backdrop-filter: blur(3px);
+    }
+    .ds-swatch-chip.on-light .tag { background: rgba(31,41,55,0.08); color: var(--graphite); backdrop-filter: none; }
+    .ds-swatch-meta { padding: 14px 16px 16px; font-family: var(--font-mono); font-size: 12px; }
+    .ds-swatch-meta .name { color: var(--graphite); margin-bottom: 6px; font-weight: 500; font-family: var(--font-display); font-size: 15px; letter-spacing: -0.01em; }
+    .ds-swatch-meta .hex { color: var(--graphite-2); }
+    .ds-swatch-meta .var { color: var(--graphite-3); margin-top: 2px; }
+
+    .ds-scale {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+      border: 1px solid var(--line-light); border-radius: 14px; overflow: hidden;
+      background: #fff;
+    }
+    @media (max-width: 720px) { .ds-scale { grid-template-columns: 1fr; } }
+    .ds-scale .step {
+      padding: 18px; display: flex; align-items: center; gap: 14px;
+      border-right: 1px solid var(--line-light);
+    }
+    .ds-scale .step:last-child { border-right: none; }
+    @media (max-width: 720px) { .ds-scale .step { border-right: none; border-bottom: 1px solid var(--line-light); } .ds-scale .step:last-child { border-bottom: none; } }
+    .ds-scale .step .chip {
+      width: 56px; height: 56px; border-radius: 12px; flex-shrink: 0;
+      border: 1px solid var(--line-light);
+    }
+    .ds-scale .step .meta { font-family: var(--font-mono); font-size: 12px; }
+    .ds-scale .step .meta .n { font-family: var(--font-display); font-weight: 500; font-size: 15px; color: var(--graphite); letter-spacing: -0.01em; }
+    .ds-scale .step .meta .h { color: var(--graphite-3); margin-top: 4px; }
+
+    .ds-pairs {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      margin-top: 14px;
+    }
+    @media (max-width: 880px) { .ds-pairs { grid-template-columns: 1fr; } }
+    .ds-pair {
+      border-radius: 14px; padding: 22px 22px 20px;
+      border: 1px solid transparent;
+      font-family: var(--font-mono); font-size: 12px;
+    }
+    .ds-pair .h {
+      font-family: var(--font-display); font-weight: 500; font-size: 18px;
+      letter-spacing: -0.012em; margin-bottom: 6px;
+    }
+    .ds-pair .p { line-height: 1.55; opacity: 0.78; }
+    .ds-pair .ratio {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 14px;
+      padding: 4px 8px; border-radius: 6px;
+      font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .ds-pair .ratio .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    /* ── Type table ── */
+    .ds-type-table {
+      border: 1px solid var(--line-light); border-radius: 16px; overflow: hidden;
+      background: #fff;
+    }
+    .ds-type-row {
+      display: grid; grid-template-columns: 220px 1fr; gap: 24px;
+      padding: 26px 26px;
+      border-bottom: 1px solid var(--line-light);
+      align-items: baseline;
+    }
+    .ds-type-row:last-child { border-bottom: none; }
+    .ds-type-row .label {
+      font-family: var(--font-mono); font-size: 12px; color: var(--graphite-3);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .ds-type-row .label small {
+      display: block; color: var(--graphite); text-transform: none;
+      letter-spacing: 0; margin-top: 6px; font-size: 12.5px; line-height: 1.5;
+    }
+    .ds-type-row .label .sz {
+      display: inline-block; margin-top: 6px;
+      padding: 3px 7px; border-radius: 4px;
+      background: var(--beige-2); color: var(--graphite);
+      font-size: 11px; letter-spacing: 0.04em;
+    }
+    .ds-type-sample { color: var(--graphite); }
+
+    .ds-fonts {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 880px) { .ds-fonts { grid-template-columns: 1fr; } }
+    .ds-font-card {
+      background: #fff; border: 1px solid var(--line-light); border-radius: 14px;
+      padding: 24px;
+    }
+    .ds-font-card .role {
+      font-family: var(--font-mono); font-size: 11px; color: var(--graphite-3);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .ds-font-card .name {
+      font-weight: 500; letter-spacing: -0.015em;
+      font-size: 38px; margin: 10px 0 6px; line-height: 1;
+    }
+    .ds-font-card .meta {
+      font-family: var(--font-mono); font-size: 12px; color: var(--graphite-2);
+    }
+    .ds-font-card .glyphs {
+      margin-top: 18px; font-size: 22px; color: var(--graphite-2);
+      letter-spacing: -0.01em; line-height: 1.35;
+    }
+
+    /* ── Tokens table (spacing, radii, shadows) ── */
+    .ds-tokens {
+      display: grid; gap: 14px;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    @media (max-width: 880px) { .ds-tokens { grid-template-columns: 1fr; } }
+    .ds-tk-card {
+      background: #fff; border: 1px solid var(--line-light); border-radius: 14px;
+      padding: 22px;
+    }
+    .ds-tk-card h4 {
+      font-family: var(--font-display); font-weight: 500; font-size: 18px;
+      letter-spacing: -0.012em; margin: 0 0 18px;
+    }
+    .ds-tk-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 12px 0; border-bottom: 1px dashed var(--line-light);
+      font-family: var(--font-mono); font-size: 12.5px;
+    }
+    .ds-tk-row:last-child { border-bottom: none; }
+    .ds-tk-row .n { color: var(--graphite-3); min-width: 64px; }
+    .ds-tk-row .v { color: var(--graphite); }
+    .ds-tk-row .vis {
+      margin-left: auto; flex-shrink: 0;
+    }
+    .ds-spacer { background: var(--lime); height: 12px; border-radius: 3px; }
+    .ds-radius { width: 36px; height: 36px; background: var(--forest); }
+    .ds-shadow-box {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: #fff; border: 1px solid var(--line-light);
+    }
+
+    /* ── Components stage ── */
+    .ds-stage {
+      background: #fff; border: 1px solid var(--line-light);
+      border-radius: 16px; padding: 36px;
+      display: flex; flex-wrap: wrap; gap: 16px;
+      align-items: center;
+    }
+    .ds-stage.dark {
+      background: var(--forest);
+      border-color: rgba(245,241,232,0.12);
+    }
+    .ds-stage.beige2 { background: var(--beige-2); }
+    .ds-stage.column { flex-direction: column; align-items: stretch; gap: 18px; }
+    .ds-stage-grid {
+      display: grid; gap: 14px;
+    }
+    .ds-stage-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .ds-stage-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 880px) {
+      .ds-stage-grid.cols-2, .ds-stage-grid.cols-3 { grid-template-columns: 1fr; }
+    }
+
+    .ds-caption {
+      margin-top: 12px; font-family: var(--font-mono); font-size: 11.5px;
+      color: var(--graphite-3); letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .ds-caption strong { color: var(--graphite); font-weight: 500; }
+
+    /* icon grid */
+    .ds-icons {
+      display: grid; grid-template-columns: repeat(8, 1fr); gap: 1px;
+      background: var(--line-light);
+      border: 1px solid var(--line-light); border-radius: 14px; overflow: hidden;
+    }
+    @media (max-width: 880px) { .ds-icons { grid-template-columns: repeat(4, 1fr); } }
+    .ds-ico {
+      background: #fff;
+      aspect-ratio: 1 / 1;
+      display: grid; place-items: center;
+      color: var(--graphite);
+      position: relative;
+      transition: background .2s ease, color .2s ease;
+    }
+    .ds-ico:hover { background: var(--forest); color: var(--lime); }
+    .ds-ico .nm {
+      position: absolute; bottom: 8px; left: 0; right: 0;
+      text-align: center;
+      font-family: var(--font-mono); font-size: 9.5px;
+      color: var(--graphite-3); letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .ds-ico:hover .nm { color: rgba(245,241,232,0.5); }
+
+    /* code */
+    .ds-code {
+      background: var(--forest); color: var(--beige);
+      padding: 24px 28px; border-radius: 14px;
+      font-family: var(--font-mono); font-size: 13.5px; line-height: 1.65;
+      overflow-x: auto; margin: 0;
+    }
+    .ds-code .c { color: rgba(245,241,232,0.45); }
+    .ds-code .k { color: var(--lime); }
+    .ds-code .s { color: #ffd166; }
+
+    /* misc */
+    .ds-callout {
+      background: var(--forest); color: var(--beige);
+      border-radius: 16px; padding: 28px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 24px; flex-wrap: wrap;
+      margin-top: 32px;
+    }
+    .ds-callout h4 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 500; font-size: 20px; letter-spacing: -0.012em; }
+    .ds-callout p { margin: 0; color: rgba(245,241,232,0.65); font-size: 14px; }
+    .ds-callout .btn { background: var(--lime); color: var(--forest); height: 44px; padding: 0 20px; font-weight: 600; }
+
+    /* form preview stage = darker, mimicking the real one */
+    .ds-form-preview { padding: 32px; }
+
+    /* metric mini */
+    .ds-metric-mini {
+      background: var(--forest); color: var(--beige);
+      border-radius: 16px; padding: 36px;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+    @media (max-width: 880px) { .ds-metric-mini { grid-template-columns: 1fr; } }
+    .ds-metric-mini .m { padding: 0 24px; border-right: 1px solid rgba(245,241,232,0.12); }
+    .ds-metric-mini .m:first-child { padding-left: 0; }
+    .ds-metric-mini .m:last-child { border-right: none; padding-right: 0; }
+    @media (max-width: 880px) {
+      .ds-metric-mini .m { border-right: none; border-bottom: 1px solid rgba(245,241,232,0.12); padding: 24px 0; }
+      .ds-metric-mini .m:first-child { padding-top: 0; }
+      .ds-metric-mini .m:last-child { border-bottom: none; padding-bottom: 0; }
+    }
+    .ds-metric-mini .v {
+      font-family: var(--font-display); font-weight: 500; font-size: 56px;
+      color: var(--lime); line-height: 1; letter-spacing: -0.025em;
+      display: flex; align-items: baseline; gap: 2px;
+    }
+    .ds-metric-mini .v .unit { font-size: 0.55em; }
+    .ds-metric-mini .l { font-size: 13.5px; color: rgba(245,241,232,0.72); margin-top: 14px; line-height: 1.5; }
+    .ds-metric-mini .t {
+      font-family: var(--font-mono); font-size: 10.5px; color: rgba(245,241,232,0.45);
+      letter-spacing: 0.06em; text-transform: uppercase; margin-top: 14px;
+    }
+
+    /* timeline-mini */
+    .ds-tl {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+      position: relative;
+    }
+    @media (max-width: 880px) { .ds-tl { grid-template-columns: 1fr; } }
+    .ds-tl::before {
+      content: ""; position: absolute; top: 9px; left: 0; right: 0; height: 1px;
+      background: repeating-linear-gradient(90deg, var(--graphite-3) 0 6px, transparent 6px 12px);
+      opacity: 0.4;
+    }
+    @media (max-width: 880px) { .ds-tl::before { display: none; } }
+    .ds-tl-step { padding-top: 30px; position: relative; }
+    .ds-tl-step .node {
+      position: absolute; top: 3px; left: 0;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--beige); border: 1px solid var(--graphite-3);
+    }
+    .ds-tl-step.active .node {
+      background: var(--lime); border-color: var(--lime);
+      box-shadow: 0 0 0 5px rgba(0,255,136,0.18);
+    }
+    .ds-tl-step .num {
+      font-family: var(--font-mono); font-size: 11px; color: var(--graphite-3);
+      letter-spacing: 0.06em; margin-bottom: 4px;
+    }
+    .ds-tl-step h5 {
+      font-family: var(--font-display); font-weight: 500; font-size: 17px;
+      letter-spacing: -0.012em; margin: 0 0 6px;
+    }
+    .ds-tl-step p { margin: 0; font-size: 13px; color: var(--graphite-2); line-height: 1.5; }
+
+    /* sector card sample (mirrors the real component) */
+    .ds-sec-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      border: 1px solid var(--line-light); border-radius: 14px; overflow: hidden;
+      background: #fff;
+    }
+    @media (max-width: 720px) { .ds-sec-grid { grid-template-columns: 1fr 1fr; } }
+    .ds-sec {
+      display: flex; align-items: center; gap: 14px;
+      padding: 22px 20px;
+      border-right: 1px solid var(--line-light);
+      color: var(--graphite);
+    }
+    .ds-sec:last-child { border-right: none; }
+    .ds-sec .ico { color: var(--graphite-2); flex-shrink: 0; }
+    .ds-sec .lbl {
+      font-family: var(--font-display); font-weight: 500; font-size: 15px;
+      letter-spacing: -0.012em;
+    }
+    .ds-sec .sub {
+      font-family: var(--font-mono); font-size: 10.5px; color: var(--graphite-3);
+      letter-spacing: 0.04em; margin-top: 2px;
+    }
+
+    /* ── Print styles · "Descargar PDF" ── */
+    @media print {
+      @page { size: A4; margin: 14mm 12mm; }
+      html, body { background: #fff !important; }
+      body { color: var(--graphite) !important; }
+      .ds-shell { padding: 0 !important; }
+      #ds-pdf-btn, .ds-back { display: none !important; }
+      .ds-topbar { margin-bottom: 28px; }
+      .ds-section { margin-top: 36px; page-break-inside: avoid; break-inside: avoid; }
+      .ds-section-head { page-break-after: avoid; break-after: avoid; }
+      .ds-swatches, .ds-pairs, .ds-tokens, .ds-fonts,
+      .ds-stage-grid, .ds-icons, .ds-sec-grid,
+      .pillars-grid, .bento, .cases-grid {
+        page-break-inside: avoid; break-inside: avoid;
+      }
+      .ds-stage, .ds-stage.dark, .ds-stage.beige2,
+      .ds-callout, .ds-metric-mini, .ds-code {
+        page-break-inside: avoid; break-inside: avoid;
+      }
+      .ds-swatch, .ds-pair, .ds-tk-card, .ds-font-card,
+      .pillar, .bento-card, .case, .ds-ico {
+        page-break-inside: avoid; break-inside: avoid;
+      }
+      .ds-h1, .ds-h2 { page-break-after: avoid; break-after: avoid; }
+      a { color: inherit !important; text-decoration: none !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ds-shell">
+    <div class="wrap">
+
+      <!-- topbar -->
+      <div class="ds-topbar">
+        <a class="brand" href="index.html">
+          <span class="mark">tS</span>
+          <span>Tu Solvex</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <button id="ds-pdf-btn" class="btn btn-ghost-dark" style="height: 40px; padding: 0 16px; font-size: 13px;" onclick="window.print()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right: 2px;">
+              <path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path>
+            </svg>
+            Descargar PDF
+          </button>
+          <a class="ds-back" href="index.html">← volver al sitio</a>
+        </div>
+      </div>
+
+      <!-- header -->
+      <header>
+        <div class="ds-eyebrow">Design system · v1.0</div>
+        <h1 class="ds-h1">Sistema de diseño<em>.</em></h1>
+        <p class="ds-lede">
+          Los <strong>fundamentos</strong> que sostienen la marca Tu Solvex —
+          paleta, tipografía, espacio, radios y sombras — y los <strong>componentes</strong>
+          (botones, eyebrows, cards, formularios, métricas, timelines, sectores e iconografía)
+          que aparecen en la landing. Una sola fuente de verdad para que cualquier nueva pieza
+          (deck, propuesta, anuncio, app) hable con la misma voz visual.
+        </p>
+
+        <!-- meta -->
+        <div class="ds-hero-meta-grid">
+          <div class="ds-hero-meta-cell">
+            <div class="k">Personalidad</div>
+            <div class="v">Crecimiento verde</div>
+          </div>
+          <div class="ds-hero-meta-cell">
+            <div class="k">Tono</div>
+            <div class="v">Pragmático &amp; nítido</div>
+          </div>
+          <div class="ds-hero-meta-cell">
+            <div class="k">Versión</div>
+            <div class="v">v1.0 · 2026</div>
+          </div>
+          <div class="ds-hero-meta-cell">
+            <div class="k">Stack</div>
+            <div class="v">HTML · CSS vars · React</div>
+          </div>
+        </div>
+
+        <!-- index -->
+        <nav class="ds-index" aria-label="Índice">
+          <a href="#color">
+            <span class="num">01</span>
+            <span>
+              <span class="ttl">Color</span>
+              <span class="desc">paleta · escalas · pares</span>
+            </span>
+            <span class="arr">↓</span>
+          </a>
+          <a href="#type">
+            <span class="num">02</span>
+            <span>
+              <span class="ttl">Tipografía</span>
+              <span class="desc">familias · escala · uso</span>
+            </span>
+            <span class="arr">↓</span>
+          </a>
+          <a href="#tokens">
+            <span class="num">03</span>
+            <span>
+              <span class="ttl">Espacio &amp; forma</span>
+              <span class="desc">spacing · radii · sombras</span>
+            </span>
+            <span class="arr">↓</span>
+          </a>
+          <a href="#buttons">
+            <span class="num">04</span>
+            <span>
+              <span class="ttl">Botones</span>
+              <span class="desc">primary · ghost · estados</span>
+            </span>
+            <span class="arr">↓</span>
+          </a>
+          <a href="#tags">
+            <span class="num">05</span>
+            <span>
+              <span class="ttl">Eyebrows &amp; tags</span>
+              <span class="desc">etiquetas mono · pulso lime</span>
+            </span>
+            <span class="arr">↓</span>
+          </a>
+          <a href="#cards">
+            <span class="num">06</span>
+            <span>
+              <span class="ttl">Cards</span>
+              <span class="desc">pilar · servicio · caso</span>
+            </span>
+            <span class="arr">↓</span>
+          </a>
+          <a href="#forms">
+            <span class="num">07</span>
+            <span>
+              <span class="ttl">Formularios</span>
+              <span class="desc">inputs sobre forest</span>
+            </span>
+            <span class="arr">↓</span>
+          </a>
+          <a href="#metrics">
+            <span class="num">08</span>
+            <span>
+              <span class="ttl">Métricas &amp; timeline</span>
+              <span class="desc">big numbers · proceso</span>
+            </span>
+            <span class="arr">↓</span>
+          </a>
+          <a href="#icons">
+            <span class="num">09</span>
+            <span>
+              <span class="ttl">Iconografía</span>
+              <span class="desc">stroke 1.6 · 24×24</span>
+            </span>
+            <span class="arr">↓</span>
+          </a>
+        </nav>
+
+        <!-- callout to Logo page -->
+        <div class="ds-callout">
+          <div>
+            <h4>El componente Logo vive en su propia página</h4>
+            <p>Lockup, isotipo, logotipo, banners y app icons — listos para descargar en SVG / PNG.</p>
+          </div>
+          <a class="btn btn-primary" href="design-system.html" style="background: var(--lime); color: var(--forest);">
+            Abrir Logo · DS
+            <span class="arr">→</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- ═══════════════════════════════════════════
+           01 · COLOR
+           ═══════════════════════════════════════════ -->
+      <section class="ds-section" id="color">
+        <div class="ds-section-head">
+          <h2 class="ds-h2">01 · Color</h2>
+          <span class="ds-meta">cuatro tokens base · sin invenciones</span>
+        </div>
+
+        <p class="ds-lede" style="margin-bottom: 24px;">
+          Solo cuatro colores cargan toda la identidad. <strong>Forest</strong> es el lienzo serio,
+          <strong>lime</strong> es la única acción/acento, <strong>beige</strong> es el respiro,
+          <strong>graphite</strong> sostiene texto y footer. Nada más.
+        </p>
+
+        <div class="ds-swatches">
+          <div class="ds-swatch">
+            <div class="ds-swatch-chip" style="background: var(--forest);"><span class="tag">primary · oscuro</span></div>
+            <div class="ds-swatch-meta">
+              <div class="name">Forest</div>
+              <div class="hex">#0D2818</div>
+              <div class="var">--forest</div>
+            </div>
+          </div>
+          <div class="ds-swatch">
+            <div class="ds-swatch-chip on-light" style="background: var(--lime);"><span class="tag">accent · único</span></div>
+            <div class="ds-swatch-meta">
+              <div class="name">Lime</div>
+              <div class="hex">#00FF88</div>
+              <div class="var">--lime</div>
+            </div>
+          </div>
+          <div class="ds-swatch">
+            <div class="ds-swatch-chip on-light" style="background: var(--beige);"><span class="tag">canvas · claro</span></div>
+            <div class="ds-swatch-meta">
+              <div class="name">Beige</div>
+              <div class="hex">#F5F1E8</div>
+              <div class="var">--beige</div>
+            </div>
+          </div>
+          <div class="ds-swatch">
+            <div class="ds-swatch-chip" style="background: var(--graphite);"><span class="tag">texto · neutral</span></div>
+            <div class="ds-swatch-meta">
+              <div class="name">Graphite</div>
+              <div class="hex">#1F2937</div>
+              <div class="var">--graphite</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forest scale -->
+        <div class="ds-sub-h"><strong>Forest scale</strong> — para profundidad sobre fondos oscuros</div>
+        <div class="ds-scale">
+          <div class="step">
+            <div class="chip" style="background: var(--forest-2);"></div>
+            <div class="meta"><div class="n">Forest 2</div><div class="h">#0A1F12 · --forest-2</div></div>
+          </div>
+          <div class="step">
+            <div class="chip" style="background: var(--forest);"></div>
+            <div class="meta"><div class="n">Forest</div><div class="h">#0D2818 · --forest</div></div>
+          </div>
+          <div class="step">
+            <div class="chip" style="background: var(--forest-soft);"></div>
+            <div class="meta"><div class="n">Forest soft</div><div class="h">#133123 · --forest-soft</div></div>
+          </div>
+        </div>
+
+        <!-- Beige scale -->
+        <div class="ds-sub-h"><strong>Beige scale</strong> — fondos calmados, divisores, tags</div>
+        <div class="ds-scale">
+          <div class="step">
+            <div class="chip" style="background: var(--beige);"></div>
+            <div class="meta"><div class="n">Beige</div><div class="h">#F5F1E8 · --beige</div></div>
+          </div>
+          <div class="step">
+            <div class="chip" style="background: var(--beige-2);"></div>
+            <div class="meta"><div class="n">Beige 2</div><div class="h">#ECE6D7 · --beige-2</div></div>
+          </div>
+          <div class="step">
+            <div class="chip" style="background: var(--beige-3);"></div>
+            <div class="meta"><div class="n">Beige 3</div><div class="h">#E2DBC7 · --beige-3</div></div>
+          </div>
+        </div>
+
+        <!-- Graphite scale -->
+        <div class="ds-sub-h"><strong>Graphite scale</strong> — texto, secundarios, hints</div>
+        <div class="ds-scale">
+          <div class="step">
+            <div class="chip" style="background: var(--graphite);"></div>
+            <div class="meta"><div class="n">Graphite</div><div class="h">#1F2937 · --graphite</div></div>
+          </div>
+          <div class="step">
+            <div class="chip" style="background: var(--graphite-2);"></div>
+            <div class="meta"><div class="n">Graphite 2</div><div class="h">#374151 · --graphite-2</div></div>
+          </div>
+          <div class="step">
+            <div class="chip" style="background: var(--graphite-3);"></div>
+            <div class="meta"><div class="n">Graphite 3</div><div class="h">#6B7280 · --graphite-3</div></div>
+          </div>
+        </div>
+
+        <!-- Pares -->
+        <div class="ds-sub-h"><strong>Pares aprobados</strong> — combinaciones que pasan contraste AA / AAA</div>
+        <div class="ds-pairs">
+          <div class="ds-pair" style="background: var(--forest); color: var(--beige); border-color: rgba(245,241,232,0.1);">
+            <div class="h" style="color: var(--beige);">Forest + Beige</div>
+            <div class="p">Modo oscuro principal — hero, results, CTA, footer. Beige al 78% para texto secundario.</div>
+            <div class="ratio" style="background: rgba(0,255,136,0.12); color: var(--lime);">
+              <span class="dot" style="background: var(--lime);"></span> 14.2:1 · AAA
+            </div>
+          </div>
+          <div class="ds-pair" style="background: var(--forest); color: var(--lime); border-color: rgba(0,255,136,0.2);">
+            <div class="h" style="color: var(--lime);">Forest + Lime</div>
+            <div class="p">Acento — solo para CTAs primarios, números grandes, eyebrow ticks y estados activos.</div>
+            <div class="ratio" style="background: rgba(0,255,136,0.12); color: var(--lime);">
+              <span class="dot" style="background: var(--lime);"></span> 11.6:1 · AAA
+            </div>
+          </div>
+          <div class="ds-pair" style="background: var(--beige); color: var(--graphite); border-color: var(--line-light);">
+            <div class="h" style="color: var(--graphite);">Beige + Graphite</div>
+            <div class="p">Modo claro principal — pillars, services, cases. Graphite-2 para body, graphite-3 para hints.</div>
+            <div class="ratio" style="background: rgba(31,41,55,0.08); color: var(--graphite);">
+              <span class="dot" style="background: var(--graphite);"></span> 12.4:1 · AAA
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           02 · TYPOGRAFÍA
+           ═══════════════════════════════════════════ -->
+      <section class="ds-section" id="type">
+        <div class="ds-section-head">
+          <h2 class="ds-h2">02 · Tipografía</h2>
+          <span class="ds-meta">3 familias · 1 escala</span>
+        </div>
+
+        <div class="ds-fonts">
+          <div class="ds-font-card">
+            <div class="role">Display</div>
+            <div class="name" style="font-family: 'Space Grotesk', sans-serif;">Space Grotesk</div>
+            <div class="meta">500 · 600 · -2.5% tracking en displays</div>
+            <div class="glyphs" style="font-family: 'Space Grotesk', sans-serif; font-weight: 500;">
+              Aa Bb Cc Dd Ee · 0 1 2 3 4 5 6 7 8 9 · % $ &amp;
+            </div>
+          </div>
+          <div class="ds-font-card">
+            <div class="role">Body</div>
+            <div class="name" style="font-family: 'DM Sans', sans-serif;">DM Sans</div>
+            <div class="meta">400 · 500 · texto, párrafos, labels</div>
+            <div class="glyphs" style="font-family: 'DM Sans', sans-serif; font-weight: 400;">
+              Aa Bb Cc Dd Ee · 0 1 2 3 4 5 6 7 8 9 · % $ &amp;
+            </div>
+          </div>
+          <div class="ds-font-card">
+            <div class="role">Mono</div>
+            <div class="name" style="font-family: 'Geist Mono', monospace;">Geist Mono</div>
+            <div class="meta">500 · 700 · eyebrows, tags, código, isotipo</div>
+            <div class="glyphs" style="font-family: 'Geist Mono', monospace; font-weight: 500;">
+              Aa Bb Cc Dd Ee · 0 1 2 3 4 5 6 7 8 9 · % $ &amp;
+            </div>
+          </div>
+        </div>
+
+        <div class="ds-type-table">
+          <div class="ds-type-row">
+            <div class="label">
+              Display
+              <small>Space Grotesk · 500</small>
+              <span class="sz">clamp(40 → 88) · -2.5% · 0.98</span>
+            </div>
+            <div class="ds-type-sample" style="font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 64px; letter-spacing: -0.025em; line-height: 0.98;">
+              Software con propósito<em style="font-style: normal; color: var(--lime-dim);">.</em>
+            </div>
+          </div>
+          <div class="ds-type-row">
+            <div class="label">
+              Section
+              <small>Space Grotesk · 500</small>
+              <span class="sz">clamp(32 → 56) · -2.2% · 1.02</span>
+            </div>
+            <div class="ds-type-sample" style="font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 44px; letter-spacing: -0.022em; line-height: 1.02;">
+              Cómo trabajamos contigo
+            </div>
+          </div>
+          <div class="ds-type-row">
+            <div class="label">
+              Card / H3
+              <small>Space Grotesk · 500</small>
+              <span class="sz">22px · -1.2% · 1.15</span>
+            </div>
+            <div class="ds-type-sample" style="font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 22px; letter-spacing: -0.012em; line-height: 1.15;">
+              Automatización de ventas
+            </div>
+          </div>
+          <div class="ds-type-row">
+            <div class="label">
+              Lede
+              <small>DM Sans · 400</small>
+              <span class="sz">clamp(16 → 19) · 1.5</span>
+            </div>
+            <div class="ds-type-sample" style="font-family: 'DM Sans', sans-serif; font-weight: 400; font-size: 18px; line-height: 1.5; color: var(--graphite-2); max-width: 56ch;">
+              Analizamos cada negocio, diseñamos software a medida y aplicamos IA para
+              atraer más clientes, vender más y elevar la calidad del servicio.
+            </div>
+          </div>
+          <div class="ds-type-row">
+            <div class="label">
+              Body
+              <small>DM Sans · 400</small>
+              <span class="sz">15 / 15.5 · 1.55</span>
+            </div>
+            <div class="ds-type-sample" style="font-family: 'DM Sans', sans-serif; font-weight: 400; font-size: 15px; line-height: 1.55; color: var(--graphite-2); max-width: 60ch;">
+              Texto de párrafo dentro de cards y bloques de contenido. Sirve para
+              describir un servicio, justificar un dato o contar el cómo. Se mantiene
+              entre 56–60 caracteres por línea para máxima legibilidad.
+            </div>
+          </div>
+          <div class="ds-type-row">
+            <div class="label">
+              Eyebrow
+              <small>Geist Mono · 500</small>
+              <span class="sz">12px · +4% · UPPER</span>
+            </div>
+            <div class="ds-type-sample">
+              <span class="eyebrow" style="margin: 0;"><span class="num">/01</span> Cómo trabajamos</span>
+            </div>
+          </div>
+          <div class="ds-type-row">
+            <div class="label">
+              Tag / código
+              <small>Geist Mono · 500</small>
+              <span class="sz">11–12px · +2-4% · UPPER</span>
+            </div>
+            <div class="ds-type-sample" style="font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--graphite-2); letter-spacing: 0.04em;">
+              [ N8N · OPENAI · WHATSAPP-BUSINESS · SUPABASE ]
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           03 · TOKENS — spacing / radii / shadows
+           ═══════════════════════════════════════════ -->
+      <section class="ds-section" id="tokens">
+        <div class="ds-section-head">
+          <h2 class="ds-h2">03 · Espacio &amp; forma</h2>
+          <span class="ds-meta">tokens · ritmo</span>
+        </div>
+
+        <div class="ds-tokens">
+          <!-- spacing -->
+          <div class="ds-tk-card">
+            <h4>Espaciado</h4>
+            <div class="ds-tk-row">
+              <span class="n">xs</span><span class="v">8px</span>
+              <span class="vis ds-spacer" style="width: 8px;"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">sm</span><span class="v">14px</span>
+              <span class="vis ds-spacer" style="width: 14px;"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">md</span><span class="v">22px</span>
+              <span class="vis ds-spacer" style="width: 22px;"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">lg</span><span class="v">36px</span>
+              <span class="vis ds-spacer" style="width: 36px;"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">xl</span><span class="v">60px</span>
+              <span class="vis ds-spacer" style="width: 60px;"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">2xl</span><span class="v">110px</span>
+              <span class="vis ds-spacer" style="width: 90px;"></span>
+            </div>
+            <p class="ds-caption" style="margin-top: 18px;">
+              Secciones <strong>110px</strong> de padding vertical · Gaps de card <strong>18–22px</strong>.
+            </p>
+          </div>
+
+          <!-- radii -->
+          <div class="ds-tk-card">
+            <h4>Radios</h4>
+            <div class="ds-tk-row">
+              <span class="n">sm</span><span class="v">8px · --r-sm</span>
+              <span class="vis ds-radius" style="border-radius: 8px;"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">md</span><span class="v">14px · --r</span>
+              <span class="vis ds-radius" style="border-radius: 14px;"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">lg</span><span class="v">20px · --r-lg</span>
+              <span class="vis ds-radius" style="border-radius: 20px;"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">pill</span><span class="v">999px · botones, tags</span>
+              <span class="vis ds-radius" style="border-radius: 999px; width: 64px;"></span>
+            </div>
+            <p class="ds-caption" style="margin-top: 18px;">
+              Cards usan <strong>20px</strong> · Inputs <strong>10–14px</strong> · Botones siempre <strong>pill</strong>.
+            </p>
+          </div>
+
+          <!-- shadows -->
+          <div class="ds-tk-card">
+            <h4>Sombras</h4>
+            <div class="ds-tk-row">
+              <span class="n">card hover</span>
+              <span class="v" style="font-size: 11.5px;">0 18px 40px -28px rgba(31,41,55,.25)</span>
+              <span class="vis ds-shadow-box" style="box-shadow: 0 18px 40px -28px rgba(31,41,55,0.25);"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">case</span>
+              <span class="v" style="font-size: 11.5px;">0 22px 50px -30px rgba(31,41,55,.30)</span>
+              <span class="vis ds-shadow-box" style="box-shadow: 0 22px 50px -30px rgba(31,41,55,0.30);"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">lime glow</span>
+              <span class="v" style="font-size: 11.5px;">0 12px 30px -12px rgba(0,255,136,.55)</span>
+              <span class="vis ds-shadow-box" style="box-shadow: 0 0 0 4px rgba(0,255,136,0.18), 0 12px 30px -12px rgba(0,255,136,0.55); border-color: var(--lime);"></span>
+            </div>
+            <div class="ds-tk-row">
+              <span class="n">focus ring</span>
+              <span class="v" style="font-size: 11.5px;">0 0 0 4px rgba(0,255,136,.15)</span>
+              <span class="vis ds-shadow-box" style="box-shadow: 0 0 0 4px rgba(0,255,136,0.15); border-color: var(--lime);"></span>
+            </div>
+            <p class="ds-caption" style="margin-top: 18px;">
+              Sombras siempre <strong>verticales y suaves</strong>, nunca duras.
+              El <strong>lime glow</strong> sólo para CTAs primarios y hover.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           04 · BOTONES
+           ═══════════════════════════════════════════ -->
+      <section class="ds-section" id="buttons">
+        <div class="ds-section-head">
+          <h2 class="ds-h2">04 · Botones</h2>
+          <span class="ds-meta">3 estilos · pill 999 · 50px</span>
+        </div>
+
+        <div class="ds-sub-h"><strong>Primary</strong> · única acción crítica en pantalla</div>
+        <div class="ds-stage dark">
+          <button class="btn btn-primary">Empieza tu diagnóstico <span class="arr">→</span></button>
+          <button class="btn btn-primary">Reservar consulta <span class="arr">→</span></button>
+        </div>
+        <p class="ds-caption">
+          <strong>btn-primary</strong> · lime sobre forest · hover halo lime al 18%. Sólo <strong>uno por pantalla</strong>.
+        </p>
+
+        <div class="ds-sub-h"><strong>Ghost light</strong> · sobre fondos oscuros (forest, graphite)</div>
+        <div class="ds-stage dark">
+          <button class="btn btn-ghost-light">Ver servicios</button>
+          <button class="btn btn-ghost-light">Casos →</button>
+        </div>
+        <p class="ds-caption">
+          <strong>btn-ghost-light</strong> · borde beige 22% · hover borde lime + texto lime.
+        </p>
+
+        <div class="ds-sub-h"><strong>Ghost dark</strong> · sobre fondos claros (beige)</div>
+        <div class="ds-stage">
+          <button class="btn btn-ghost-dark">Más información</button>
+          <button class="btn btn-ghost-dark">Descargar dossier</button>
+        </div>
+        <p class="ds-caption">
+          <strong>btn-ghost-dark</strong> · borde graphite 18% · hover borde graphite full.
+        </p>
+
+        <div class="ds-sub-h"><strong>Glow</strong> · submit de formularios (54px, full-width, glow lime)</div>
+        <div class="ds-stage dark column">
+          <button class="btn btn-glow">Enviar diagnóstico <span class="arr">→</span></button>
+        </div>
+        <p class="ds-caption">
+          <strong>btn-glow</strong> · variante reforzada del primary · 54px, peso 600, halo siempre visible.
+        </p>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           05 · EYEBROWS &amp; TAGS
+           ═══════════════════════════════════════════ -->
+      <section class="ds-section" id="tags">
+        <div class="ds-section-head">
+          <h2 class="ds-h2">05 · Eyebrows &amp; tags</h2>
+          <span class="ds-meta">mono · pulso lime</span>
+        </div>
+
+        <div class="ds-sub-h"><strong>Eyebrow</strong> — abre cada sección con tick lime</div>
+        <div class="ds-stage column">
+          <div><span class="eyebrow" style="margin: 0;"><span class="num">/01</span> Cómo trabajamos</span></div>
+          <div><span class="eyebrow" style="margin: 0;"><span class="num">/02</span> Servicios</span></div>
+          <div><span class="eyebrow" style="margin: 0;"><span class="num">/03</span> Resultados medibles</span></div>
+        </div>
+        <div class="ds-stage dark column" style="margin-top: 14px;">
+          <div><span class="eyebrow" style="margin: 0; color: rgba(245,241,232,0.55);"><span class="num">/04</span> Casos</span></div>
+          <div><span class="eyebrow" style="margin: 0; color: rgba(245,241,232,0.55);"><span class="num">/05</span> Sectores</span></div>
+        </div>
+
+        <div class="ds-sub-h"><strong>Hero tag</strong> · estado live con pulso lime</div>
+        <div class="ds-stage dark">
+          <span class="hero-tag">
+            <span class="dot"></span>
+            Disponibles · Q3 2026
+          </span>
+          <span class="hero-tag">
+            <span class="dot"></span>
+            7 plazas restantes este mes
+          </span>
+        </div>
+
+        <div class="ds-sub-h"><strong>Stack tags</strong> · stack técnico dentro de cards de servicio</div>
+        <div class="ds-stage">
+          <span class="tag" style="font-family: var(--font-mono); font-size: 11px; padding: 4px 8px; border-radius: 6px; background: var(--beige-3); color: var(--graphite-2); letter-spacing: 0.02em;">N8N</span>
+          <span class="tag" style="font-family: var(--font-mono); font-size: 11px; padding: 4px 8px; border-radius: 6px; background: var(--beige-3); color: var(--graphite-2); letter-spacing: 0.02em;">OpenAI</span>
+          <span class="tag" style="font-family: var(--font-mono); font-size: 11px; padding: 4px 8px; border-radius: 6px; background: var(--beige-3); color: var(--graphite-2); letter-spacing: 0.02em;">WhatsApp Business</span>
+          <span class="tag" style="font-family: var(--font-mono); font-size: 11px; padding: 4px 8px; border-radius: 6px; background: var(--beige-3); color: var(--graphite-2); letter-spacing: 0.02em;">Supabase</span>
+          <span class="tag" style="font-family: var(--font-mono); font-size: 11px; padding: 4px 8px; border-radius: 6px; background: var(--beige-3); color: var(--graphite-2); letter-spacing: 0.02em;">Next.js</span>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           06 · CARDS
+           ═══════════════════════════════════════════ -->
+      <section class="ds-section" id="cards">
+        <div class="ds-section-head">
+          <h2 class="ds-h2">06 · Cards</h2>
+          <span class="ds-meta">pilar · servicio · caso</span>
+        </div>
+
+        <!-- pilar -->
+        <div class="ds-sub-h"><strong>Pilar</strong> — narrativa numerada, icono en forest box</div>
+        <div class="ds-stage-grid cols-3">
+          <article class="pillar">
+            <span class="step">PASO 01</span>
+            <div class="icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="6.5"></circle>
+                <path d="M16 16l4 4"></path>
+              </svg>
+            </div>
+            <h3 class="h-card">Diagnosticamos</h3>
+            <p>Entendemos tu negocio, tu cliente y tus cuellos de botella antes de proponer una línea de código.</p>
+            <span class="corner">↘</span>
+          </article>
+          <article class="pillar">
+            <span class="step">PASO 02</span>
+            <div class="icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M15.5 8.5L13 13l-4.5 2.5L11 11z"></path>
+              </svg>
+            </div>
+            <h3 class="h-card">Diseñamos a medida</h3>
+            <p>Software e IA construidos alrededor de tu operación — no plantillas, no atajos.</p>
+            <span class="corner">↘</span>
+          </article>
+          <article class="pillar">
+            <span class="step">PASO 03</span>
+            <div class="icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 19c1-4 4-6 8-7s7-1 7-1-0 3-1 7-3 7-7 8c-1-2-1-3-3-4s-3-2-4-3z"></path>
+                <circle cx="14" cy="10" r="1.6"></circle>
+                <path d="M5 19l-2 2M8 16l-3 1M9 19l1-3"></path>
+              </svg>
+            </div>
+            <h3 class="h-card">Lanzamos &amp; medimos</h3>
+            <p>Vamos a producción rápido, instrumentamos todo y iteramos con datos reales.</p>
+            <span class="corner">↘</span>
+          </article>
+        </div>
+
+        <!-- bento -->
+        <div class="ds-sub-h" style="margin-top: 40px;"><strong>Servicio (bento)</strong> — incluye variante feature en forest</div>
+        <div class="bento" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px;">
+          <article class="bento-card feature col-3 row-2">
+            <div>
+              <span class="num">/SERVICIO 01</span>
+              <div class="svc-icon" style="margin-top: 16px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="4" y="7" width="16" height="13" rx="3"></rect>
+                  <path d="M12 3v4M8 12.5h.01M16 12.5h.01M9 17h6"></path>
+                </svg>
+              </div>
+              <h3 class="h-card" style="color: var(--beige); margin-top: 14px;">Agentes IA para atención &amp; ventas</h3>
+              <p>Bots que conversan, cualifican leads y reservan citas 24/7 — entrenados con tu tono y tu catálogo.</p>
+              <div class="tag-row">
+                <span class="tag">OpenAI</span>
+                <span class="tag">WhatsApp Business</span>
+                <span class="tag">N8N</span>
+              </div>
+            </div>
+          </article>
+          <article class="bento-card col-3">
+            <div>
+              <span class="num">/SERVICIO 02</span>
+              <h3 class="h-card" style="margin-top: 14px;">Automatización de procesos</h3>
+              <p>Conectamos tus herramientas y eliminamos el copia-pega — horas humanas que regresan a tu equipo.</p>
+            </div>
+          </article>
+          <article class="bento-card col-3">
+            <div>
+              <span class="num">/SERVICIO 03</span>
+              <h3 class="h-card" style="margin-top: 14px;">Dashboards a medida</h3>
+              <p>Datos de varias fuentes en una sola vista — para que decidir tarde 30 segundos, no 30 minutos.</p>
+            </div>
+          </article>
+        </div>
+
+        <!-- case -->
+        <div class="ds-sub-h" style="margin-top: 40px;"><strong>Caso</strong> — testimonial con resultado destacado</div>
+        <div class="ds-stage-grid cols-3" style="background: var(--beige-2); padding: 28px; border-radius: 18px;">
+          <article class="case">
+            <p class="quote">Pasamos de responder mensajes a las 11 de la noche a tener un agente que califica leads mientras dormimos.</p>
+            <div class="person">
+              <div class="avatar">MS</div>
+              <div class="who">
+                <div class="n">María Sánchez</div>
+                <div class="r">Hotel boutique · Bariloche</div>
+              </div>
+            </div>
+            <div class="result">
+              <div class="v"><em>+42%</em></div>
+              <div class="l">Reservas directas en 90 días</div>
+            </div>
+          </article>
+          <article class="case">
+            <p class="quote">Tu Solvex armó el flujo en dos semanas, no en seis meses. Hoy nuestro CRM se carga solo.</p>
+            <div class="person">
+              <div class="avatar">JR</div>
+              <div class="who">
+                <div class="n">Javier Ramos</div>
+                <div class="r">Inmobiliaria · CABA</div>
+              </div>
+            </div>
+            <div class="result">
+              <div class="v"><em>−18h</em></div>
+              <div class="l">Por semana en tareas manuales</div>
+            </div>
+          </article>
+          <article class="case">
+            <p class="quote">Diagnosticaron primero. Lo que entregaron resolvió exactamente lo que estaba frenando ventas.</p>
+            <div class="person">
+              <div class="avatar">CD</div>
+              <div class="who">
+                <div class="n">Carla Duarte</div>
+                <div class="r">E-commerce moda · Córdoba</div>
+              </div>
+            </div>
+            <div class="result">
+              <div class="v"><em>×2,3</em></div>
+              <div class="l">Conversión del checkout</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           07 · FORMULARIOS
+           ═══════════════════════════════════════════ -->
+      <section class="ds-section" id="forms">
+        <div class="ds-section-head">
+          <h2 class="ds-h2">07 · Formularios</h2>
+          <span class="ds-meta">inputs sobre forest · focus lime</span>
+        </div>
+
+        <div class="ds-stage dark ds-form-preview">
+          <div class="form" style="width: 100%; max-width: 520px; margin: 0 auto;">
+            <h3>Cuéntanos sobre tu negocio</h3>
+            <p class="form-sub">Respondemos en menos de 24h con un primer diagnóstico.</p>
+            <div class="field">
+              <label>Nombre</label>
+              <input type="text" placeholder="Tu nombre" />
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label>Email</label>
+                <input type="email" placeholder="tu@empresa.com" />
+              </div>
+              <div class="field">
+                <label>Empresa</label>
+                <input type="text" placeholder="Empresa SA" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Sector</label>
+              <select>
+                <option>Hotelería &amp; hospitality</option>
+                <option>E-commerce &amp; retail</option>
+                <option>Servicios profesionales</option>
+                <option>Inmobiliario</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Qué quieres resolver</label>
+              <textarea rows="3" placeholder="Ej: contestamos lento, perdemos leads en WhatsApp…"></textarea>
+            </div>
+            <button class="btn btn-glow">Enviar diagnóstico <span class="arr">→</span></button>
+            <p class="legal">Al enviar aceptas nuestra <a href="#">política de privacidad</a>.</p>
+          </div>
+        </div>
+        <p class="ds-caption">
+          Inputs sobre forest con borde beige al 14% · <strong>focus</strong> borde lime + halo lime al 15% ·
+          Labels en mono uppercase 11px graphite-3.
+        </p>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           08 · MÉTRICAS &amp; TIMELINE
+           ═══════════════════════════════════════════ -->
+      <section class="ds-section" id="metrics">
+        <div class="ds-section-head">
+          <h2 class="ds-h2">08 · Métricas &amp; timeline</h2>
+          <span class="ds-meta">big numbers · pasos</span>
+        </div>
+
+        <div class="ds-sub-h"><strong>Métricas</strong> · números grandes lime sobre forest</div>
+        <div class="ds-metric-mini">
+          <div class="m">
+            <div class="v">+<span>42</span><span class="unit">%</span></div>
+            <div class="l">Crecimiento promedio en conversión a 90 días</div>
+            <div class="t">RESULTADO · 12 PROYECTOS</div>
+          </div>
+          <div class="m">
+            <div class="v">−<span>18</span><span class="unit">h</span></div>
+            <div class="l">Horas semanales recuperadas por equipo</div>
+            <div class="t">PROMEDIO · POST-AUTOMATIZACIÓN</div>
+          </div>
+          <div class="m">
+            <div class="v">×<span>2,3</span></div>
+            <div class="l">Multiplicador de leads cualificados</div>
+            <div class="t">AGENTES IA · 6 MESES</div>
+          </div>
+        </div>
+
+        <div class="ds-sub-h" style="margin-top: 32px;"><strong>Timeline</strong> · proceso con línea punteada + nodos</div>
+        <div class="ds-stage">
+          <div class="ds-tl" style="width: 100%;">
+            <div class="ds-tl-step active">
+              <span class="node"></span>
+              <div class="num">/01 · DÍA 1–3</div>
+              <h5>Diagnóstico</h5>
+              <p>Sesión profunda + análisis de operaciones, datos y dolores.</p>
+            </div>
+            <div class="ds-tl-step active">
+              <span class="node"></span>
+              <div class="num">/02 · SEM 1–2</div>
+              <h5>Diseño</h5>
+              <p>Mapa de solución, stack propuesto, costos y tiempos.</p>
+            </div>
+            <div class="ds-tl-step">
+              <span class="node"></span>
+              <div class="num">/03 · SEM 3–6</div>
+              <h5>Construcción</h5>
+              <p>Iteramos en demos semanales — sin sorpresas al final.</p>
+            </div>
+            <div class="ds-tl-step">
+              <span class="node"></span>
+              <div class="num">/04 · CONTINUO</div>
+              <h5>Operación</h5>
+              <p>Monitoreo, mejora continua y soporte cercano.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ds-sub-h" style="margin-top: 32px;"><strong>Sectores</strong> · grid de 4 con icono + sub-mono</div>
+        <div class="ds-sec-grid">
+          <div class="ds-sec">
+            <span class="ico">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 17v-3a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v3"></path>
+                <path d="M3 21v-4M21 21v-4M5 11V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4"></path>
+              </svg>
+            </span>
+            <div>
+              <div class="lbl">Hotelería</div>
+              <div class="sub">RESERVAS · CONCIERGE IA</div>
+            </div>
+          </div>
+          <div class="ds-sec">
+            <span class="ico">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 4h2l3 12h11l2-8H7"></path>
+                <circle cx="9" cy="20" r="1.5"></circle>
+                <circle cx="18" cy="20" r="1.5"></circle>
+              </svg>
+            </span>
+            <div>
+              <div class="lbl">E-commerce</div>
+              <div class="sub">CHECKOUT · POST-VENTA</div>
+            </div>
+          </div>
+          <div class="ds-sec">
+            <span class="ico">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="4" y="3" width="16" height="18" rx="1"></rect>
+                <path d="M9 7h2M9 11h2M9 15h2M14 7h2M14 11h2M14 15h2M10 21v-3h4v3"></path>
+              </svg>
+            </span>
+            <div>
+              <div class="lbl">Inmobiliario</div>
+              <div class="sub">CRM · QUALIFY-BOTS</div>
+            </div>
+          </div>
+          <div class="ds-sec">
+            <span class="ico">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 17V6h11v11"></path>
+                <path d="M14 9h4l3 4v4h-2"></path>
+                <circle cx="8" cy="18" r="2"></circle>
+                <circle cx="17" cy="18" r="2"></circle>
+              </svg>
+            </span>
+            <div>
+              <div class="lbl">Logística</div>
+              <div class="sub">RUTAS · TRACKING</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           09 · ICONOGRAFÍA
+           ═══════════════════════════════════════════ -->
+      <section class="ds-section" id="icons">
+        <div class="ds-section-head">
+          <h2 class="ds-h2">09 · Iconografía</h2>
+          <span class="ds-meta">stroke 1.6 · 24×24 · rounded</span>
+        </div>
+
+        <p class="ds-lede" style="margin-bottom: 20px;">
+          Una sola familia de iconos lineales — todos a <strong>24×24</strong> con stroke <strong>1.6</strong>,
+          esquinas redondeadas y trazo simplificado. Color hereda de <code>currentColor</code>:
+          graphite en claro, lime en hover y dentro del icon-wrap forest.
+        </p>
+
+        <div class="ds-icons">
+          <div class="ds-ico" title="Search">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.5"></circle>
+              <path d="M16 16l4 4"></path>
+            </svg>
+            <span class="nm">Search</span>
+          </div>
+          <div class="ds-ico" title="Compass">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M15.5 8.5L13 13l-4.5 2.5L11 11z"></path>
+            </svg>
+            <span class="nm">Compass</span>
+          </div>
+          <div class="ds-ico" title="Rocket">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 19c1-4 4-6 8-7s7-1 7-1-0 3-1 7-3 7-7 8c-1-2-1-3-3-4s-3-2-4-3z"></path>
+              <circle cx="14" cy="10" r="1.6"></circle>
+              <path d="M5 19l-2 2M8 16l-3 1M9 19l1-3"></path>
+            </svg>
+            <span class="nm">Rocket</span>
+          </div>
+          <div class="ds-ico" title="Bolt">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M13 2L4 14h7l-1 8 9-12h-7z"></path>
+            </svg>
+            <span class="nm">Bolt</span>
+          </div>
+          <div class="ds-ico" title="Bot">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="7" width="16" height="13" rx="3"></rect>
+              <path d="M12 3v4M8 12.5h.01M16 12.5h.01M9 17h6"></path>
+            </svg>
+            <span class="nm">Bot</span>
+          </div>
+          <div class="ds-ico" title="Chart">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 19h16"></path>
+              <path d="M5 15l4-5 4 3 6-8"></path>
+              <circle cx="9" cy="10" r="1.4"></circle>
+              <circle cx="13" cy="13" r="1.4"></circle>
+              <circle cx="19" cy="5" r="1.4"></circle>
+            </svg>
+            <span class="nm">Chart</span>
+          </div>
+          <div class="ds-ico" title="Plug">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 3v4M15 3v4"></path>
+              <rect x="6" y="7" width="12" height="6" rx="2"></rect>
+              <path d="M12 13v4a3 3 0 0 0 3 3h2"></path>
+            </svg>
+            <span class="nm">Plug</span>
+          </div>
+          <div class="ds-ico" title="Chat">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-4 4V7a2 2 0 0 1 2-2z"></path>
+              <path d="M9 11h.01M12 11h.01M15 11h.01"></path>
+            </svg>
+            <span class="nm">Chat</span>
+          </div>
+          <div class="ds-ico" title="Cart">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 4h2l3 12h11l2-8H7"></path>
+              <circle cx="9" cy="20" r="1.5"></circle>
+              <circle cx="18" cy="20" r="1.5"></circle>
+            </svg>
+            <span class="nm">Cart</span>
+          </div>
+          <div class="ds-ico" title="Building">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="3" width="16" height="18" rx="1"></rect>
+              <path d="M9 7h2M9 11h2M9 15h2M14 7h2M14 11h2M14 15h2M10 21v-3h4v3"></path>
+            </svg>
+            <span class="nm">Building</span>
+          </div>
+          <div class="ds-ico" title="Truck">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 17V6h11v11"></path>
+              <path d="M14 9h4l3 4v4h-2"></path>
+              <circle cx="8" cy="18" r="2"></circle>
+              <circle cx="17" cy="18" r="2"></circle>
+            </svg>
+            <span class="nm">Truck</span>
+          </div>
+          <div class="ds-ico" title="Bed">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 17v-3a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v3"></path>
+              <path d="M3 21v-4M21 21v-4M5 11V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4"></path>
+            </svg>
+            <span class="nm">Bed</span>
+          </div>
+          <div class="ds-ico" title="Check">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 12l5 5L20 6"></path>
+            </svg>
+            <span class="nm">Check</span>
+          </div>
+          <div class="ds-ico" title="Arrow">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
+            <span class="nm">Arrow</span>
+          </div>
+          <div class="ds-ico" title="Spark">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l3 3M15 15l3 3M6 18l3-3M15 9l3-3"></path>
+            </svg>
+            <span class="nm">Spark</span>
+          </div>
+          <div class="ds-ico" title="Lock">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="5" y="11" width="14" height="9" rx="2"></rect>
+              <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+            </svg>
+            <span class="nm">Lock</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════════
+           10 · USO EN CÓDIGO
+           ═══════════════════════════════════════════ -->
+      <section class="ds-section">
+        <div class="ds-section-head">
+          <h2 class="ds-h2">10 · Uso en código</h2>
+          <span class="ds-meta">tokens · clases</span>
+        </div>
+
+        <pre class="ds-code">
+<span class="c">/* tokens — definidos en styles.css */</span>
+<span class="k">--forest</span>: #0D2818;   <span class="k">--lime</span>: #00FF88;
+<span class="k">--beige</span>:  #F5F1E8;   <span class="k">--graphite</span>: #1F2937;
+
+<span class="k">--font-display</span>: <span class="s">"Space Grotesk"</span>;
+<span class="k">--font-body</span>:    <span class="s">"DM Sans"</span>;
+<span class="k">--font-mono</span>:    <span class="s">"Geist Mono"</span>;
+
+<span class="k">--r-sm</span>: 8px;  <span class="k">--r</span>: 14px;  <span class="k">--r-lg</span>: 20px;
+
+<span class="c">/* clases prêt-à-porter */</span>
+&lt;button class=<span class="s">"btn btn-primary"</span>&gt;CTA &lt;span class=<span class="s">"arr"</span>&gt;→&lt;/span&gt;&lt;/button&gt;
+&lt;span    class=<span class="s">"eyebrow"</span>&gt;&lt;span class=<span class="s">"num"</span>&gt;/01&lt;/span&gt; Sección&lt;/span&gt;
+&lt;h2      class=<span class="s">"h-section"</span>&gt;Título de sección&lt;em&gt;.&lt;/em&gt;&lt;/h2&gt;
+&lt;article class=<span class="s">"pillar"</span>&gt;… &lt;/article&gt;
+&lt;article class=<span class="s">"bento-card feature col-3"</span>&gt;… &lt;/article&gt;
+&lt;article class=<span class="s">"case"</span>&gt;… &lt;/article&gt;</pre>
+      </section>
+
+    </div>
+  </div>
+</body>
+</html>

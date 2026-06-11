@@ -1,0 +1,211 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "design-canvas.jsx",
+              "ui_kits/marketing/**"
+            ],
+            "message": "Import design-system components from 'index.js', not component internals."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Space Grotesk|DM Sans|Geist Mono))/i]",
+        "message": "Font not provided by the design system. Available: Space Grotesk, DM Sans, Geist Mono."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {},
+    "tokens": [
+      "--accent",
+      "--accent-hover",
+      "--active-step",
+      "--beige",
+      "--beige-2",
+      "--beige-3",
+      "--beige-paper",
+      "--bg",
+      "--bg-chip",
+      "--bg-elev",
+      "--bg-soft",
+      "--ease-out",
+      "--fg1",
+      "--fg2",
+      "--fg3",
+      "--font-body",
+      "--font-display",
+      "--font-mono",
+      "--forest",
+      "--forest-2",
+      "--forest-soft",
+      "--fs-body",
+      "--fs-caption",
+      "--fs-display",
+      "--fs-h1",
+      "--fs-h2",
+      "--fs-h3",
+      "--fs-h4",
+      "--fs-lede",
+      "--fs-mono-eyebrow",
+      "--fs-small",
+      "--glow-lime",
+      "--graphite",
+      "--graphite-2",
+      "--graphite-3",
+      "--lh-body",
+      "--lh-display",
+      "--lh-heading",
+      "--lime",
+      "--lime-dim",
+      "--line-dark",
+      "--line-light",
+      "--ls-display",
+      "--ls-eyebrow",
+      "--ls-heading",
+      "--maxw",
+      "--node-size",
+      "--on-accent",
+      "--pad-x",
+      "--r",
+      "--r-lg",
+      "--r-pill",
+      "--r-sm",
+      "--rail-edge",
+      "--s-1",
+      "--s-10",
+      "--s-12",
+      "--s-16",
+      "--s-2",
+      "--s-20",
+      "--s-24",
+      "--s-28",
+      "--s-3",
+      "--s-4",
+      "--s-5",
+      "--s-6",
+      "--s-8",
+      "--shadow-1",
+      "--shadow-2",
+      "--shadow-3",
+      "--t-base",
+      "--t-fast",
+      "--t-slow"
+    ],
+    "tokenKinds": {
+      "--forest": "color",
+      "--forest-2": "color",
+      "--forest-soft": "color",
+      "--lime": "color",
+      "--lime-dim": "color",
+      "--beige": "color",
+      "--beige-2": "color",
+      "--beige-3": "color",
+      "--beige-paper": "color",
+      "--graphite": "color",
+      "--graphite-2": "color",
+      "--graphite-3": "color",
+      "--bg": "color",
+      "--bg-elev": "shadow",
+      "--bg-soft": "color",
+      "--bg-chip": "color",
+      "--fg1": "color",
+      "--fg2": "color",
+      "--fg3": "color",
+      "--accent": "color",
+      "--accent-hover": "color",
+      "--on-accent": "color",
+      "--line-light": "color",
+      "--line-dark": "color",
+      "--font-display": "font",
+      "--font-body": "font",
+      "--font-mono": "font",
+      "--fs-display": "other",
+      "--fs-h1": "other",
+      "--fs-h2": "other",
+      "--fs-h3": "spacing",
+      "--fs-h4": "spacing",
+      "--fs-lede": "other",
+      "--fs-body": "spacing",
+      "--fs-small": "spacing",
+      "--fs-caption": "spacing",
+      "--fs-mono-eyebrow": "spacing",
+      "--lh-display": "other",
+      "--lh-heading": "other",
+      "--lh-body": "other",
+      "--ls-display": "spacing",
+      "--ls-heading": "spacing",
+      "--ls-eyebrow": "spacing",
+      "--r-sm": "spacing",
+      "--r": "spacing",
+      "--r-lg": "spacing",
+      "--r-pill": "spacing",
+      "--s-1": "spacing",
+      "--s-2": "spacing",
+      "--s-3": "spacing",
+      "--s-4": "spacing",
+      "--s-5": "spacing",
+      "--s-6": "spacing",
+      "--s-8": "spacing",
+      "--s-10": "spacing",
+      "--s-12": "spacing",
+      "--s-16": "spacing",
+      "--s-20": "spacing",
+      "--s-24": "spacing",
+      "--s-28": "spacing",
+      "--shadow-1": "shadow",
+      "--shadow-2": "shadow",
+      "--shadow-3": "shadow",
+      "--glow-lime": "shadow",
+      "--maxw": "spacing",
+      "--pad-x": "spacing",
+      "--ease-out": "other",
+      "--t-fast": "other",
+      "--t-base": "other",
+      "--t-slow": "other",
+      "--active-step": "other",
+      "--node-size": "spacing",
+      "--rail-edge": "spacing"
+    },
+    "fontFamilies": [
+      "DM Sans",
+      "Geist Mono",
+      "Space Grotesk"
+    ]
+  }
+}

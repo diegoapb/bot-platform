@@ -1,0 +1,151 @@
+<!doctype html>
+<!-- @dsCard group="Brand" name="Type · Stack" subtitle="Three families · usage map" viewport="760x280" --><html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .family {
+    padding-top: 18px;
+    margin-top: 18px;
+    border-top: 1px solid rgba(31,41,55,0.10);
+  }
+  .family:first-of-type { padding-top: 0; margin-top: 0; border:0; }
+
+  .family-head {
+    display:flex; align-items:baseline; justify-content:space-between; gap:14px;
+    margin-bottom: 14px;
+  }
+  .family-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: -0.012em;
+    color: #1F2937;
+  }
+  .family-role {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6B7280;
+  }
+
+  .spec {
+    display: grid;
+    grid-template-columns: 124px 1fr;
+    gap: 18px;
+    align-items: baseline;
+    padding: 8px 0;
+    border-top: 1px dashed rgba(31,41,55,0.08);
+  }
+  .spec:first-of-type { border-top: 0; padding-top: 0; }
+  .spec-meta {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: #6B7280;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+  }
+  .spec-meta strong { color: #00A85A; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; display: block; }
+  .spec-sample { color: #1F2937; }
+  .spec-sample em { font-style: normal; color: #00B863; background: linear-gradient(180deg, transparent 62%, rgba(0,255,136,0.32) 62%, rgba(0,255,136,0.32) 92%, transparent 92%); padding: 0 4px; margin: 0 -2px; }
+</style>
+</head>
+<body class="pad">
+
+  <!-- ─── Space Grotesk ─── -->
+  <section class="family">
+    <div class="family-head">
+      <div class="family-name">Space Grotesk</div>
+      <div class="family-role">Display · Headings · 400 / 500 / 600 / 700</div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>Display</strong>64 / 500<br>−0.025 · 0.98</div>
+      <div class="spec-sample" style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:48px; line-height:0.98; letter-spacing:-0.025em;">Software &amp; IA que hace <em>crecer</em> tu negocio.</div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>H-section</strong>40 / 500<br>−0.022 · 1.02</div>
+      <div class="spec-sample" style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:34px; line-height:1.02; letter-spacing:-0.022em;">Cómo crecemos contigo</div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>H-card</strong>22 / 500<br>−0.012 · 1.15</div>
+      <div class="spec-sample" style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:22px; line-height:1.15; letter-spacing:-0.012em;">Automatización de procesos</div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>Wordmark</strong>18 / 600<br>−0.01 · 1.0</div>
+      <div class="spec-sample" style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; letter-spacing:-0.01em;">Open Solvex</div>
+    </div>
+  </section>
+
+  <!-- ─── DM Sans ─── -->
+  <section class="family">
+    <div class="family-head">
+      <div class="family-name">DM Sans</div>
+      <div class="family-role">Body · UI · 400 / 500 / 600</div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>Lede</strong>17 / 400<br>1.5 · fg-2</div>
+      <div class="spec-sample" style="font-family:'DM Sans',sans-serif; font-weight:400; font-size:17px; line-height:1.5; color:#374151;">Diseñamos soluciones a medida para impulsar ventas, atraer clientes y elevar la calidad del servicio.</div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>Body</strong>15 / 400<br>1.55 · fg-2</div>
+      <div class="spec-sample" style="font-family:'DM Sans',sans-serif; font-weight:400; font-size:15px; line-height:1.55; color:#374151;">Implementamos herramientas open-source para que tu hotel capte más huéspedes, reduzca comisiones y opere mejor.</div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>Button</strong>15 / 500<br>−0.005 · pill</div>
+      <div class="spec-sample">
+        <span style="display:inline-flex; align-items:center; gap:10px; height:42px; padding:0 20px; border-radius:999px; background:#00FF88; color:#0D2818; font-family:'DM Sans',sans-serif; font-weight:500; font-size:15px; letter-spacing:-0.005em;">Agendar diagnóstico →</span>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>Small</strong>14 / 400<br>1.5 · listas</div>
+      <div class="spec-sample" style="font-family:'DM Sans',sans-serif; font-weight:400; font-size:14px; line-height:1.5; color:#374151;">Cal.com · Listmonk · Plausible · NocoDB</div>
+    </div>
+  </section>
+
+  <!-- ─── Geist Mono ─── -->
+  <section class="family">
+    <div class="family-head">
+      <div class="family-name">Geist Mono</div>
+      <div class="family-role">Mono · Metadata · 400 / 500</div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>Eyebrow</strong>12 / 500<br>+0.04 · CAPS</div>
+      <div class="spec-sample" style="display:inline-flex; align-items:center; gap:10px; font-family:'Geist Mono',monospace; font-weight:500; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:#6B7280;">
+        <span style="width:22px; height:1px; background:#00CC6E;"></span>
+        <span style="color:#00CC6E;">01</span><span>&nbsp;SERVICIOS</span>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>KPI value</strong>32 / 500<br>−0.03 · lime-dim</div>
+      <div class="spec-sample" style="display:inline-flex; align-items:baseline; gap:10px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:32px; letter-spacing:-0.03em; color:#00CC6E; line-height:1;">+38%</span>
+        <span style="font-family:'Geist Mono',monospace; font-weight:400; font-size:11px; letter-spacing:0.04em; text-transform:uppercase; color:#6B7280;">reservas directas</span>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>Tag chip</strong>11 / 400<br>+0.02 · r-6</div>
+      <div class="spec-sample" style="display:inline-flex; gap:6px;">
+        <span style="font-family:'Geist Mono',monospace; font-size:11px; padding:4px 8px; border-radius:6px; background:#E2DBC7; color:#374151; letter-spacing:0.02em;">cal.com</span>
+        <span style="font-family:'Geist Mono',monospace; font-size:11px; padding:4px 8px; border-radius:6px; background:#E2DBC7; color:#374151; letter-spacing:0.02em;">listmonk</span>
+        <span style="font-family:'Geist Mono',monospace; font-size:11px; padding:4px 8px; border-radius:6px; background:#E2DBC7; color:#374151; letter-spacing:0.02em;">plausible</span>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-meta"><strong>Badge OS</strong>10 / 600<br>+0.08 · sello</div>
+      <div class="spec-sample">
+        <span style="display:inline-block; font-family:'Geist Mono',monospace; font-weight:600; font-size:10px; letter-spacing:0.08em; padding:4px 8px; border-radius:5px; background:rgba(0,204,110,0.16); border:1px solid #00CC6E; color:#00A85A;">OS</span>
+      </div>
+    </div>
+  </section>
+
+</body></html>
