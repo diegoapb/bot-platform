@@ -32,11 +32,11 @@ El corazón del producto: ante un mensaje entrante, el bot construye contexto (i
 
 ## Historias de la épica (2)
 
-**Progreso:** 0/2 en producción (0%) · Pendiente desarrollo: 2
+**Progreso:** 0/2 en producción (0%) · Pendiente de pruebas: 2
 
 | ID | Título | Ciclo | Estado | Prioridad |
 | --- | --- | --- | --- | --- |
-| [US-011](../stories/US-011-pipeline-respuesta/index.md) | Pipeline de respuesta automática | C01 | Pendiente desarrollo | P0 |
-| [US-012](../stories/US-012-handoff-humano/index.md) | Handoff bot ↔ agente humano | C01 | Pendiente desarrollo | P1 |
+| [US-011](../stories/US-011-pipeline-respuesta/index.md) | Pipeline de respuesta automática | C01 | Pendiente de pruebas | P0 |
+| [US-012](../stories/US-012-handoff-humano/index.md) | Handoff bot ↔ agente humano | C01 | Pendiente de pruebas | P1 |
 
 <!-- DASHBOARD:END -->

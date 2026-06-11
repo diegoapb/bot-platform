@@ -3,7 +3,7 @@ id: US-011
 title: Pipeline de respuesta automática
 epic: E06
 cycle: C01
-status: Pendiente desarrollo
+status: Pendiente de pruebas
 priority: P0
 estimate: XL
 owner: @diego

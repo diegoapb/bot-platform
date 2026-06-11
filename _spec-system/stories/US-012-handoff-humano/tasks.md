@@ -10,35 +10,35 @@ Estado y auditoría (T1–T2), tool del LLM (T3), control manual API+webhook (T4
 
 ## Tasks
 
-- [ ] **T1 — Migración: `conversation_transitions` + `bots.handoff_message`**
+- [x] **T1 — Migración: `conversation_transitions` + `bots.handoff_message`**
   - Archivos: `apps/backend/drizzle/000X_handoff.sql`, `apps/backend/src/db/schema.ts`
   - PASS si: fk a conversations; índice por conversation; default de plantilla.
   - FAIL si: transición sin cause/actor.
   - Properties: P2
   - Requirements: 4.3
 
-- [ ] **T2 — `conversationState.setMode` transaccional e idempotente**
+- [x] **T2 — `conversationState.setMode` transaccional e idempotente**
   - Archivos: `apps/backend/src/services/conversation-state.ts`
   - PASS si: FOR UPDATE; no-op si mismo modo; labels Chatwoot best-effort.
   - FAIL si: cambio de modo sin fila de transición.
   - Properties: P2, P3
   - Requirements: 3.3, 4.3
 
-- [ ] **T3 — Tool `request_human` en replyEngine**
+- [x] **T3 — Tool `request_human` en replyEngine**
   - Archivos: `apps/backend/src/services/reply-engine.ts`, `apps/backend/src/services/context-builder.ts`
   - PASS si: tool_use → modo human + plantilla al cliente + nota privada con reason; texto del LLM descartado; system prompt instruye usar la tool ante intención de humano.
   - FAIL si: cliente recibe respuesta del LLM además de la plantilla.
   - Properties: P1, P4
   - Requirements: 1.1, 1.2, 1.3, 2.1, 2.2
 
-- [ ] **T4 — Endpoint de modo + webhook `conversation_updated`**
+- [x] **T4 — Endpoint de modo + webhook `conversation_updated`**
   - Archivos: `apps/backend/src/routes/conversations.ts`, `apps/backend/src/routes/webhooks.ts`
   - PASS si: POST mode con permisos; asignación de agente en Chatwoot → human; devolución a bot reactiva el motor.
   - FAIL si: member no asignado cambia modo.
   - Properties: P1, P3
   - Requirements: 3.1, 3.2, 4.1
 
-- [ ] **T5 — UI de estado en panel de conversación**
+- [x] **T5 — UI de estado en panel de conversación**
   - Archivos: `apps/frontend/src/pages/conversations/ConversationView.tsx`
   - PASS si: badge de modo con refresh ≤5s; acciones tomar/devolver/pausar según rol; historial de transiciones visible.
   - FAIL si: estado mostrado diverge del backend tras una acción.

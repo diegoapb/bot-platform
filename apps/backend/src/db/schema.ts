@@ -9,6 +9,7 @@ import {
   unique,
   index,
   jsonb,
+  numeric,
 } from "drizzle-orm/pg-core";
 
 export const botChannel = pgEnum("bot_channel", ["whatsapp"]);
@@ -20,6 +21,20 @@ export const connectionStatus = pgEnum("connection_status", [
 ]);
 export const webhookSource = pgEnum("webhook_source", ["evolution", "chatwoot"]);
 export const identityType = pgEnum("identity_type", ["SOUL", "IDENTITY", "GUARDRAILS"]);
+export const knowledgeSourceKind = pgEnum("knowledge_source_kind", ["text", "file", "faq"]);
+export const knowledgeSourceStatus = pgEnum("knowledge_source_status", [
+  "pending",
+  "indexing",
+  "ready",
+  "failed",
+]);
+export const catalogAvailability = pgEnum("catalog_availability", [
+  "available",
+  "unavailable",
+  "on_request",
+]);
+export const conversationMode = pgEnum("conversation_mode", ["bot", "human", "paused"]);
+export const factOrigin = pgEnum("fact_origin", ["bot", "human"]);
 
 /**
  * Estado de plataforma de cada tenant (organización de Clerk). La membresía y
@@ -69,6 +84,10 @@ export const bots = pgTable(
     chatwootInboxIdentifier: text("chatwoot_inbox_identifier"),
     // Token por bot para validar el webhook entrante de Chatwoot.
     chatwootWebhookToken: text("chatwoot_webhook_token"),
+    // Plantilla que el bot envía al cliente cuando transfiere a un humano (E06/US-012).
+    handoffMessage: text("handoff_message")
+      .notNull()
+      .default("Te comunico con una persona del equipo, en breve te atienden."),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -179,6 +198,220 @@ export const identityDocuments = pgTable(
     byBot: index("identity_documents_bot_idx").on(t.botId, t.type),
   }),
 );
+
+// --- Base de conocimiento (E05 / US-009) -----------------------------------
+
+/**
+ * Fuente de conocimiento de un bot: texto pegado, archivo (md/txt/pdf) o FAQ.
+ * `rawText` conserva el texto extraído para poder reindexar sin el archivo.
+ */
+export const knowledgeSources = pgTable(
+  "knowledge_sources",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    kind: knowledgeSourceKind("kind").notNull(),
+    title: text("title").notNull(),
+    rawText: text("raw_text").notNull(),
+    status: knowledgeSourceStatus("status").notNull().default("pending"),
+    error: text("error"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byBot: index("knowledge_sources_bot_idx").on(t.botId),
+  }),
+);
+
+/**
+ * Chunk indexado de una fuente. El embedding se guarda como jsonb (number[]):
+ * el Postgres de Dokploy no trae pgvector; la similitud coseno se calcula
+ * in-process en `retrieve()` — suficiente a escala MVP. Deuda: migrar a
+ * pgvector + HNSW cuando la imagen de Postgres lo soporte.
+ */
+export const knowledgeChunks = pgTable(
+  "knowledge_chunks",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    sourceId: uuid("source_id")
+      .notNull()
+      .references(() => knowledgeSources.id, { onDelete: "cascade" }),
+    seq: integer("seq").notNull(),
+    content: text("content").notNull(),
+    embedding: jsonb("embedding").$type<number[]>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byBot: index("knowledge_chunks_bot_idx").on(t.botId),
+    bySource: index("knowledge_chunks_source_idx").on(t.sourceId),
+  }),
+);
+
+// --- Catálogo (E05 / US-010) ------------------------------------------------
+
+/**
+ * Ítem del catálogo. La columna generada `search tsvector` (config spanish,
+ * sobre name+description+attributes) vive solo en SQL (migración); las
+ * consultas full-text usan sql`` directamente.
+ */
+export const catalogItems = pgTable(
+  "catalog_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    // numeric → string en TS; nunca float binario (P3 de US-010).
+    price: numeric("price", { precision: 12, scale: 2 }).notNull(),
+    currency: text("currency").notNull(),
+    availability: catalogAvailability("availability").notNull().default("available"),
+    attributes: jsonb("attributes").$type<Record<string, string>>().notNull().default({}),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byBot: index("catalog_items_bot_idx").on(t.botId),
+  }),
+);
+
+// --- Motor conversacional (E06 / US-011, US-012) -----------------------------
+
+/**
+ * Estado propio de cada conversación (no depende de Chatwoot). Una fila por
+ * channel_link (MVP: una conversación viva por contacto). `lockedAt` actúa de
+ * lock con TTL 60s para serializar generaciones; `consolidatedAt` marca la
+ * consolidación de memoria (E07) y se resetea con cada mensaje nuevo.
+ */
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    channelLinkId: uuid("channel_link_id")
+      .notNull()
+      .references(() => channelLinks.id, { onDelete: "cascade" }),
+    mode: conversationMode("mode").notNull().default("bot"),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lastMsgAt: timestamp("last_msg_at", { withTimezone: true }).notNull().defaultNow(),
+    consolidatedAt: timestamp("consolidated_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqLink: unique("conversations_channel_link_uq").on(t.channelLinkId),
+    byTenant: index("conversations_tenant_idx").on(t.tenantId),
+    byBot: index("conversations_bot_idx").on(t.botId),
+  }),
+);
+
+/** Traza de cada invocación al LLM (éxito o error) — P4 de US-011. */
+export const generations = pgTable(
+  "generations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    model: text("model").notNull(),
+    prompt: jsonb("prompt").notNull(),
+    response: text("response"),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    latencyMs: integer("latency_ms"),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byTenant: index("generations_tenant_idx").on(t.tenantId, t.createdAt),
+    byConversation: index("generations_conversation_idx").on(t.conversationId),
+  }),
+);
+
+/** Auditoría de transiciones de modo (US-012, P2). */
+export const conversationTransitions = pgTable(
+  "conversation_transitions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversations.id, { onDelete: "cascade" }),
+    fromMode: conversationMode("from_mode").notNull(),
+    toMode: conversationMode("to_mode").notNull(),
+    cause: text("cause").notNull(),
+    actorId: text("actor_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byConversation: index("conversation_transitions_conversation_idx").on(t.conversationId),
+  }),
+);
+
+// --- Memoria por cliente (E07 / US-013) --------------------------------------
+
+/** Resumen acumulado por contacto (anclado al channel_link → aislamiento por bot/tenant). */
+export const contactMemories = pgTable("contact_memories", {
+  channelLinkId: uuid("channel_link_id")
+    .primaryKey()
+    .references(() => channelLinks.id, { onDelete: "cascade" }),
+  tenantId: text("tenant_id").notNull(),
+  botId: uuid("bot_id")
+    .notNull()
+    .references(() => bots.id, { onDelete: "cascade" }),
+  summary: text("summary").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Hecho clave-valor sobre el contacto. A lo sumo un valor vigente por (contacto, clave). */
+export const contactFacts = pgTable(
+  "contact_facts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    channelLinkId: uuid("channel_link_id")
+      .notNull()
+      .references(() => channelLinks.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    value: text("value").notNull(),
+    origin: factOrigin("origin").notNull(),
+    updatedBy: text("updated_by"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqFact: unique("contact_facts_link_key_uq").on(t.channelLinkId, t.key),
+    byLink: index("contact_facts_link_idx").on(t.channelLinkId),
+  }),
+);
+
+export type KnowledgeSourceRow = typeof knowledgeSources.$inferSelect;
+export type KnowledgeChunkRow = typeof knowledgeChunks.$inferSelect;
+export type CatalogItemRow = typeof catalogItems.$inferSelect;
+export type ConversationRow = typeof conversations.$inferSelect;
+export type GenerationRow = typeof generations.$inferSelect;
+export type ConversationTransitionRow = typeof conversationTransitions.$inferSelect;
+export type ContactMemoryRow = typeof contactMemories.$inferSelect;
+export type ContactFactRow = typeof contactFacts.$inferSelect;
 
 export type WebhookEventRow = typeof webhookEvents.$inferSelect;
 export type ChannelLinkRow = typeof channelLinks.$inferSelect;

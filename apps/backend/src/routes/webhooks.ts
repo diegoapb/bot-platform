@@ -1,10 +1,11 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { env } from "../env.js";
 import { db } from "../db/client.js";
-import { bots, webhookEvents } from "../db/schema.js";
+import { bots, channelLinks, conversations, webhookEvents } from "../db/schema.js";
 import { mapConnectionState } from "../integrations/evolution.js";
 import { findBotByInstance, handleInbound, handleAgentReply } from "../services/message-sync.js";
+import { setMode } from "../services/conversation-state.js";
 
 /**
  * Webhooks ENTRANTES.
@@ -101,6 +102,35 @@ webhooks.post("/chatwoot/:botId", async (c) => {
     } catch (e) {
       console.error("[webhook:chatwoot] handleAgentReply", e);
       return c.json({ ok: false }, 500);
+    }
+  } else if (type === "conversation_updated") {
+    // US-012 (3.1): asignación de agente en Chatwoot → modo human. La
+    // devolución al bot es siempre una decisión explícita (panel), no automática.
+    try {
+      const cwConversationId: number | undefined = payload.id ?? payload.conversation?.id;
+      const assigneeId = payload.meta?.assignee?.id ?? payload.conversation?.meta?.assignee?.id;
+      if (cwConversationId && assigneeId) {
+        const [link] = await db
+          .select()
+          .from(channelLinks)
+          .where(
+            and(
+              eq(channelLinks.botId, bot.id),
+              eq(channelLinks.cwConversationId, cwConversationId),
+            ),
+          );
+        if (link) {
+          const [convo] = await db
+            .select()
+            .from(conversations)
+            .where(eq(conversations.channelLinkId, link.id));
+          if (convo && convo.mode === "bot") {
+            await setMode(convo.id, "human", "chatwoot:agent", String(assigneeId));
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[webhook:chatwoot] conversation_updated", e);
     }
   }
 

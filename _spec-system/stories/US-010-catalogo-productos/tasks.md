@@ -10,35 +10,35 @@ Modelo con tsvector (T1), servicio (T2), import CSV (T3), rutas (T4), UI (T5), t
 
 ## Tasks
 
-- [ ] **T1 — Migración: `catalog_items` con tsvector generado**
+- [x] **T1 — Migración: `catalog_items` con tsvector generado**
   - Archivos: `apps/backend/drizzle/000X_catalog.sql`, `apps/backend/src/db/schema.ts`
   - PASS si: columna generada con config `spanish`; índice GIN; numeric(12,2); enums correctos.
   - FAIL si: precio como float/double.
   - Properties: P3
   - Requirements: 1.1
 
-- [ ] **T2 — `catalogService` CRUD + `searchCatalog`**
+- [x] **T2 — `catalogService` CRUD + `searchCatalog`**
   - Archivos: `apps/backend/src/services/catalog.ts`
   - PASS si: create/update/archive correctos; search solo activos del bot con ranking.
   - FAIL si: ítem archivado aparece en searchCatalog.
   - Properties: P1, P2, P3
   - Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.3
 
-- [ ] **T3 — Import CSV con reporte por fila**
+- [x] **T3 — Import CSV con reporte por fila**
   - Archivos: `apps/backend/src/services/catalog.ts`
   - PASS si: 500 filas máx; válidas insertadas, inválidas reportadas con fila y motivo.
   - FAIL si: una fila inválida aborta todo el import.
   - Properties: P4
   - Requirements: 1.5
 
-- [ ] **T4 — Rutas `/api/bots/:id/catalog*`**
+- [x] **T4 — Rutas `/api/bots/:id/catalog*`**
   - Archivos: `apps/backend/src/routes/catalog.ts`, `apps/backend/src/index.ts`
   - PASS si: admin escribe, member solo GET; filtros q/availability; multipart import.
   - FAIL si: acceso cross-tenant.
   - Properties: P1
   - Requirements: 3.1, 3.2
 
-- [ ] **T5 — UI `CatalogManager`**
+- [x] **T5 — UI `CatalogManager`**
   - Archivos: `apps/frontend/src/pages/bots/CatalogManager.tsx`
   - PASS si: tabla con filtros, modal CRUD, archivar con confirmación, import con reporte visible.
   - FAIL si: precios renderizados con errores de redondeo.

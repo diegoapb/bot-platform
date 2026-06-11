@@ -3,7 +3,7 @@ id: US-012
 title: Handoff bot ↔ agente humano
 epic: E06
 cycle: C01
-status: Pendiente desarrollo
+status: Pendiente de pruebas
 priority: P1
 estimate: M
 owner: @diego

@@ -13,6 +13,18 @@ import type {
   IdentityType,
   IdentityDoc,
   IdentityVersion,
+  KnowledgeSource,
+  CreateSourceInput,
+  ScoredChunk,
+  CatalogItem,
+  CatalogItemInput,
+  UpdateCatalogItemInput,
+  ImportReport,
+  ConversationSummary,
+  ConversationTransition,
+  ConversationMode,
+  ContactSummary,
+  ContactMemory,
 } from "@bot/shared";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
@@ -31,6 +43,25 @@ export function createApi(getToken: () => Promise<string | null>) {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init?.headers ?? {}),
       },
+    });
+    const json = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      data?: T;
+      error?: string;
+    };
+    if (!res.ok || !json.ok) {
+      throw new Error(json.error ?? `HTTP ${res.status}`);
+    }
+    return json.data as T;
+  }
+
+  /** Variante multipart: no fija Content-Type (lo pone el browser con boundary). */
+  async function requestForm<T>(path: string, form: FormData): Promise<T> {
+    const token = await getToken();
+    const res = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: form,
     });
     const json = (await res.json().catch(() => ({}))) as {
       ok?: boolean;
@@ -93,6 +124,89 @@ export function createApi(getToken: () => Promise<string | null>) {
         `/api/bots/${botId}/identity/${type}/versions/${version}/restore`,
         { method: "POST" },
       ),
+
+    // Base de conocimiento (E05 / US-009)
+    listKnowledge: (botId: string) =>
+      request<KnowledgeSource[]>(`/api/bots/${botId}/knowledge`),
+    createKnowledgeSource: (botId: string, input: CreateSourceInput) =>
+      request<{ id: string }>(`/api/bots/${botId}/knowledge`, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    uploadKnowledgeFile: (botId: string, file: File, title?: string) => {
+      const form = new FormData();
+      form.set("file", file);
+      if (title) form.set("title", title);
+      return requestForm<{ id: string }>(`/api/bots/${botId}/knowledge`, form);
+    },
+    deleteKnowledgeSource: (botId: string, sourceId: string) =>
+      request<{ id: string }>(`/api/bots/${botId}/knowledge/${sourceId}`, { method: "DELETE" }),
+    reindexKnowledgeSource: (botId: string, sourceId: string) =>
+      request<{ id: string }>(`/api/bots/${botId}/knowledge/${sourceId}/reindex`, {
+        method: "POST",
+      }),
+    searchKnowledge: (botId: string, query: string, k?: number) =>
+      request<ScoredChunk[]>(`/api/bots/${botId}/knowledge/search`, {
+        method: "POST",
+        body: JSON.stringify({ query, k }),
+      }),
+
+    // Catálogo (E05 / US-010)
+    listCatalog: (botId: string, filter?: { q?: string; availability?: string }) => {
+      const params = new URLSearchParams();
+      if (filter?.q) params.set("q", filter.q);
+      if (filter?.availability) params.set("availability", filter.availability);
+      const qs = params.toString();
+      return request<CatalogItem[]>(`/api/bots/${botId}/catalog${qs ? `?${qs}` : ""}`);
+    },
+    createCatalogItem: (botId: string, input: CatalogItemInput) =>
+      request<CatalogItem>(`/api/bots/${botId}/catalog`, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    updateCatalogItem: (botId: string, itemId: string, patch: UpdateCatalogItemInput) =>
+      request<CatalogItem>(`/api/bots/${botId}/catalog/${itemId}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch),
+      }),
+    archiveCatalogItem: (botId: string, itemId: string, archived: boolean) =>
+      request<CatalogItem>(`/api/bots/${botId}/catalog/${itemId}/archive`, {
+        method: "POST",
+        body: JSON.stringify({ archived }),
+      }),
+    importCatalogCsv: (botId: string, file: File) => {
+      const form = new FormData();
+      form.set("file", file);
+      return requestForm<ImportReport>(`/api/bots/${botId}/catalog/import`, form);
+    },
+
+    // Conversaciones (E06)
+    listConversations: (botId: string) =>
+      request<ConversationSummary[]>(`/api/bots/${botId}/conversations`),
+    listTransitions: (conversationId: string) =>
+      request<ConversationTransition[]>(`/api/conversations/${conversationId}/transitions`),
+    setConversationMode: (conversationId: string, mode: ConversationMode) =>
+      request<{ mode: ConversationMode; changed: boolean }>(
+        `/api/conversations/${conversationId}/mode`,
+        { method: "POST", body: JSON.stringify({ mode }) },
+      ),
+
+    // Contactos y memoria (E07)
+    listContacts: (botId: string) => request<ContactSummary[]>(`/api/bots/${botId}/contacts`),
+    getContactMemory: (linkId: string) =>
+      request<ContactMemory>(`/api/contacts/${linkId}/memory`),
+    upsertContactFact: (linkId: string, key: string, value: string) =>
+      request<{ key: string }>(`/api/contacts/${linkId}/memory`, {
+        method: "PATCH",
+        body: JSON.stringify({ key, value }),
+      }),
+    deleteContactFact: (linkId: string, key: string) =>
+      request<{ key: string }>(
+        `/api/contacts/${linkId}/memory/facts/${encodeURIComponent(key)}`,
+        { method: "DELETE" },
+      ),
+    wipeContactMemory: (linkId: string) =>
+      request<{ wiped: boolean }>(`/api/contacts/${linkId}/memory`, { method: "DELETE" }),
 
     // Equipo (admin)
     listMembers: () => request<TenantMember[]>("/api/team/members"),

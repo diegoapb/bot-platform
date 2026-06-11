@@ -3,7 +3,7 @@ id: US-013
 title: Memoria persistente por cliente
 epic: E07
 cycle: C01
-status: Pendiente desarrollo
+status: Pendiente de pruebas
 priority: P1
 estimate: M
 owner: @diego

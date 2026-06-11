@@ -3,7 +3,7 @@ id: US-009
 title: Gestión e ingestión de conocimiento
 epic: E05
 cycle: C01
-status: Pendiente desarrollo
+status: Pendiente de pruebas
 priority: P1
 estimate: L
 owner: @diego

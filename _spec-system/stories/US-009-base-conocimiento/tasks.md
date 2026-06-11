@@ -10,42 +10,42 @@ pgvector y modelo primero (T1), chunker+embeddings (T2), servicio de ingestión 
 
 ## Tasks
 
-- [ ] **T1 — Migración: pgvector + `knowledge_sources` + `knowledge_chunks`**
+- [x] **T1 — Migración: pgvector + `knowledge_sources` + `knowledge_chunks`**
   - Archivos: `apps/backend/drizzle/000X_knowledge.sql`, `apps/backend/src/db/schema.ts`
   - PASS si: `CREATE EXTENSION vector` aplica en dev y prod; FK cascade source→chunks; índice HNSW creado.
   - FAIL si: vector dims ≠ 1536 o falta índice por bot_id.
   - Properties: P1, P2
   - Requirements: 1.5, 2.4, 3.2
 
-- [ ] **T2 — `chunker` + `embeddings` client**
+- [x] **T2 — `chunker` + `embeddings` client**
   - Archivos: `apps/backend/src/services/chunker.ts`, `apps/backend/src/integrations/embeddings.ts`, `apps/backend/src/env.ts`
   - PASS si: chunks ≤ target con solape correcto; batching de embeddings; FAQ = 1 chunk.
   - FAIL si: texto se pierde entre chunks (cobertura < 100% del contenido).
   - Properties: P3
   - Requirements: 2.1
 
-- [ ] **T3 — `knowledgeService`: createSource/delete/reindex + pipeline async**
+- [x] **T3 — `knowledgeService`: createSource/delete/reindex + pipeline async**
   - Archivos: `apps/backend/src/services/knowledge.ts`
   - PASS si: estados pending→indexing→ready/failed correctos; reindex reemplaza chunks; delete sin huérfanos; pdf/txt/md extraídos.
   - FAIL si: fuente `ready` con 0 chunks.
   - Properties: P2, P4
   - Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4
 
-- [ ] **T4 — `retrieve()` con umbral y aislamiento**
+- [x] **T4 — `retrieve()` con umbral y aislamiento**
   - Archivos: `apps/backend/src/services/knowledge.ts`
   - PASS si: solo chunks del bot; orden descendente; umbral aplica; k configurable.
   - FAIL si: query de bot A devuelve chunk de bot B.
   - Properties: P1, P3
   - Requirements: 3.1, 3.2, 3.3
 
-- [ ] **T5 — Rutas `/api/bots/:id/knowledge*`**
+- [x] **T5 — Rutas `/api/bots/:id/knowledge*`**
   - Archivos: `apps/backend/src/routes/knowledge.ts`, `apps/backend/src/index.ts`
   - PASS si: upload multipart 10MB ok; 422 en formato inválido; search playground devuelve scores; admin escribe, member lee.
   - FAIL si: acceso cross-tenant.
   - Properties: P1
   - Requirements: 1.1, 1.2, 1.3, 4.1, 4.2
 
-- [ ] **T6 — UI `KnowledgeManager` + playground**
+- [x] **T6 — UI `KnowledgeManager` + playground**
   - Archivos: `apps/frontend/src/pages/bots/KnowledgeManager.tsx`
   - PASS si: upload drag&drop, lista con estados auto-refrescada, FAQ form, búsqueda de prueba con scores.
   - FAIL si: estado `failed` sin mensaje de error visible.

@@ -6,11 +6,19 @@ import { useApi } from "@/lib/useApi";
 import { ConnectWhatsApp } from "./ConnectWhatsApp";
 import { ChatwootSettings } from "./ChatwootSettings";
 import { IdentityEditor } from "./IdentityEditor";
+import { KnowledgeManager } from "./KnowledgeManager";
+import { CatalogManager } from "./CatalogManager";
+import { ConversationsPanel } from "./ConversationsPanel";
+import { ContactsPanel } from "./ContactsPanel";
 
 const TABS = [
   { key: "whatsapp", label: "WhatsApp" },
   { key: "chatwoot", label: "Chatwoot" },
   { key: "identity", label: "Identidad" },
+  { key: "knowledge", label: "Conocimiento" },
+  { key: "catalog", label: "Catálogo" },
+  { key: "conversations", label: "Conversaciones" },
+  { key: "contacts", label: "Contactos" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -61,6 +69,10 @@ export function BotDetailPage() {
       {tab === "whatsapp" && <ConnectWhatsApp botId={bot.id} isAdmin={isAdmin} />}
       {tab === "chatwoot" && <ChatwootSettings botId={bot.id} isAdmin={isAdmin} />}
       {tab === "identity" && <IdentityEditor botId={bot.id} isAdmin={isAdmin} />}
+      {tab === "knowledge" && <KnowledgeManager botId={bot.id} isAdmin={isAdmin} />}
+      {tab === "catalog" && <CatalogManager botId={bot.id} isAdmin={isAdmin} />}
+      {tab === "conversations" && <ConversationsPanel botId={bot.id} isAdmin={isAdmin} />}
+      {tab === "contacts" && <ContactsPanel botId={bot.id} isAdmin={isAdmin} />}
     </section>
   );
 }

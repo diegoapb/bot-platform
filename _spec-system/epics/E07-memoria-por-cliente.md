@@ -32,10 +32,10 @@ Que el agente recuerde a cada cliente entre conversaciones: hechos, preferencias
 
 ## Historias de la épica (1)
 
-**Progreso:** 0/1 en producción (0%) · Pendiente desarrollo: 1
+**Progreso:** 0/1 en producción (0%) · Pendiente de pruebas: 1
 
 | ID | Título | Ciclo | Estado | Prioridad |
 | --- | --- | --- | --- | --- |
-| [US-013](../stories/US-013-memoria-cliente/index.md) | Memoria persistente por cliente | C01 | Pendiente desarrollo | P1 |
+| [US-013](../stories/US-013-memoria-cliente/index.md) | Memoria persistente por cliente | C01 | Pendiente de pruebas | P1 |
 
 <!-- DASHBOARD:END -->

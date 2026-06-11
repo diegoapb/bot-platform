@@ -10,35 +10,35 @@ Modelo (T1), servicio de memoria (T2), extracción LLM + job (T3), inyección al
 
 ## Tasks
 
-- [ ] **T1 — Migración: `contact_memories`, `contact_facts`, `conversations.consolidated_at`**
+- [x] **T1 — Migración: `contact_memories`, `contact_facts`, `conversations.consolidated_at`**
   - Archivos: `apps/backend/drizzle/000X_memory.sql`, `apps/backend/src/db/schema.ts`
   - PASS si: unique `(channel_link_id, key)`; fks correctas; reset de consolidated_at documentado en sync.
   - FAIL si: facts sin tenant_id.
   - Properties: P1, P3
   - Requirements: 2.2, 3.3
 
-- [ ] **T2 — `memoryService`: get/upsert/delete/wipe**
+- [x] **T2 — `memoryService`: get/upsert/delete/wipe**
   - Archivos: `apps/backend/src/services/memory.ts`
   - PASS si: upsert idempotente por clave; wipe transaccional; getMemory scopeado.
   - FAIL si: cross-tenant leak.
   - Properties: P1, P3
   - Requirements: 1.1, 1.2, 1.3, 2.2, 3.2, 3.3
 
-- [ ] **T3 — Extracción LLM + job de consolidación**
+- [x] **T3 — Extracción LLM + job de consolidación**
   - Archivos: `apps/backend/src/services/memory.ts`, `apps/backend/src/jobs/memory-consolidation.ts`, `apps/backend/src/integrations/llm.ts`
   - PASS si: JSON validado con Zod; fallo → memoria intacta + marca; resumen ≤2000 chars; job sin solape.
   - FAIL si: fallo de LLM borra o corrompe memoria.
   - Properties: P2, P4
   - Requirements: 2.1, 2.3, 2.4
 
-- [ ] **T4 — Inyección en `contextBuilder` (US-011)**
+- [x] **T4 — Inyección en `contextBuilder` (US-011)**
   - Archivos: `apps/backend/src/services/context-builder.ts`
   - PASS si: bloque de memoria presente cuando existe; ausencia silenciosa cuando no; reset de consolidated_at al llegar mensaje.
   - FAIL si: memoria de otro contacto/bot en el prompt.
   - Properties: P1
   - Requirements: 1.1, 1.2, 1.3
 
-- [ ] **T5 — Rutas de contactos/memoria + `ContactView`**
+- [x] **T5 — Rutas de contactos/memoria + `ContactView`**
   - Archivos: `apps/backend/src/routes/contacts.ts`, `apps/frontend/src/pages/contacts/ContactView.tsx`
   - PASS si: lista de contactos, hechos editables con origen, resumen visible, wipe con doble confirmación; member solo lectura.
   - FAIL si: edición sin registrar origen `humano`.

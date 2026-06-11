@@ -10,6 +10,11 @@ import { teamRoutes } from "./routes/team.js";
 import { adminRoutes } from "./routes/admin.js";
 import { webhooks } from "./routes/webhooks.js";
 import { identityRoutes } from "./routes/identity.js";
+import { knowledgeRoutes } from "./routes/knowledge.js";
+import { catalogRoutes } from "./routes/catalog.js";
+import { conversationsRoutes } from "./routes/conversations.js";
+import { contactsRoutes } from "./routes/contacts.js";
+import { startMemoryConsolidationJob } from "./jobs/memory-consolidation.js";
 
 const app = new Hono();
 
@@ -28,11 +33,17 @@ app.route("/health", health);
 app.route("/api/me", meRoutes);
 app.route("/api/bots", botsRoutes);
 app.route("/api/bots", identityRoutes);
+app.route("/api/bots", knowledgeRoutes);
+app.route("/api/bots", catalogRoutes);
+app.route("/api", conversationsRoutes);
+app.route("/api", contactsRoutes);
 app.route("/api/team", teamRoutes);
 app.route("/api/admin", adminRoutes);
 app.route("/webhooks", webhooks);
 
 app.notFound((c) => c.json({ ok: false, error: "Ruta no encontrada" }, 404));
+
+startMemoryConsolidationJob();
 
 serve({ fetch: app.fetch, port: env.PORT }, (info) => {
   console.log(`🤖 bot-plataform backend escuchando en :${info.port}`);

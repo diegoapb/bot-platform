@@ -27,7 +27,7 @@ Demostrar el flujo completo de valor: un tenant conecta su número de WhatsApp, 
 
 ## Historias inscritas (10)
 
-**Progreso:** 0/10 en producción (0%) · Pendiente desarrollo: 10
+**Progreso:** 0/10 en producción (0%) · Pendiente desarrollo: 5 · Pendiente de pruebas: 5
 
 | ID | Título | Épica | Estado | Prioridad |
 | --- | --- | --- | --- | --- |
@@ -35,11 +35,11 @@ Demostrar el flujo completo de valor: un tenant conecta su número de WhatsApp, 
 | [US-006](../stories/US-006-provision-chatwoot-tenant/index.md) | Provisión de cuenta e inbox Chatwoot por tenant | E03 | Pendiente desarrollo | P0 |
 | [US-007](../stories/US-007-sync-mensajes-evolution-chatwoot/index.md) | Sincronización bidireccional de mensajes | E03 | Pendiente desarrollo | P0 |
 | [US-008](../stories/US-008-identidad-agente/index.md) | Gestión de identidad del agente | E04 | Pendiente desarrollo | P1 |
-| [US-009](../stories/US-009-base-conocimiento/index.md) | Gestión e ingestión de conocimiento | E05 | Pendiente desarrollo | P1 |
-| [US-010](../stories/US-010-catalogo-productos/index.md) | Catálogo de productos y servicios | E05 | Pendiente desarrollo | P1 |
-| [US-011](../stories/US-011-pipeline-respuesta/index.md) | Pipeline de respuesta automática | E06 | Pendiente desarrollo | P0 |
-| [US-012](../stories/US-012-handoff-humano/index.md) | Handoff bot ↔ agente humano | E06 | Pendiente desarrollo | P1 |
-| [US-013](../stories/US-013-memoria-cliente/index.md) | Memoria persistente por cliente | E07 | Pendiente desarrollo | P1 |
+| [US-009](../stories/US-009-base-conocimiento/index.md) | Gestión e ingestión de conocimiento | E05 | Pendiente de pruebas | P1 |
+| [US-010](../stories/US-010-catalogo-productos/index.md) | Catálogo de productos y servicios | E05 | Pendiente de pruebas | P1 |
+| [US-011](../stories/US-011-pipeline-respuesta/index.md) | Pipeline de respuesta automática | E06 | Pendiente de pruebas | P0 |
+| [US-012](../stories/US-012-handoff-humano/index.md) | Handoff bot ↔ agente humano | E06 | Pendiente de pruebas | P1 |
+| [US-013](../stories/US-013-memoria-cliente/index.md) | Memoria persistente por cliente | E07 | Pendiente de pruebas | P1 |
 | [US-014](../stories/US-014-panel-operacion/index.md) | Panel de operación y despliegue MVP | E08 | Pendiente desarrollo | P1 |
 
 <!-- DASHBOARD:END -->

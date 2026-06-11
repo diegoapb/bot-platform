@@ -156,6 +156,37 @@ export const chatwoot = {
     return { id: res.id };
   },
 
+  /** Últimos mensajes de una conversación (orden cronológico de Chatwoot). */
+  listMessages: async (
+    accountId: number,
+    conversationId: number,
+  ): Promise<
+    Array<{ id: number; content: string | null; message_type: number; private: boolean }>
+  > => {
+    const res = await app(accountId, `/conversations/${conversationId}/messages`);
+    return res.payload ?? [];
+  },
+
+  /** Reemplaza las etiquetas de una conversación. */
+  setLabels: (accountId: number, conversationId: number, labels: string[]) =>
+    app(accountId, `/conversations/${conversationId}/labels`, {
+      method: "POST",
+      body: JSON.stringify({ labels }),
+    }),
+
+  /** Etiquetas actuales de una conversación. */
+  getLabels: async (accountId: number, conversationId: number): Promise<string[]> => {
+    const res = await app(accountId, `/conversations/${conversationId}/labels`);
+    return res.payload ?? [];
+  },
+
+  /** Cambia la prioridad de una conversación (urgent/high/medium/low/null). */
+  setPriority: (accountId: number, conversationId: number, priority: string | null) =>
+    app(accountId, `/conversations/${conversationId}/toggle_priority`, {
+      method: "POST",
+      body: JSON.stringify({ priority }),
+    }),
+
   /** Crea un mensaje en una conversación (incoming/outgoing, opc. privado). */
   createMessage: (
     accountId: number,

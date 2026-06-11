@@ -22,6 +22,20 @@
       "when": 1781156259932,
       "tag": "0002_shallow_manta",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781185634477,
+      "tag": "0003_neat_the_twelve",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781185691251,
+      "tag": "0004_catalog_search",
+      "breakpoints": true
     }
   ]
 }

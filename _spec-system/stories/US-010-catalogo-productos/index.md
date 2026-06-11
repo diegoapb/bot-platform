@@ -3,7 +3,7 @@ id: US-010
 title: Catálogo de productos y servicios
 epic: E05
 cycle: C01
-status: Pendiente desarrollo
+status: Pendiente de pruebas
 priority: P1
 estimate: M
 owner: @diego

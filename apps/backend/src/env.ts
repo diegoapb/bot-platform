@@ -36,6 +36,16 @@ const envSchema = z.object({
   CHATWOOT_ADMIN_USER_ID: z.coerce.number().int().positive(),
 
   WEBHOOK_SECRET: z.string().min(1),
+
+  // --- IA (E05/E06/E07). Opcionales para no romper el arranque en entornos
+  // sin keys; los servicios que las usan degradan con error claro si faltan.
+  // Embeddings de la base de conocimiento (OpenAI text-embedding-3-small).
+  OPENAI_API_KEY: z.string().optional(),
+  EMBEDDINGS_MODEL: z.string().default("text-embedding-3-small"),
+  // Motor conversacional (Anthropic Messages API).
+  ANTHROPIC_API_KEY: z.string().optional(),
+  LLM_MODEL: z.string().default("claude-haiku-4-5-20251001"),
+  LLM_TIMEOUT_MS: z.coerce.number().default(12_000),
 });
 
 const parsed = envSchema.safeParse(process.env);

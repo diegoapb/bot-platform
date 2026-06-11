@@ -199,3 +199,162 @@ export const identityVersionSchema = identityDocSchema.omit({ type: true });
 export type IdentityVersion = z.infer<typeof identityVersionSchema>;
 
 export { IDENTITY_TEMPLATES } from "./identity-templates.js";
+
+// --- Base de conocimiento (E05 / US-009) -----------------------------------
+
+export const knowledgeSourceKindSchema = z.enum(["text", "file", "faq"]);
+export type KnowledgeSourceKind = z.infer<typeof knowledgeSourceKindSchema>;
+
+export const knowledgeSourceStatusSchema = z.enum(["pending", "indexing", "ready", "failed"]);
+export type KnowledgeSourceStatus = z.infer<typeof knowledgeSourceStatusSchema>;
+
+export const knowledgeSourceSchema = z.object({
+  id: z.string().uuid(),
+  kind: knowledgeSourceKindSchema,
+  title: z.string(),
+  status: knowledgeSourceStatusSchema,
+  error: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type KnowledgeSource = z.infer<typeof knowledgeSourceSchema>;
+
+export const createTextSourceSchema = z.object({
+  kind: z.literal("text"),
+  title: z.string().min(1),
+  content: z.string().min(1),
+});
+export const createFaqSourceSchema = z.object({
+  kind: z.literal("faq"),
+  question: z.string().min(1),
+  answer: z.string().min(1),
+});
+export const createSourceSchema = z.discriminatedUnion("kind", [
+  createTextSourceSchema,
+  createFaqSourceSchema,
+]);
+export type CreateSourceInput = z.infer<typeof createSourceSchema>;
+
+export const knowledgeSearchSchema = z.object({
+  query: z.string().min(1),
+  k: z.number().int().min(1).max(20).optional(),
+});
+export type KnowledgeSearchInput = z.infer<typeof knowledgeSearchSchema>;
+
+export const scoredChunkSchema = z.object({
+  content: z.string(),
+  score: z.number(),
+  sourceId: z.string(),
+});
+export type ScoredChunk = z.infer<typeof scoredChunkSchema>;
+
+// --- Catálogo (E05 / US-010) -------------------------------------------------
+
+export const catalogAvailabilitySchema = z.enum(["available", "unavailable", "on_request"]);
+export type CatalogAvailability = z.infer<typeof catalogAvailabilitySchema>;
+
+/** Monedas ISO 4217 habituales en la región (ampliable). */
+export const CURRENCIES = ["COP", "USD", "EUR", "MXN", "PEN", "CLP", "ARS", "BRL"] as const;
+export const currencySchema = z.enum(CURRENCIES);
+
+export const catalogItemInputSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().nullable().optional().default(null),
+  // string para evitar floats binarios; validado como decimal >= 0 (P3).
+  price: z.string().regex(/^\d{1,10}(\.\d{1,2})?$/, "Precio inválido (decimal >= 0)"),
+  currency: currencySchema,
+  availability: catalogAvailabilitySchema.default("available"),
+  attributes: z.record(z.string()).default({}),
+});
+export type CatalogItemInput = z.infer<typeof catalogItemInputSchema>;
+
+export const updateCatalogItemSchema = catalogItemInputSchema.partial();
+export type UpdateCatalogItemInput = z.infer<typeof updateCatalogItemSchema>;
+
+export const catalogItemSchema = z.object({
+  id: z.string().uuid(),
+  botId: z.string().uuid(),
+  name: z.string(),
+  description: z.string().nullable(),
+  price: z.string(),
+  currency: z.string(),
+  availability: catalogAvailabilitySchema,
+  attributes: z.record(z.string()),
+  archivedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type CatalogItem = z.infer<typeof catalogItemSchema>;
+
+export const importReportSchema = z.object({
+  created: z.number().int(),
+  rejected: z.array(z.object({ row: z.number().int(), reason: z.string() })),
+});
+export type ImportReport = z.infer<typeof importReportSchema>;
+
+// --- Motor conversacional (E06 / US-011, US-012) ------------------------------
+
+export const conversationModeSchema = z.enum(["bot", "human", "paused"]);
+export type ConversationMode = z.infer<typeof conversationModeSchema>;
+
+export const setConversationModeSchema = z.object({
+  mode: conversationModeSchema,
+});
+export type SetConversationModeInput = z.infer<typeof setConversationModeSchema>;
+
+export const conversationSummarySchema = z.object({
+  id: z.string().uuid(),
+  botId: z.string().uuid(),
+  mode: conversationModeSchema,
+  phoneE164: z.string(),
+  lastMsgAt: z.string(),
+  createdAt: z.string(),
+});
+export type ConversationSummary = z.infer<typeof conversationSummarySchema>;
+
+export const conversationTransitionSchema = z.object({
+  id: z.string().uuid(),
+  fromMode: conversationModeSchema,
+  toMode: conversationModeSchema,
+  cause: z.string(),
+  actorId: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type ConversationTransition = z.infer<typeof conversationTransitionSchema>;
+
+// --- Memoria por cliente (E07 / US-013) ---------------------------------------
+
+export const factOriginSchema = z.enum(["bot", "human"]);
+export type FactOrigin = z.infer<typeof factOriginSchema>;
+
+export const contactFactSchema = z.object({
+  key: z.string(),
+  value: z.string(),
+  origin: factOriginSchema,
+  updatedAt: z.string(),
+});
+export type ContactFact = z.infer<typeof contactFactSchema>;
+
+export const contactMemorySchema = z.object({
+  facts: z.array(contactFactSchema),
+  summary: z.string().nullable(),
+  updatedAt: z.string().nullable(),
+});
+export type ContactMemory = z.infer<typeof contactMemorySchema>;
+
+export const upsertFactSchema = z.object({
+  key: z.string().min(1).max(100),
+  value: z.string().min(1).max(500),
+});
+export type UpsertFactInput = z.infer<typeof upsertFactSchema>;
+
+export const contactSummarySchema = z.object({
+  channelLinkId: z.string().uuid(),
+  phoneE164: z.string(),
+  factsCount: z.number().int(),
+  hasSummary: z.boolean(),
+  memoryUpdatedAt: z.string().nullable(),
+});
+export type ContactSummary = z.infer<typeof contactSummarySchema>;
+
+export const MEMORY_SUMMARY_MAX_CHARS = 2000;

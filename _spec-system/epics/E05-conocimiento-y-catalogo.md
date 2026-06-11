@@ -32,11 +32,11 @@ Darle al agente el "qué sabe": una base de conocimiento por bot (documentos, FA
 
 ## Historias de la épica (2)
 
-**Progreso:** 0/2 en producción (0%) · Pendiente desarrollo: 2
+**Progreso:** 0/2 en producción (0%) · Pendiente de pruebas: 2
 
 | ID | Título | Ciclo | Estado | Prioridad |
 | --- | --- | --- | --- | --- |
-| [US-009](../stories/US-009-base-conocimiento/index.md) | Gestión e ingestión de conocimiento | C01 | Pendiente desarrollo | P1 |
-| [US-010](../stories/US-010-catalogo-productos/index.md) | Catálogo de productos y servicios | C01 | Pendiente desarrollo | P1 |
+| [US-009](../stories/US-009-base-conocimiento/index.md) | Gestión e ingestión de conocimiento | C01 | Pendiente de pruebas | P1 |
+| [US-010](../stories/US-010-catalogo-productos/index.md) | Catálogo de productos y servicios | C01 | Pendiente de pruebas | P1 |
 
 <!-- DASHBOARD:END -->
