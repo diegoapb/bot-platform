@@ -3,7 +3,7 @@ id: US-027
 title: Esquema de extracción configurable por bot
 epic: E12
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P1
 estimate: S
 owner: @diego

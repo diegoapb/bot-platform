@@ -7,12 +7,12 @@
 
 | Estado | Conteo |
 | --- | --- |
-| Levantamiento de requerimientos | 15 |
+| Levantamiento de requerimientos | 4 |
 | Creación de diseño | 0 |
 | Levantamiento de tareas | 0 |
 | Pendiente desarrollo | 4 |
 | En implementación | 1 |
-| Pendiente de pruebas | 5 |
+| Pendiente de pruebas | 16 |
 | Probada | 0 |
 | En CA | 0 |
 | En producción | 4 |
@@ -55,17 +55,17 @@ _Entregar el MVP — bot de WhatsApp con identidad, conocimiento y memoria, oper
 | US-016 | Librería de componentes UI del design system | E09 | Levantamiento de requerimientos | P0 |
 | US-017 | Layout global y navegación alineados al DS | E09 | Levantamiento de requerimientos | P1 |
 | US-018 | Migración de páginas y vistas al design system | E09 | Levantamiento de requerimientos | P1 |
-| US-019 | Estado de activación global del bot | E10 | Levantamiento de requerimientos | P0 |
-| US-020 | Toggle de activación del bot en el dashboard | E10 | Levantamiento de requerimientos | P0 |
-| US-021 | Abstracción de canal y provisión de inbox por canal | E11 | Levantamiento de requerimientos | P0 |
-| US-022 | Pipeline de respuesta agnóstico de canal vía Chatwoot | E11 | Levantamiento de requerimientos | P0 |
-| US-023 | Canal Telegram | E11 | Levantamiento de requerimientos | P1 |
-| US-024 | Canal WhatsApp Cloud API (oficial) | E11 | Levantamiento de requerimientos | P1 |
-| US-025 | Canales Meta — Instagram DM y Facebook Messenger | E11 | Levantamiento de requerimientos | P2 |
-| US-026 | UI de gestión de canales del bot | E11 | Levantamiento de requerimientos | P1 |
-| US-027 | Esquema de extracción configurable por bot | E12 | Levantamiento de requerimientos | P1 |
-| US-028 | Pipeline de extracción de información estructurada | E12 | Levantamiento de requerimientos | P1 |
-| US-029 | Vista amigable y edición JSON de los datos extraídos | E12 | Levantamiento de requerimientos | P1 |
+| US-019 | Estado de activación global del bot | E10 | Pendiente de pruebas | P0 |
+| US-020 | Toggle de activación del bot en el dashboard | E10 | Pendiente de pruebas | P0 |
+| US-021 | Abstracción de canal y provisión de inbox por canal | E11 | Pendiente de pruebas | P0 |
+| US-022 | Pipeline de respuesta agnóstico de canal vía Chatwoot | E11 | Pendiente de pruebas | P0 |
+| US-023 | Canal Telegram | E11 | Pendiente de pruebas | P1 |
+| US-024 | Canal WhatsApp Cloud API (oficial) | E11 | Pendiente de pruebas | P1 |
+| US-025 | Canales Meta — Instagram DM y Facebook Messenger | E11 | Pendiente de pruebas | P2 |
+| US-026 | UI de gestión de canales del bot | E11 | Pendiente de pruebas | P1 |
+| US-027 | Esquema de extracción configurable por bot | E12 | Pendiente de pruebas | P1 |
+| US-028 | Pipeline de extracción de información estructurada | E12 | Pendiente de pruebas | P1 |
+| US-029 | Vista amigable y edición JSON de los datos extraídos | E12 | Pendiente de pruebas | P1 |
 
 ## Por épica
 
@@ -123,25 +123,25 @@ _Entregar el MVP — bot de WhatsApp con identidad, conocimiento y memoria, oper
 | US-017 | Layout global y navegación alineados al DS | — | Levantamiento de requerimientos |
 | US-018 | Migración de páginas y vistas al design system | — | Levantamiento de requerimientos |
 
-### E10 — Activación y ciclo de vida del bot  · _draft_
+### E10 — Activación y ciclo de vida del bot  · _in-progress_
 | ID | Título | Ciclo | Estado |
 | --- | --- | --- | --- |
-| US-019 | Estado de activación global del bot | — | Levantamiento de requerimientos |
-| US-020 | Toggle de activación del bot en el dashboard | — | Levantamiento de requerimientos |
+| US-019 | Estado de activación global del bot | — | Pendiente de pruebas |
+| US-020 | Toggle de activación del bot en el dashboard | — | Pendiente de pruebas |
 
-### E11 — Multicanal vía Chatwoot  · _draft_
+### E11 — Multicanal vía Chatwoot  · _in-progress_
 | ID | Título | Ciclo | Estado |
 | --- | --- | --- | --- |
-| US-021 | Abstracción de canal y provisión de inbox por canal | — | Levantamiento de requerimientos |
-| US-022 | Pipeline de respuesta agnóstico de canal vía Chatwoot | — | Levantamiento de requerimientos |
-| US-023 | Canal Telegram | — | Levantamiento de requerimientos |
-| US-024 | Canal WhatsApp Cloud API (oficial) | — | Levantamiento de requerimientos |
-| US-025 | Canales Meta — Instagram DM y Facebook Messenger | — | Levantamiento de requerimientos |
-| US-026 | UI de gestión de canales del bot | — | Levantamiento de requerimientos |
+| US-021 | Abstracción de canal y provisión de inbox por canal | — | Pendiente de pruebas |
+| US-022 | Pipeline de respuesta agnóstico de canal vía Chatwoot | — | Pendiente de pruebas |
+| US-023 | Canal Telegram | — | Pendiente de pruebas |
+| US-024 | Canal WhatsApp Cloud API (oficial) | — | Pendiente de pruebas |
+| US-025 | Canales Meta — Instagram DM y Facebook Messenger | — | Pendiente de pruebas |
+| US-026 | UI de gestión de canales del bot | — | Pendiente de pruebas |
 
-### E12 — Extracción de información estructurada de conversaciones  · _draft_
+### E12 — Extracción de información estructurada de conversaciones  · _in-progress_
 | ID | Título | Ciclo | Estado |
 | --- | --- | --- | --- |
-| US-027 | Esquema de extracción configurable por bot | — | Levantamiento de requerimientos |
-| US-028 | Pipeline de extracción de información estructurada | — | Levantamiento de requerimientos |
-| US-029 | Vista amigable y edición JSON de los datos extraídos | — | Levantamiento de requerimientos |
+| US-027 | Esquema de extracción configurable por bot | — | Pendiente de pruebas |
+| US-028 | Pipeline de extracción de información estructurada | — | Pendiente de pruebas |
+| US-029 | Vista amigable y edición JSON de los datos extraídos | — | Pendiente de pruebas |

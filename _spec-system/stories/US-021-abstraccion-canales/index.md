@@ -3,7 +3,7 @@ id: US-021
 title: Abstracción de canal y provisión de inbox por canal
 epic: E11
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P0
 estimate: M
 owner: @diego

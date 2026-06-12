@@ -10,6 +10,7 @@ import { teamRoutes } from "./routes/team.js";
 import { adminRoutes } from "./routes/admin.js";
 import { webhooks } from "./routes/webhooks.js";
 import { identityRoutes } from "./routes/identity.js";
+import { channelsRoutes } from "./routes/channels.js";
 import { knowledgeRoutes } from "./routes/knowledge.js";
 import { catalogRoutes } from "./routes/catalog.js";
 import { conversationsRoutes } from "./routes/conversations.js";
@@ -34,6 +35,7 @@ app.use(
 app.route("/health", health);
 app.route("/api/me", meRoutes);
 app.route("/api/bots", botsRoutes);
+app.route("/api/bots", channelsRoutes);
 app.route("/api/bots", identityRoutes);
 app.route("/api/bots", knowledgeRoutes);
 app.route("/api/bots", catalogRoutes);

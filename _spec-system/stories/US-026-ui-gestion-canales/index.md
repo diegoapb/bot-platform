@@ -3,7 +3,7 @@ id: US-026
 title: UI de gestión de canales del bot
 epic: E11
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P1
 estimate: M
 owner: @diego

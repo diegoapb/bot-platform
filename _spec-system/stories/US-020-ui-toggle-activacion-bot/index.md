@@ -3,7 +3,7 @@ id: US-020
 title: Toggle de activación del bot en el dashboard
 epic: E10
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P0
 estimate: XS
 owner: @diego

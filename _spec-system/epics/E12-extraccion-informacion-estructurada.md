@@ -1,7 +1,7 @@
 ---
 id: E12
 title: Extracción de información estructurada de conversaciones
-status: draft
+status: in-progress
 owner: @diego
 ---
 
@@ -34,12 +34,12 @@ Que la plataforma extraiga automáticamente información estructurada de las con
 
 ## Historias de la épica (3)
 
-**Progreso:** 0/3 en producción (0%) · Levantamiento de requerimientos: 3
+**Progreso:** 0/3 en producción (0%) · Pendiente de pruebas: 3
 
 | ID | Título | Ciclo | Estado | Prioridad |
 | --- | --- | --- | --- | --- |
-| [US-027](../stories/US-027-esquema-extraccion-configurable/index.md) | Esquema de extracción configurable por bot | — | Levantamiento de requerimientos | P1 |
-| [US-028](../stories/US-028-pipeline-extraccion-estructurada/index.md) | Pipeline de extracción de información estructurada | — | Levantamiento de requerimientos | P1 |
-| [US-029](../stories/US-029-vista-edicion-datos-extraidos/index.md) | Vista amigable y edición JSON de los datos extraídos | — | Levantamiento de requerimientos | P1 |
+| [US-027](../stories/US-027-esquema-extraccion-configurable/index.md) | Esquema de extracción configurable por bot | — | Pendiente de pruebas | P1 |
+| [US-028](../stories/US-028-pipeline-extraccion-estructurada/index.md) | Pipeline de extracción de información estructurada | — | Pendiente de pruebas | P1 |
+| [US-029](../stories/US-029-vista-edicion-datos-extraidos/index.md) | Vista amigable y edición JSON de los datos extraídos | — | Pendiente de pruebas | P1 |
 
 <!-- DASHBOARD:END -->

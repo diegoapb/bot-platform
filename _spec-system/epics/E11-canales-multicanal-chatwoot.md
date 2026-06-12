@@ -1,7 +1,7 @@
 ---
 id: E11
 title: Multicanal vía Chatwoot
-status: draft
+status: in-progress
 owner: @diego
 ---
 
@@ -34,15 +34,15 @@ Que un bot atienda clientes por múltiples canales (WhatsApp vía Baileys/Evolut
 
 ## Historias de la épica (6)
 
-**Progreso:** 0/6 en producción (0%) · Levantamiento de requerimientos: 6
+**Progreso:** 0/6 en producción (0%) · Pendiente de pruebas: 6
 
 | ID | Título | Ciclo | Estado | Prioridad |
 | --- | --- | --- | --- | --- |
-| [US-021](../stories/US-021-abstraccion-canales/index.md) | Abstracción de canal y provisión de inbox por canal | — | Levantamiento de requerimientos | P0 |
-| [US-022](../stories/US-022-pipeline-agnostico-canal/index.md) | Pipeline de respuesta agnóstico de canal vía Chatwoot | — | Levantamiento de requerimientos | P0 |
-| [US-023](../stories/US-023-canal-telegram/index.md) | Canal Telegram | — | Levantamiento de requerimientos | P1 |
-| [US-024](../stories/US-024-canal-whatsapp-cloud-api/index.md) | Canal WhatsApp Cloud API (oficial) | — | Levantamiento de requerimientos | P1 |
-| [US-025](../stories/US-025-canales-meta-instagram-messenger/index.md) | Canales Meta — Instagram DM y Facebook Messenger | — | Levantamiento de requerimientos | P2 |
-| [US-026](../stories/US-026-ui-gestion-canales/index.md) | UI de gestión de canales del bot | — | Levantamiento de requerimientos | P1 |
+| [US-021](../stories/US-021-abstraccion-canales/index.md) | Abstracción de canal y provisión de inbox por canal | — | Pendiente de pruebas | P0 |
+| [US-022](../stories/US-022-pipeline-agnostico-canal/index.md) | Pipeline de respuesta agnóstico de canal vía Chatwoot | — | Pendiente de pruebas | P0 |
+| [US-023](../stories/US-023-canal-telegram/index.md) | Canal Telegram | — | Pendiente de pruebas | P1 |
+| [US-024](../stories/US-024-canal-whatsapp-cloud-api/index.md) | Canal WhatsApp Cloud API (oficial) | — | Pendiente de pruebas | P1 |
+| [US-025](../stories/US-025-canales-meta-instagram-messenger/index.md) | Canales Meta — Instagram DM y Facebook Messenger | — | Pendiente de pruebas | P2 |
+| [US-026](../stories/US-026-ui-gestion-canales/index.md) | UI de gestión de canales del bot | — | Pendiente de pruebas | P1 |
 
 <!-- DASHBOARD:END -->

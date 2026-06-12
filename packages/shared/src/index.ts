@@ -89,6 +89,8 @@ export const botSchema = z.object({
   chatwootInboxId: z.number().int().nullable(),
   // Lista blanca activa: el bot solo atiende números con regla `allow`.
   whitelistEnabled: z.boolean(),
+  // E12: esquema de extracción de información estructurada (null = desactivada).
+  extractionSchema: z.record(z.unknown()).nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -384,3 +386,123 @@ export const contactSummarySchema = z.object({
 export type ContactSummary = z.infer<typeof contactSummarySchema>;
 
 export const MEMORY_SUMMARY_MAX_CHARS = 2000;
+
+// --- Activación global del bot (E10 / US-019, US-020) -------------------------
+
+/** Activa/pausa el bot a nivel global: pausado no genera respuestas automáticas. */
+export const setBotActivationSchema = z.object({
+  active: z.boolean(),
+});
+export type SetBotActivationInput = z.infer<typeof setBotActivationSchema>;
+
+export const botStatusTransitionSchema = z.object({
+  id: z.string().uuid(),
+  fromStatus: botStatusSchema,
+  toStatus: botStatusSchema,
+  cause: z.string(),
+  actorId: z.string().nullable(),
+  createdAt: z.string(),
+});
+export type BotStatusTransition = z.infer<typeof botStatusTransitionSchema>;
+
+// --- Canales multicanal vía Chatwoot (E11 / US-021..026) ----------------------
+
+/**
+ * Tipos de canal gestionados como inbox nativo de Chatwoot. El WhatsApp vía
+ * Evolution (E02) se expone como canal virtual `whatsapp_evolution` en la API
+ * de canales, pero su ciclo de vida sigue en /connection.
+ */
+export const channelTypeSchema = z.enum([
+  "telegram",
+  "whatsapp_cloud",
+  "instagram",
+  "messenger",
+]);
+export type ChannelType = z.infer<typeof channelTypeSchema>;
+
+export const channelStatusSchema = z.enum(["connected", "disconnected", "error"]);
+export type ChannelStatus = z.infer<typeof channelStatusSchema>;
+
+/** Vista de un canal para el dashboard. Las credenciales nunca viajan al frontend. */
+export const channelSchema = z.object({
+  id: z.string(),
+  type: z.union([channelTypeSchema, z.literal("whatsapp_evolution")]),
+  status: z.union([channelStatusSchema, z.literal("qr")]),
+  displayName: z.string().nullable(),
+  error: z.string().nullable(),
+  // Canal virtual de Evolution: se gestiona desde la pestaña WhatsApp.
+  virtual: z.boolean().default(false),
+  createdAt: z.string().nullable(),
+});
+export type Channel = z.infer<typeof channelSchema>;
+
+export const connectTelegramSchema = z.object({
+  type: z.literal("telegram"),
+  botToken: z.string().min(20),
+});
+export const connectWhatsappCloudSchema = z.object({
+  type: z.literal("whatsapp_cloud"),
+  phoneNumber: z.string().min(7),
+  phoneNumberId: z.string().min(1),
+  businessAccountId: z.string().min(1),
+  apiKey: z.string().min(10),
+});
+export const connectMetaPageSchema = z.object({
+  type: z.union([z.literal("instagram"), z.literal("messenger")]),
+  pageId: z.string().min(1),
+  userAccessToken: z.string().min(10),
+  pageAccessToken: z.string().min(10),
+  pageName: z.string().min(1),
+});
+export const connectChannelSchema = z.discriminatedUnion("type", [
+  connectTelegramSchema,
+  connectWhatsappCloudSchema,
+  connectMetaPageSchema.extend({ type: z.literal("instagram") }),
+  connectMetaPageSchema.extend({ type: z.literal("messenger") }),
+]);
+export type ConnectChannelInput = z.infer<typeof connectChannelSchema>;
+
+// --- Extracción de información estructurada (E12 / US-027..029) ---------------
+
+export {
+  validateExtractionSchema,
+  validateDataAgainstSchema,
+  sanitizeAgainstSchema,
+  type ExtractionSchema,
+  type ExtractionField,
+  type ExtractionFieldType,
+} from "./extraction.js";
+
+export const saveExtractionSchemaSchema = z.object({
+  // null desactiva la extracción; el objeto se valida con validateExtractionSchema.
+  schema: z.record(z.unknown()).nullable(),
+});
+export type SaveExtractionSchemaInput = z.infer<typeof saveExtractionSchemaSchema>;
+
+export const extractedDataSchema = z.object({
+  data: z.record(z.unknown()),
+  manualKeys: z.array(z.string()),
+  provenance: z.record(
+    z.object({ source: z.enum(["bot", "human"]), at: z.string() }),
+  ),
+  updatedAt: z.string().nullable(),
+});
+export type ExtractedData = z.infer<typeof extractedDataSchema>;
+
+export const updateExtractedDataSchema = z.object({
+  data: z.record(z.unknown()),
+});
+export type UpdateExtractedDataInput = z.infer<typeof updateExtractedDataSchema>;
+
+/** Esquema de ejemplo que se ofrece al activar la extracción por primera vez. */
+export const EXTRACTION_SCHEMA_EXAMPLE = {
+  type: "object",
+  properties: {
+    nombre: { type: "string", description: "Nombre del cliente" },
+    interes: { type: "string", description: "Producto o servicio que busca" },
+    presupuesto: { type: "number", description: "Presupuesto aproximado" },
+    listo_para_comprar: { type: "boolean", description: "¿Mostró intención clara de compra?" },
+    etiquetas: { type: "array", description: "Temas mencionados (lista de strings)" },
+  },
+  required: ["nombre"],
+} as const;

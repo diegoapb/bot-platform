@@ -27,6 +27,10 @@ import type {
   ContactMemory,
   PhoneRule,
   CreatePhoneRuleInput,
+  BotStatusTransition,
+  Channel,
+  ConnectChannelInput,
+  ExtractedData,
 } from "@bot/shared";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
@@ -89,6 +93,47 @@ export function createApi(getToken: () => Promise<string | null>) {
     deleteBot: (id: string) =>
       request<{ id: string }>(`/api/bots/${id}`, { method: "DELETE" }),
     getBot: (id: string) => request<Bot>(`/api/bots/${id}`),
+
+    // Activación global del bot (E10)
+    setBotActivation: (botId: string, active: boolean) =>
+      request<Bot>(`/api/bots/${botId}/activation`, {
+        method: "POST",
+        body: JSON.stringify({ active }),
+      }),
+    getActivationHistory: (botId: string) =>
+      request<BotStatusTransition[]>(`/api/bots/${botId}/activation/history`),
+
+    // Canales (E11)
+    listChannels: (botId: string) => request<Channel[]>(`/api/bots/${botId}/channels`),
+    connectChannel: (botId: string, input: ConnectChannelInput) =>
+      request<Channel>(`/api/bots/${botId}/channels`, {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    disconnectChannel: (botId: string, channelId: string) =>
+      request<{ id: string; status: string }>(`/api/bots/${botId}/channels/${channelId}`, {
+        method: "DELETE",
+      }),
+
+    // Extracción de información estructurada (E12)
+    getExtractionSchema: (botId: string) =>
+      request<{ schema: Record<string, unknown> | null }>(
+        `/api/bots/${botId}/extraction-schema`,
+      ),
+    saveExtractionSchema: (botId: string, schema: Record<string, unknown> | null) =>
+      request<{ schema: Record<string, unknown> | null }>(
+        `/api/bots/${botId}/extraction-schema`,
+        { method: "PUT", body: JSON.stringify({ schema }) },
+      ),
+    getContactExtraction: (linkId: string) =>
+      request<ExtractedData & { schema: Record<string, unknown> | null }>(
+        `/api/contacts/${linkId}/extraction`,
+      ),
+    updateContactExtraction: (linkId: string, data: Record<string, unknown>) =>
+      request<ExtractedData & { schema: Record<string, unknown> | null }>(
+        `/api/contacts/${linkId}/extraction`,
+        { method: "PUT", body: JSON.stringify({ data }) },
+      ),
 
     // Conexión WhatsApp (E02)
     startConnection: (botId: string) =>

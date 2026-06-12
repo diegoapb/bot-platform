@@ -3,7 +3,7 @@ id: US-019
 title: Estado de activación global del bot
 epic: E10
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P0
 estimate: S
 owner: @diego

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { and, desc, eq, sql } from "drizzle-orm";
-import { upsertFactSchema } from "@bot/shared";
+import { upsertFactSchema, updateExtractedDataSchema } from "@bot/shared";
 import { db } from "../db/client.js";
 import {
   bots,
@@ -11,6 +11,7 @@ import {
 } from "../db/schema.js";
 import { requireAuth, requireTenant, requireAdmin, ADMIN_ROLE } from "../middleware/auth.js";
 import { getMemory, upsertFact, deleteFact, wipe } from "../services/memory.js";
+import { getExtraction, updateExtractionManual } from "../services/extraction.js";
 
 /**
  * Contactos y su memoria (US-013): lista por bot + gestión de hechos/resumen.
@@ -117,6 +118,60 @@ contactsRoutes.delete("/contacts/:linkId/memory/facts/:key", requireAdmin, async
   const deleted = await deleteFact(link.id, decodeURIComponent(c.req.param("key")));
   if (!deleted) return c.json({ ok: false, error: "Hecho no encontrado" }, 404);
   return c.json({ ok: true, data: { key: c.req.param("key") } });
+});
+
+// --- Datos estructurados extraídos (E12 / US-029) ---------------------------
+
+/** Datos extraídos del contacto + esquema del bot (para render amigable). */
+contactsRoutes.get("/contacts/:linkId/extraction", async (c) => {
+  const link = await getTenantLink(c, c.req.param("linkId"));
+  if (!link) return c.json({ ok: false, error: "No encontrado" }, 404);
+  const [bot] = await db.select().from(bots).where(eq(bots.id, link.botId));
+  const extraction = await getExtraction(link.id);
+  return c.json({
+    ok: true,
+    data: {
+      schema: bot?.extractionSchema ?? null,
+      data: extraction.data,
+      manualKeys: extraction.manualKeys,
+      provenance: extraction.provenance,
+      updatedAt: extraction.updatedAt?.toISOString() ?? null,
+    },
+  });
+});
+
+/**
+ * Edición manual del JSON extraído (US-029). Valida contra el esquema del bot;
+ * las claves modificadas quedan marcadas como manuales y la extracción
+ * automática no las vuelve a pisar. Solo admin.
+ */
+contactsRoutes.put("/contacts/:linkId/extraction", requireAdmin, async (c) => {
+  const link = await getTenantLink(c, c.req.param("linkId"));
+  if (!link) return c.json({ ok: false, error: "No encontrado" }, 404);
+  const [bot] = await db.select().from(bots).where(eq(bots.id, link.botId));
+  if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+
+  const body = await c.req.json().catch(() => null);
+  const parsed = updateExtractedDataSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ ok: false, error: "Payload inválido", issues: parsed.error.issues }, 422);
+  }
+
+  const result = await updateExtractionManual(link, bot, parsed.data.data);
+  if (result.errors.length > 0) {
+    return c.json({ ok: false, error: result.errors.join("; ") }, 422);
+  }
+  const e = result.extraction!;
+  return c.json({
+    ok: true,
+    data: {
+      schema: bot.extractionSchema ?? null,
+      data: e.data,
+      manualKeys: e.manualKeys,
+      provenance: e.provenance,
+      updatedAt: e.updatedAt?.toISOString() ?? null,
+    },
+  });
 });
 
 /** Borra TODA la memoria del contacto, irreversible (3.3). Solo admin. */

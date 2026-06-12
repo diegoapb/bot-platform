@@ -3,7 +3,7 @@ id: US-022
 title: Pipeline de respuesta agnóstico de canal vía Chatwoot
 epic: E11
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P0
 estimate: L
 owner: @diego

@@ -1,11 +1,18 @@
 import { Hono } from "hono";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { env } from "../env.js";
 import { db } from "../db/client.js";
-import { bots, channelLinks, conversations, webhookEvents } from "../db/schema.js";
+import { bots, tenants, webhookEvents } from "../db/schema.js";
 import { mapConnectionState } from "../integrations/evolution.js";
-import { findBotByInstance, handleInbound, handleAgentReply } from "../services/message-sync.js";
-import { setMode } from "../services/conversation-state.js";
+import {
+  findBotByInstance,
+  handleInbound,
+  handleAgentReply,
+  applyAssigneeHandoff,
+} from "../services/message-sync.js";
+import { setBotStatus } from "../services/bot-activation.js";
+import { findChannelByInbox } from "../services/channels.js";
+import { handleChannelMessage, findBotForChannel } from "../services/channel-inbound.js";
 
 /**
  * Webhooks ENTRANTES.
@@ -56,6 +63,11 @@ webhooks.post("/evolution/:instance", async (c) => {
           updatedAt: new Date(),
         })
         .where(eq(bots.id, bot.id));
+      // E10: la primera conexión activa el bot (draft → active). Pausas
+      // posteriores son decisión explícita del admin y no se tocan aquí.
+      if (status === "connected" && bot.status === "draft") {
+        await setBotStatus(bot.id, "active", "system:connected");
+      }
     }
   } else if (type === "qrcode.updated") {
     await db
@@ -104,33 +116,69 @@ webhooks.post("/chatwoot/:botId", async (c) => {
       return c.json({ ok: false }, 500);
     }
   } else if (type === "conversation_updated") {
-    // US-012 (3.1): asignación de agente en Chatwoot → modo human. La
-    // devolución al bot es siempre una decisión explícita (panel), no automática.
     try {
-      const cwConversationId: number | undefined = payload.id ?? payload.conversation?.id;
-      const assigneeId = payload.meta?.assignee?.id ?? payload.conversation?.meta?.assignee?.id;
-      if (cwConversationId && assigneeId) {
-        const [link] = await db
-          .select()
-          .from(channelLinks)
-          .where(
-            and(
-              eq(channelLinks.botId, bot.id),
-              eq(channelLinks.cwConversationId, cwConversationId),
-            ),
-          );
-        if (link) {
-          const [convo] = await db
-            .select()
-            .from(conversations)
-            .where(eq(conversations.channelLinkId, link.id));
-          if (convo && convo.mode === "bot") {
-            await setMode(convo.id, "human", "chatwoot:agent", String(assigneeId));
-          }
-        }
-      }
+      await applyAssigneeHandoff(bot, payload);
     } catch (e) {
       console.error("[webhook:chatwoot] conversation_updated", e);
+    }
+  }
+
+  return c.json({ ok: true });
+});
+
+/**
+ * Webhook a NIVEL DE CUENTA de Chatwoot (E11/US-022): un webhook por tenant,
+ * recibe eventos de todos los inboxes. Solo procesa los inboxes que mapean a
+ * un canal nativo (tabla channels); el inbox API del flujo Evolution se
+ * atiende por el webhook por bot de arriba y aquí se ignora (sin doble efecto).
+ */
+webhooks.post("/chatwoot-account/:tenantId", async (c) => {
+  const tenantId = c.req.param("tenantId");
+  const token = c.req.query("token");
+
+  const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId));
+  if (
+    !tenant ||
+    !tenant.chatwootAccountWebhookToken ||
+    token !== tenant.chatwootAccountWebhookToken
+  ) {
+    return c.json({ ok: false, error: "token inválido" }, 401);
+  }
+
+  const payload = await c.req.json().catch(() => null);
+  if (!payload) return c.json({ ok: true });
+
+  const type: string = payload.event ?? "unknown";
+  // message_created trae el inbox en conversation.inbox_id / inbox.id;
+  // conversation_updated ES la conversación (inbox_id en la raíz).
+  const inboxId: number | undefined =
+    payload.conversation?.inbox_id ?? payload.inbox?.id ?? payload.inbox_id;
+  if (!inboxId) return c.json({ ok: true });
+
+  const channel = await findChannelByInbox(tenantId, inboxId);
+  if (!channel) return c.json({ ok: true });
+
+  await db.insert(webhookEvents).values({
+    tenantId,
+    botId: channel.botId,
+    source: "chatwoot",
+    type,
+    payload,
+  });
+
+  if (type === "message_created") {
+    try {
+      await handleChannelMessage(channel, payload);
+    } catch (e) {
+      console.error("[webhook:chatwoot-account] handleChannelMessage", e);
+      return c.json({ ok: false }, 500);
+    }
+  } else if (type === "conversation_updated") {
+    try {
+      const bot = await findBotForChannel(channel);
+      if (bot) await applyAssigneeHandoff(bot, payload);
+    } catch (e) {
+      console.error("[webhook:chatwoot-account] conversation_updated", e);
     }
   }
 

@@ -2,6 +2,7 @@ import { and, isNull, lt } from "drizzle-orm";
 import { db } from "../db/client.js";
 import { conversations } from "../db/schema.js";
 import { consolidate } from "../services/memory.js";
+import { runExtraction } from "../services/extraction.js";
 import { env } from "../env.js";
 
 /**
@@ -27,6 +28,9 @@ export async function runConsolidationPass(): Promise<number> {
       .limit(50);
     for (const convo of stale) {
       await consolidate(convo);
+      // E12: misma ventana de inactividad para refrescar los datos extraídos
+      // (cubre conversaciones atendidas por humanos, sin ráfagas del bot).
+      await runExtraction(convo);
     }
     if (stale.length > 0) {
       console.log(`[memory-job] consolidadas ${stale.length} conversaciones`);

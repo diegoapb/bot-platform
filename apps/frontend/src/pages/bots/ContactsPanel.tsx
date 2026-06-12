@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useApi } from "@/lib/useApi";
 import { Badge, Button, Card, Input } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { ExtractionDataCard } from "./ExtractionDataCard";
 
 /** Contactos del bot y su memoria: hechos editables + resumen (US-013). */
 export function ContactsPanel({ botId, isAdmin }: { botId: string; isAdmin: boolean }) {
@@ -138,6 +139,8 @@ export function ContactsPanel({ botId, isAdmin }: { botId: string; isAdmin: bool
                 </p>
               )}
             </div>
+
+            <ExtractionDataCard linkId={selected} isAdmin={isAdmin} />
 
             {isAdmin && (
               <Button

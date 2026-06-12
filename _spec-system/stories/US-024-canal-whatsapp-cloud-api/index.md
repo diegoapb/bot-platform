@@ -3,7 +3,7 @@ id: US-024
 title: Canal WhatsApp Cloud API (oficial)
 epic: E11
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P1
 estimate: M
 owner: @diego

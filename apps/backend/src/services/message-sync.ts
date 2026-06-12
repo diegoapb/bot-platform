@@ -3,6 +3,7 @@ import { db } from "../db/client.js";
 import {
   bots,
   channelLinks,
+  conversations,
   phoneRules,
   processedMessages,
   tenants,
@@ -11,8 +12,9 @@ import {
 import { chatwoot } from "../integrations/chatwoot.js";
 import { evolution } from "../integrations/evolution.js";
 import { provisionChatwoot } from "./chatwoot-provisioning.js";
-import { ensureConversation } from "./conversation-state.js";
+import { ensureConversation, setMode } from "./conversation-state.js";
 import { onInboundMessage } from "./reply-engine.js";
+import { isBotActive } from "./bot-activation.js";
 
 /**
  * Sincronización bidireccional Evolution ↔ Chatwoot.
@@ -162,8 +164,10 @@ export async function handleInbound(bot: BotRow, data: any): Promise<void> {
   // E06: resuelve la conversación propia (estado/lock) y dispara el motor.
   // El reply del bot se crea vía API (sin sender) → no rebota por el webhook
   // de Chatwoot (anti-loop) ni vuelve a entrar aquí (fromMe filtrado arriba).
+  // E10: con el bot pausado el mensaje ya quedó en Chatwoot para atención
+  // humana; el motor no se dispara.
   const convo = await ensureConversation(bot.tenantId, bot.id, link.id);
-  onInboundMessage(bot, convo, text);
+  if (isBotActive(bot)) onInboundMessage(bot, convo, text);
 }
 
 /** Respuesta de agente en Chatwoot (webhook `message_created` outgoing) → WhatsApp. */
@@ -216,4 +220,30 @@ export async function handleAgentReply(bot: BotRow, evt: any): Promise<void> {
 export async function findBotByInstance(instance: string): Promise<BotRow | null> {
   const [bot] = await db.select().from(bots).where(eq(bots.evolutionInstance, instance));
   return bot ?? null;
+}
+
+/**
+ * US-012 (3.1): asignación de agente en Chatwoot → modo human. Compartido por
+ * el webhook por bot (inbox API) y el webhook de cuenta (canales E11). La
+ * devolución al bot es siempre decisión explícita del panel, no automática.
+ */
+export async function applyAssigneeHandoff(bot: BotRow, payload: any): Promise<void> {
+  const cwConversationId: number | undefined = payload.id ?? payload.conversation?.id;
+  const assigneeId = payload.meta?.assignee?.id ?? payload.conversation?.meta?.assignee?.id;
+  if (!cwConversationId || !assigneeId) return;
+
+  const [link] = await db
+    .select()
+    .from(channelLinks)
+    .where(
+      and(eq(channelLinks.botId, bot.id), eq(channelLinks.cwConversationId, cwConversationId)),
+    );
+  if (!link) return;
+  const [convo] = await db
+    .select()
+    .from(conversations)
+    .where(eq(conversations.channelLinkId, link.id));
+  if (convo && convo.mode === "bot") {
+    await setMode(convo.id, "human", "chatwoot:agent", String(assigneeId));
+  }
 }

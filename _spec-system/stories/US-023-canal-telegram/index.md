@@ -3,7 +3,7 @@ id: US-023
 title: Canal Telegram
 epic: E11
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P1
 estimate: S
 owner: @diego

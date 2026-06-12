@@ -56,7 +56,7 @@ export async function buildContext(
   sections.push(
     [
       "## Instrucciones de canal",
-      "- Respondes por WhatsApp: mensajes breves, claros y en el idioma del cliente.",
+      "- Respondes por un canal de mensajería (WhatsApp, Telegram, Instagram…): mensajes breves, claros y en el idioma del cliente.",
       "- Usa la herramienta `search_catalog` para consultar precios y disponibilidad antes de afirmarlos.",
       "- Si el cliente pide hablar con una persona, o no puedes responder con la información disponible, usa la herramienta `request_human` con el motivo. No inventes información.",
     ].join("\n"),

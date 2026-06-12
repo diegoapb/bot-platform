@@ -36,6 +36,17 @@ export const catalogAvailability = pgEnum("catalog_availability", [
 export const conversationMode = pgEnum("conversation_mode", ["bot", "human", "paused"]);
 export const factOrigin = pgEnum("fact_origin", ["bot", "human"]);
 export const phoneRuleKind = pgEnum("phone_rule_kind", ["allow", "block"]);
+export const channelType = pgEnum("channel_type", [
+  "telegram",
+  "whatsapp_cloud",
+  "instagram",
+  "messenger",
+]);
+export const channelStatus = pgEnum("channel_status", [
+  "connected",
+  "disconnected",
+  "error",
+]);
 
 /**
  * Estado de plataforma de cada tenant (organización de Clerk). La membresía y
@@ -51,6 +62,11 @@ export const tenants = pgTable("tenants", {
   blockedReason: text("blocked_reason"),
   // Cuenta de Chatwoot provisionada para este tenant (Platform API).
   chatwootAccountId: integer("chatwoot_account_id"),
+  // Webhook a nivel de cuenta de Chatwoot (E11): recibe message_created /
+  // conversation_updated de TODOS los inboxes del tenant. Un solo webhook por
+  // cuenta; los eventos se rutean por inbox_id a su canal.
+  chatwootAccountWebhookId: integer("chatwoot_account_webhook_id"),
+  chatwootAccountWebhookToken: text("chatwoot_account_webhook_token"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -92,11 +108,73 @@ export const bots = pgTable(
     handoffMessage: text("handoff_message")
       .notNull()
       .default("Te comunico con una persona del equipo, en breve te atienden."),
+    // E12: JSON Schema (subset) que define qué información estructurada extraer
+    // de las conversaciones. null = extracción desactivada para este bot.
+    extractionSchema: jsonb("extraction_schema").$type<Record<string, unknown> | null>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
     byTenant: index("bots_tenant_idx").on(t.tenantId),
+  }),
+);
+
+/**
+ * Auditoría de activación/desactivación global del bot (E10/US-019): quién
+ * cambió `bots.status`, cuándo y por qué causa ("panel:user" | "system:connected").
+ */
+export const botStatusTransitions = pgTable(
+  "bot_status_transitions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    fromStatus: botStatus("from_status").notNull(),
+    toStatus: botStatus("to_status").notNull(),
+    cause: text("cause").notNull(),
+    actorId: text("actor_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byBot: index("bot_status_transitions_bot_idx").on(t.botId, t.createdAt),
+  }),
+);
+
+/**
+ * Canal de comunicación de un bot (E11/US-021): cada canal es un inbox propio
+ * en Chatwoot y el motor responde de forma agnóstica al transporte. El canal
+ * WhatsApp vía Evolution (E02) sigue viviendo en columnas de `bots` y se
+ * presenta como canal virtual en la API; aquí van solo los canales nativos de
+ * Chatwoot (Telegram, WhatsApp Cloud, Instagram, Messenger).
+ */
+export const channels = pgTable(
+  "channels",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    type: channelType("type").notNull(),
+    status: channelStatus("status").notNull().default("connected"),
+    // Credenciales del conector (bot token, tokens de Meta…). Secretas: nunca
+    // se devuelven al frontend.
+    credentials: jsonb("credentials").$type<Record<string, string>>().notNull().default({}),
+    // Inbox de Chatwoot que materializa este canal.
+    chatwootInboxId: integer("chatwoot_inbox_id"),
+    // Etiqueta visible (p.ej. @username del bot de Telegram, nombre de la página).
+    displayName: text("display_name"),
+    error: text("error"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqBotType: unique("channels_bot_type_uq").on(t.botId, t.type),
+    byBot: index("channels_bot_idx").on(t.botId),
+    byInbox: index("channels_inbox_idx").on(t.chatwootInboxId),
   }),
 );
 
@@ -168,7 +246,12 @@ export const webhookEvents = pgTable(
   }),
 );
 
-/** Mapeo WhatsApp (jid) ↔ Chatwoot (contacto, conversación) por bot. */
+/**
+ * Mapeo contacto del canal ↔ Chatwoot (contacto, conversación) por bot.
+ * Para WhatsApp/Evolution `waJid` es el jid; para canales nativos de Chatwoot
+ * (E11) es un id sintético `cw:<conversationId>` y `channelId` indica el canal.
+ * `channelId` null = canal WhatsApp vía Evolution (legado E02/E03).
+ */
 export const channelLinks = pgTable(
   "channel_links",
   {
@@ -177,6 +260,7 @@ export const channelLinks = pgTable(
     botId: uuid("bot_id")
       .notNull()
       .references(() => bots.id, { onDelete: "cascade" }),
+    channelId: uuid("channel_id").references(() => channels.id, { onDelete: "set null" }),
     waJid: text("wa_jid").notNull(),
     phoneE164: text("phone_e164").notNull(),
     cwContactId: integer("cw_contact_id").notNull(),
@@ -434,6 +518,36 @@ export const contactFacts = pgTable(
     byLink: index("contact_facts_link_idx").on(t.channelLinkId),
   }),
 );
+
+// --- Extracción de información estructurada (E12 / US-027..029) ---------------
+
+/**
+ * JSON estructurado extraído de las conversaciones de un contacto, según el
+ * `extractionSchema` del bot. Una fila por channel_link.
+ *  - `data`: valores vigentes (objeto plano validado contra el esquema).
+ *  - `manualKeys`: claves corregidas a mano; la extracción automática no las pisa.
+ *  - `provenance`: por clave, de dónde salió el valor y cuándo.
+ */
+export const extractedData = pgTable("extracted_data", {
+  channelLinkId: uuid("channel_link_id")
+    .primaryKey()
+    .references(() => channelLinks.id, { onDelete: "cascade" }),
+  tenantId: text("tenant_id").notNull(),
+  botId: uuid("bot_id")
+    .notNull()
+    .references(() => bots.id, { onDelete: "cascade" }),
+  data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
+  manualKeys: jsonb("manual_keys").$type<string[]>().notNull().default([]),
+  provenance: jsonb("provenance")
+    .$type<Record<string, { source: "bot" | "human"; at: string }>>()
+    .notNull()
+    .default({}),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type ExtractedDataRow = typeof extractedData.$inferSelect;
+export type ChannelRow = typeof channels.$inferSelect;
+export type BotStatusTransitionRow = typeof botStatusTransitions.$inferSelect;
 
 export type KnowledgeSourceRow = typeof knowledgeSources.$inferSelect;
 export type KnowledgeChunkRow = typeof knowledgeChunks.$inferSelect;

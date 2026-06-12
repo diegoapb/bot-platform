@@ -1,14 +1,25 @@
 import { Hono } from "hono";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import {
   createBotSchema,
   updateBotSchema,
   addChatwootAgentSchema,
   createPhoneRuleSchema,
+  setBotActivationSchema,
+  saveExtractionSchemaSchema,
+  validateExtractionSchema,
 } from "@bot/shared";
 import type { BotConnection } from "@bot/shared";
 import { db } from "../db/client.js";
-import { bots, botAssignments, phoneRules, tenants, type BotRow } from "../db/schema.js";
+import {
+  bots,
+  botAssignments,
+  botStatusTransitions,
+  phoneRules,
+  tenants,
+  type BotRow,
+} from "../db/schema.js";
+import { setBotStatus } from "../services/bot-activation.js";
 import { requireAuth, requireTenant, requireAdmin, ADMIN_ROLE } from "../middleware/auth.js";
 import { evolution, mapConnectionState, EvolutionError } from "../integrations/evolution.js";
 import { provisionChatwoot, provisionAgent } from "../services/chatwoot-provisioning.js";
@@ -125,6 +136,54 @@ botsRoutes.delete("/:id", requireAdmin, async (c) => {
     .returning({ id: bots.id });
   if (!row) return c.json({ ok: false, error: "No encontrado" }, 404);
   return c.json({ ok: true, data: { id: row.id } });
+});
+
+// --- Activación global del bot (E10 / US-019) ------------------------------
+
+/**
+ * Activa o pausa el bot a nivel global. Pausado: los mensajes siguen llegando
+ * a Chatwoot para atención humana, pero el motor no responde. Solo admin.
+ */
+botsRoutes.post("/:id/activation", requireAdmin, async (c) => {
+  const bot = await getTenantBot(c, c.req.param("id"));
+  if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+
+  const body = await c.req.json().catch(() => null);
+  const parsed = setBotActivationSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ ok: false, error: "Payload inválido", issues: parsed.error.issues }, 400);
+  }
+
+  const { bot: updated } = await setBotStatus(
+    bot.id,
+    parsed.data.active ? "active" : "paused",
+    "panel:user",
+    c.get("userId"),
+  );
+  return c.json({ ok: true, data: updated ?? bot });
+});
+
+/** Historial de activaciones/pausas del bot (auditoría US-019). */
+botsRoutes.get("/:id/activation/history", async (c) => {
+  const bot = await getTenantBot(c, c.req.param("id"));
+  if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+  const rows = await db
+    .select()
+    .from(botStatusTransitions)
+    .where(eq(botStatusTransitions.botId, bot.id))
+    .orderBy(desc(botStatusTransitions.createdAt))
+    .limit(50);
+  return c.json({
+    ok: true,
+    data: rows.map((r) => ({
+      id: r.id,
+      fromStatus: r.fromStatus,
+      toStatus: r.toStatus,
+      cause: r.cause,
+      actorId: r.actorId,
+      createdAt: r.createdAt.toISOString(),
+    })),
+  });
 });
 
 // --- Conexión WhatsApp (E02 / US-005) ------------------------------------
@@ -288,6 +347,43 @@ botsRoutes.post("/:id/chatwoot/agents", requireAdmin, async (c) => {
     console.error("[chatwoot:agents]", e);
     return c.json({ ok: false, error: "Chatwoot no disponible. Reintenta." }, 502);
   }
+});
+
+// --- Extracción de información estructurada (E12 / US-027) ------------------
+
+/** Esquema de extracción vigente del bot. */
+botsRoutes.get("/:id/extraction-schema", async (c) => {
+  const bot = await getTenantBot(c, c.req.param("id"));
+  if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+  return c.json({ ok: true, data: { schema: bot.extractionSchema ?? null } });
+});
+
+/**
+ * Guarda (o desactiva con null) el esquema de extracción. Se valida que sea un
+ * subset de JSON Schema bien formado; los datos ya extraídos no se tocan.
+ */
+botsRoutes.put("/:id/extraction-schema", requireAdmin, async (c) => {
+  const bot = await getTenantBot(c, c.req.param("id"));
+  if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+
+  const body = await c.req.json().catch(() => null);
+  const parsed = saveExtractionSchemaSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ ok: false, error: "Payload inválido", issues: parsed.error.issues }, 400);
+  }
+  if (parsed.data.schema !== null) {
+    const errors = validateExtractionSchema(parsed.data.schema);
+    if (errors.length > 0) {
+      return c.json({ ok: false, error: `Esquema inválido: ${errors.join("; ")}` }, 422);
+    }
+  }
+
+  const [row] = await db
+    .update(bots)
+    .set({ extractionSchema: parsed.data.schema, updatedAt: new Date() })
+    .where(eq(bots.id, bot.id))
+    .returning();
+  return c.json({ ok: true, data: { schema: row?.extractionSchema ?? null } });
 });
 
 // --- Audiencia: lista blanca / negra de teléfonos --------------------------

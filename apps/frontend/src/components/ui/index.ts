@@ -7,4 +7,5 @@ export { StatTile } from "./StatTile";
 export { PageHeader } from "./PageHeader";
 export { Tabs, type TabItem } from "./Tabs";
 export { Loading, ErrorText, EmptyState } from "./Feedback";
+export { Switch } from "./Switch";
 export { Logo } from "./Logo";

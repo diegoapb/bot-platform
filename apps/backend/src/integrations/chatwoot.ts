@@ -119,6 +119,98 @@ export const chatwoot = {
 
   listInboxes: (accountId: number) => app(accountId, "/inboxes") as Promise<{ payload: unknown[] }>,
 
+  // --- Inboxes por tipo de canal (E11) ---------------------------------
+
+  /** Crea un inbox de Telegram (Chatwoot registra el webhook en Telegram). */
+  createTelegramInbox: async (
+    accountId: number,
+    name: string,
+    botToken: string,
+  ): Promise<{ id: number }> => {
+    const res = await app(accountId, "/inboxes", {
+      method: "POST",
+      body: JSON.stringify({ name, channel: { type: "telegram", bot_token: botToken } }),
+    });
+    return { id: res.id };
+  },
+
+  /** Crea un inbox de WhatsApp Cloud API (oficial de Meta). */
+  createWhatsappCloudInbox: async (
+    accountId: number,
+    name: string,
+    cfg: {
+      phoneNumber: string;
+      phoneNumberId: string;
+      businessAccountId: string;
+      apiKey: string;
+    },
+  ): Promise<{ id: number }> => {
+    const res = await app(accountId, "/inboxes", {
+      method: "POST",
+      body: JSON.stringify({
+        name,
+        channel: {
+          type: "whatsapp",
+          provider: "whatsapp_cloud",
+          phone_number: cfg.phoneNumber,
+          provider_config: {
+            api_key: cfg.apiKey,
+            phone_number_id: cfg.phoneNumberId,
+            business_account_id: cfg.businessAccountId,
+          },
+        },
+      }),
+    });
+    return { id: res.id };
+  },
+
+  /**
+   * Registra una página de Facebook como inbox (Messenger). Para Instagram la
+   * página debe tener la cuenta de IG vinculada; Chatwoot enruta los DM por el
+   * mismo callback de Meta. Requiere FB_APP_ID/SECRET configurados en Chatwoot.
+   */
+  registerFacebookPage: async (
+    accountId: number,
+    cfg: {
+      pageId: string;
+      userAccessToken: string;
+      pageAccessToken: string;
+      inboxName: string;
+    },
+  ): Promise<{ id: number }> => {
+    const res = await app(accountId, "/callbacks/register_facebook_page", {
+      method: "POST",
+      body: JSON.stringify({
+        page_id: cfg.pageId,
+        user_access_token: cfg.userAccessToken,
+        page_access_token: cfg.pageAccessToken,
+        inbox_name: cfg.inboxName,
+      }),
+    });
+    return { id: res.id };
+  },
+
+  /** Elimina un inbox (al desconectar un canal). */
+  deleteInbox: (accountId: number, inboxId: number) =>
+    app(accountId, `/inboxes/${inboxId}`, { method: "DELETE" }),
+
+  /**
+   * Webhook a nivel de cuenta: Chatwoot manda los eventos suscritos de TODOS
+   * los inboxes de la cuenta a `url`. Es la entrada del pipeline agnóstico de
+   * canal (US-022).
+   */
+  createAccountWebhook: async (
+    accountId: number,
+    url: string,
+    subscriptions: string[],
+  ): Promise<{ id: number }> => {
+    const res = await app(accountId, "/webhooks", {
+      method: "POST",
+      body: JSON.stringify({ webhook: { url, subscriptions } }),
+    });
+    return { id: res.payload?.webhook?.id ?? res.id };
+  },
+
   /** Busca un contacto por teléfono E.164. null si no existe. */
   searchContact: async (
     accountId: number,

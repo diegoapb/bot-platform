@@ -3,7 +3,7 @@ id: US-029
 title: Vista amigable y edición JSON de los datos extraídos
 epic: E12
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P1
 estimate: M
 owner: @diego

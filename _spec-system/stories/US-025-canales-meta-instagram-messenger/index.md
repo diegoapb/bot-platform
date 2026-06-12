@@ -3,7 +3,7 @@ id: US-025
 title: Canales Meta — Instagram DM y Facebook Messenger
 epic: E11
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P2
 estimate: M
 owner: @diego

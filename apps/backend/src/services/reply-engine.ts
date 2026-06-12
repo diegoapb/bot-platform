@@ -17,6 +17,8 @@ import { buildContext } from "./context-builder.js";
 import { searchCatalog } from "./catalog.js";
 import { acquireLock, releaseLock, setMode } from "./conversation-state.js";
 import { tryMarkProcessed } from "./message-sync.js";
+import { isBotActive } from "./bot-activation.js";
+import { runExtraction } from "./extraction.js";
 
 /**
  * Motor de respuesta automática (US-011) + handoff (US-012).
@@ -99,8 +101,14 @@ async function processBurst(botId: string, conversationId: string): Promise<void
       .where(eq(conversations.id, conversationId));
     const [bot] = await db.select().from(bots).where(eq(bots.id, botId));
     if (!convo || !bot || convo.mode !== "bot") return; // P2
+    // E10: recheck con datos frescos — si pausaron el bot durante el debounce,
+    // la ráfaga se descarta sin responder.
+    if (!isBotActive(bot)) return;
 
     await respond(bot, convo, texts);
+    // E12: extracción incremental tras la ráfaga (fire-and-forget; no bloquea
+    // el lock ni la respuesta). Los fallos quedan logueados dentro.
+    void runExtraction(convo);
   } finally {
     await releaseLock(conversationId).catch(() => undefined);
     // Si llegaron mensajes durante la generación, se procesan agrupados.
@@ -208,7 +216,13 @@ async function respond(bot: BotRow, convo: ConversationRow, texts: string[]): Pr
   }
 }
 
-type ContactInfo = { accountId: number | null; cwConversationId: number | null; phone: string | null };
+type ContactInfo = {
+  accountId: number | null;
+  cwConversationId: number | null;
+  phone: string | null;
+  // E11: link de un canal nativo de Chatwoot → la entrega la hace Chatwoot.
+  nativeChannel: boolean;
+};
 
 async function contactInfo(convo: ConversationRow): Promise<ContactInfo> {
   const [link] = await db
@@ -220,16 +234,37 @@ async function contactInfo(convo: ConversationRow): Promise<ContactInfo> {
     accountId: tenant?.chatwootAccountId ?? null,
     cwConversationId: link?.cwConversationId ?? null,
     phone: link?.phoneE164 ?? null,
+    nativeChannel: link?.channelId != null,
   };
 }
 
-/** Envía por WhatsApp (1 retry) y registra en Chatwoot como outgoing (1.3, 3.2). */
+/**
+ * Entrega la respuesta por el canal de la conversación (1.3, 3.2 / E11):
+ *  - Canal nativo de Chatwoot (Telegram, WhatsApp Cloud, Meta): basta crear el
+ *    mensaje outgoing en Chatwoot; Chatwoot lo empuja al canal.
+ *  - WhatsApp vía Evolution: se envía por Evolution (1 retry) y se registra en
+ *    Chatwoot como espejo.
+ */
 async function deliver(
   bot: BotRow,
   convo: ConversationRow,
   info: ContactInfo,
   text: string,
 ): Promise<void> {
+  if (info.nativeChannel) {
+    if (!info.accountId || !info.cwConversationId) throw new Error("Canal sin mapeo Chatwoot");
+    // from_bot evita reprocesar el message_created del webhook (anti-loop).
+    const created = await chatwoot.createMessage(
+      info.accountId,
+      info.cwConversationId,
+      text,
+      "outgoing",
+      { contentAttributes: { from_bot: true } },
+    );
+    if (created?.id) await tryMarkProcessed(bot, "chatwoot", String(created.id));
+    return;
+  }
+
   if (!bot.evolutionInstance || !info.phone) throw new Error("Bot sin instancia o contacto");
   const to = info.phone.replace("+", "");
   try {

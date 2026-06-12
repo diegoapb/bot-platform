@@ -10,33 +10,41 @@ import { env } from "../env.js";
  * por bot. Cada paso verifica existencia y persiste inmediatamente, así un
  * fallo en el paso k se reanuda sin repetir los anteriores.
  */
-export async function provisionChatwoot(bot: BotRow): Promise<{
-  accountId: number;
-  inboxId: number;
-  dashboardUrl: string;
-}> {
-  const [tenant] = await db.select().from(tenants).where(eq(tenants.id, bot.tenantId));
+/**
+ * Garantiza la cuenta de Chatwoot del tenant (con el usuario del API token
+ * adjunto como administrator) y devuelve su id. Idempotente.
+ */
+export async function ensureChatwootAccount(tenantId: string, fallbackName?: string): Promise<number> {
+  const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId));
 
   let accountId = tenant?.chatwootAccountId ?? null;
   if (accountId == null) {
-    const account = await chatwoot.createAccount(tenant?.name ?? bot.tenantId);
+    const account = await chatwoot.createAccount(tenant?.name ?? fallbackName ?? tenantId);
     accountId = account.id;
     await db
       .insert(tenants)
-      .values({ id: bot.tenantId, chatwootAccountId: accountId })
+      .values({ id: tenantId, chatwootAccountId: accountId })
       .onConflictDoUpdate({
         target: tenants.id,
         set: { chatwootAccountId: accountId, updatedAt: new Date() },
       });
   }
+  // El Application API usa CHATWOOT_API_TOKEN, cuyo usuario debe ser miembro de
+  // la cuenta. Las cuentas creadas vía Platform API no lo incluyen, así que lo
+  // adjuntamos como administrator (idempotente).
+  await chatwoot.attachUserToAccount(accountId, env.CHATWOOT_ADMIN_USER_ID, "administrator");
+  return accountId;
+}
+
+export async function provisionChatwoot(bot: BotRow): Promise<{
+  accountId: number;
+  inboxId: number;
+  dashboardUrl: string;
+}> {
+  const accountId = await ensureChatwootAccount(bot.tenantId, bot.name);
 
   let inboxId = bot.chatwootInboxId;
   if (inboxId == null) {
-    // El Application API (crear inbox) usa CHATWOOT_API_TOKEN, cuyo usuario debe
-    // ser miembro de la cuenta. Las cuentas creadas vía Platform API no lo
-    // incluyen, así que lo adjuntamos como administrator (idempotente) antes.
-    await chatwoot.attachUserToAccount(accountId, env.CHATWOOT_ADMIN_USER_ID, "administrator");
-
     const webhookToken = bot.chatwootWebhookToken ?? randomUUID();
     const webhookUrl = `${env.PUBLIC_WEBHOOK_BASE_URL}/webhooks/chatwoot/${bot.id}?token=${webhookToken}`;
     const inbox = await chatwoot.createApiInbox(accountId, bot.name, webhookUrl);

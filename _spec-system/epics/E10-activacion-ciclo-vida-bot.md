@@ -1,7 +1,7 @@
 ---
 id: E10
 title: Activación y ciclo de vida del bot
-status: draft
+status: in-progress
 owner: @diego
 ---
 
@@ -33,11 +33,11 @@ Que el admin del tenant pueda activar o desactivar su bot de forma global con un
 
 ## Historias de la épica (2)
 
-**Progreso:** 0/2 en producción (0%) · Levantamiento de requerimientos: 2
+**Progreso:** 0/2 en producción (0%) · Pendiente de pruebas: 2
 
 | ID | Título | Ciclo | Estado | Prioridad |
 | --- | --- | --- | --- | --- |
-| [US-019](../stories/US-019-estado-activacion-bot/index.md) | Estado de activación global del bot | — | Levantamiento de requerimientos | P0 |
-| [US-020](../stories/US-020-ui-toggle-activacion-bot/index.md) | Toggle de activación del bot en el dashboard | — | Levantamiento de requerimientos | P0 |
+| [US-019](../stories/US-019-estado-activacion-bot/index.md) | Estado de activación global del bot | — | Pendiente de pruebas | P0 |
+| [US-020](../stories/US-020-ui-toggle-activacion-bot/index.md) | Toggle de activación del bot en el dashboard | — | Pendiente de pruebas | P0 |
 
 <!-- DASHBOARD:END -->
