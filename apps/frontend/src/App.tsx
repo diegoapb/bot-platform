@@ -16,22 +16,45 @@ import { ConversationsList } from "@/pages/conversations/ConversationsList";
 import { ConversationView } from "@/pages/conversations/ConversationView";
 import { MetricsDashboard } from "@/pages/metrics/MetricsDashboard";
 import { useMe } from "@/lib/useMe";
+import { Button, Eyebrow, Loading, Logo } from "@/components/ui";
 
 function Centered({ children }: { children: ReactNode }) {
-  return <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">{children}</div>;
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">{children}</div>
+  );
 }
 
-/** Pantalla de bienvenida / login. */
+/** Pantalla de bienvenida / login — superficie forest del DS. */
 function Landing() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-3xl font-bold">bot-plataform</h1>
-      <p className="text-muted-foreground">Inicia sesión para gestionar tus bots.</p>
-      <SignInButton mode="modal">
-        <button className="rounded-md bg-primary px-4 py-2 text-primary-foreground">
-          Iniciar sesión
-        </button>
-      </SignInButton>
+    <div
+      data-surface="dark"
+      className="ds-dotgrid relative flex min-h-screen flex-col items-center justify-center gap-8 overflow-hidden px-6 text-center"
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-70"
+        style={{
+          background:
+            "radial-gradient(60% 50% at 15% 10%, rgba(0,255,136,0.12), transparent 60%), radial-gradient(50% 50% at 90% 90%, rgba(0,255,136,0.08), transparent 60%)",
+        }}
+      />
+      <div className="relative flex flex-col items-center gap-8">
+        <Logo surface="dark" className="[&_span]:text-fg" />
+        <div className="space-y-5">
+          <Eyebrow num="01">Plataforma de bots</Eyebrow>
+          <h1 className="ds-display max-w-[18ch] text-fg">
+            Gestiona tus bots de WhatsApp <em>sin fricción</em>.
+          </h1>
+          <p className="mx-auto max-w-[46ch] text-base leading-relaxed text-fg2">
+            Conecta números, entrena la identidad y atiende conversaciones desde un
+            solo lugar.
+          </p>
+        </div>
+        <SignInButton mode="modal">
+          <Button size="lg">Iniciar sesión</Button>
+        </SignInButton>
+      </div>
     </div>
   );
 }
@@ -44,15 +67,20 @@ function TenantGate({ children }: { children: ReactNode }) {
   const { organization, isLoaded } = useOrganization();
   const { data: me, isLoading } = useMe();
 
-  if (!isLoaded || isLoading) return <Centered>Cargando…</Centered>;
+  if (!isLoaded || isLoading)
+    return (
+      <Centered>
+        <Loading />
+      </Centered>
+    );
 
   if (!organization) {
     if (me?.isSuperAdmin) return <Navigate to="/admin" replace />;
     return (
       <div className="flex flex-col items-center gap-6 py-10">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold">Crea tu tenant</h1>
-          <p className="text-muted-foreground">
+        <div className="space-y-2 text-center">
+          <h1 className="font-display text-2xl font-medium text-fg">Crea tu tenant</h1>
+          <p className="text-sm text-fg2">
             Serás el administrador y podrás invitar usuarios para gestionar los bots.
           </p>
         </div>
@@ -67,7 +95,12 @@ function TenantGate({ children }: { children: ReactNode }) {
 /** Páginas exclusivas de super admin de plataforma. */
 function SuperAdminGate({ children }: { children: ReactNode }) {
   const { data: me, isLoading } = useMe();
-  if (isLoading) return <Centered>Cargando…</Centered>;
+  if (isLoading)
+    return (
+      <Centered>
+        <Loading />
+      </Centered>
+    );
   if (!me?.isSuperAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }

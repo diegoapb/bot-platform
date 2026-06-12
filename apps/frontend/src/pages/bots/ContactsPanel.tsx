@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useApi } from "@/lib/useApi";
+import { Badge, Button, Card, Input } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 /** Contactos del bot y su memoria: hechos editables + resumen (US-013). */
 export function ContactsPanel({ botId, isAdmin }: { botId: string; isAdmin: boolean }) {
@@ -46,24 +48,25 @@ export function ContactsPanel({ botId, isAdmin }: { botId: string; isAdmin: bool
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <div>
-        <h3 className="mb-2 font-medium">Contactos ({contacts?.length ?? 0})</h3>
+        <h3 className="mb-3 font-display text-lg text-fg">Contactos ({contacts?.length ?? 0})</h3>
         <ul className="space-y-2">
-          {contacts?.length === 0 && (
-            <p className="text-sm text-muted-foreground">Aún no hay contactos.</p>
-          )}
+          {contacts?.length === 0 && <p className="text-sm text-fg3">Aún no hay contactos.</p>}
           {contacts?.map((c) => (
             <li key={c.channelLinkId}>
-              <button
-                onClick={() => setSelected(c.channelLinkId)}
-                className={`w-full rounded-lg border p-3 text-left text-sm ${
-                  selected === c.channelLinkId ? "border-primary bg-primary/5" : ""
-                }`}
-              >
-                <p className="font-medium">{c.phoneE164}</p>
-                <p className="text-xs text-muted-foreground">
-                  {c.factsCount} hechos · {c.hasSummary ? "con resumen" : "sin resumen"}
-                  {c.memoryUpdatedAt && ` · ${new Date(c.memoryUpdatedAt).toLocaleDateString()}`}
-                </p>
+              <button onClick={() => setSelected(c.channelLinkId)} className="block w-full text-left">
+                <Card
+                  interactive
+                  className={cn(
+                    "p-4",
+                    selected === c.channelLinkId && "border-accent shadow-e1",
+                  )}
+                >
+                  <p className="text-sm font-medium text-fg">{c.phoneE164}</p>
+                  <p className="text-xs text-fg3">
+                    {c.factsCount} hechos · {c.hasSummary ? "con resumen" : "sin resumen"}
+                    {c.memoryUpdatedAt && ` · ${new Date(c.memoryUpdatedAt).toLocaleDateString()}`}
+                  </p>
+                </Card>
               </button>
             </li>
           ))}
@@ -71,73 +74,74 @@ export function ContactsPanel({ botId, isAdmin }: { botId: string; isAdmin: bool
       </div>
 
       <div>
-        {!selected && <p className="text-sm text-muted-foreground">Selecciona un contacto.</p>}
+        {!selected && <p className="text-sm text-fg3">Selecciona un contacto.</p>}
         {selected && memory && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <h3 className="mb-2 font-medium">Hechos</h3>
-              <ul className="space-y-1">
+              <h3 className="mb-3 font-display text-lg text-fg">Hechos</h3>
+              <ul className="space-y-1.5">
                 {memory.facts.length === 0 && (
-                  <p className="text-sm text-muted-foreground">El bot aún no sabe nada de este cliente.</p>
+                  <p className="text-sm text-fg3">El bot aún no sabe nada de este cliente.</p>
                 )}
                 {memory.facts.map((f) => (
-                  <li key={f.key} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-                    <span>
-                      <span className="font-medium">{f.key}</span>: {f.value}{" "}
-                      <span className="text-xs text-muted-foreground">
-                        ({f.origin === "human" ? "editado" : "aprendido"})
-                      </span>
+                  <li
+                    key={f.key}
+                    className="flex items-center justify-between rounded-sm border border-line bg-surface px-3 py-2 text-sm"
+                  >
+                    <span className="text-fg2">
+                      <span className="font-medium text-fg">{f.key}</span>: {f.value}{" "}
+                      <Badge tone="neutral" className="ml-1">
+                        {f.origin === "human" ? "editado" : "aprendido"}
+                      </Badge>
                     </span>
                     {isAdmin && (
-                      <button
-                        onClick={() => removeFact.mutate(f.key)}
-                        className="text-xs text-red-600 underline"
-                      >
+                      <Button variant="danger" size="sm" onClick={() => removeFact.mutate(f.key)}>
                         Eliminar
-                      </button>
+                      </Button>
                     )}
                   </li>
                 ))}
               </ul>
               {isAdmin && (
-                <div className="mt-2 flex gap-2">
-                  <input
+                <div className="mt-3 flex gap-2">
+                  <Input
+                    className="w-1/3"
                     value={newKey}
                     onChange={(e) => setNewKey(e.target.value)}
                     placeholder="clave (ej. nombre)"
-                    className="w-1/3 rounded-md border px-2 py-1.5 text-sm"
                   />
-                  <input
+                  <Input
+                    className="flex-1"
                     value={newValue}
                     onChange={(e) => setNewValue(e.target.value)}
                     placeholder="valor"
-                    className="flex-1 rounded-md border px-2 py-1.5 text-sm"
                   />
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={() => upsert.mutate()}
                     disabled={!newKey || !newValue || upsert.isPending}
-                    className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50"
                   >
                     Guardar
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
 
             <div>
-              <h3 className="mb-1 font-medium">Resumen</h3>
-              <p className="whitespace-pre-wrap rounded-md border bg-muted/30 p-3 text-sm">
+              <h3 className="mb-2 font-display text-lg text-fg">Resumen</h3>
+              <p className="whitespace-pre-wrap rounded-sm border border-line bg-soft p-3 text-sm text-fg2">
                 {memory.summary ?? "Sin resumen todavía (se genera al consolidar conversaciones)."}
               </p>
               {memory.updatedAt && (
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-xs text-fg3">
                   Actualizado: {new Date(memory.updatedAt).toLocaleString()}
                 </p>
               )}
             </div>
 
             {isAdmin && (
-              <button
+              <Button
+                variant="danger"
                 onClick={() => {
                   if (
                     confirm("¿Borrar TODA la memoria de este contacto?") &&
@@ -146,10 +150,9 @@ export function ContactsPanel({ botId, isAdmin }: { botId: string; isAdmin: bool
                     wipeMemory.mutate();
                   }
                 }}
-                className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600"
               >
                 Borrar memoria completa
-              </button>
+              </Button>
             )}
           </div>
         )}

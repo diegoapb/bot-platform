@@ -2,7 +2,24 @@ import { useAuth } from "@clerk/clerk-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Bot as BotIcon, ChevronRight } from "lucide-react";
 import { useApi } from "@/lib/useApi";
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  ErrorText,
+  Input,
+  Loading,
+  PageHeader,
+} from "@/components/ui";
+
+const STATUS_TONE: Record<string, "ok" | "warn" | "neutral"> = {
+  active: "ok",
+  draft: "neutral",
+  disabled: "warn",
+};
 
 export function BotsPage() {
   const api = useApi();
@@ -17,7 +34,8 @@ export function BotsPage() {
   });
 
   const createBot = useMutation({
-    mutationFn: () => api.createBot({ name, channel: "whatsapp", evolutionInstance: null, chatwootInboxId: null }),
+    mutationFn: () =>
+      api.createBot({ name, channel: "whatsapp", evolutionInstance: null, chatwootInboxId: null }),
     onSuccess: () => {
       setName("");
       qc.invalidateQueries({ queryKey: ["bots"] });
@@ -26,63 +44,83 @@ export function BotsPage() {
 
   return (
     <section>
-      <header className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Bots</h1>
-      </header>
+      <PageHeader
+        eyebrow="Bots"
+        eyebrowNum="01"
+        title="Tus bots"
+        description="Cada bot conecta un número de WhatsApp con su identidad, conocimiento y conversaciones."
+      />
 
       {isAdmin && (
         <form
-          className="mb-6 flex gap-2"
+          className="mb-8 flex gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             if (name.trim()) createBot.mutate();
           }}
         >
-          <input
-            className="flex-1 rounded-md border px-3 py-2 text-sm"
+          <Input
+            className="flex-1"
             placeholder="Nombre del nuevo bot"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <button
-            type="submit"
-            disabled={createBot.isPending || !name.trim()}
-            className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
-          >
+          <Button type="submit" disabled={createBot.isPending || !name.trim()}>
             {createBot.isPending ? "Creando…" : "Crear bot"}
-          </button>
+          </Button>
         </form>
       )}
 
       {createBot.error && (
-        <p className="mb-4 text-sm text-red-600">{(createBot.error as Error).message}</p>
+        <ErrorText className="mb-4">{(createBot.error as Error).message}</ErrorText>
       )}
-      {isLoading && <p className="text-muted-foreground">Cargando…</p>}
-      {error && <p className="text-red-600">Error: {(error as Error).message}</p>}
+      {isLoading && <Loading />}
+      {error && <ErrorText>Error: {(error as Error).message}</ErrorText>}
 
-      <ul className="space-y-2">
+      <ul className="grid gap-3 sm:grid-cols-2">
         {bots?.map((bot) => (
-          <li key={bot.id} className="rounded-lg border p-4 hover:bg-muted/50">
+          <li key={bot.id}>
             <Link to={`/bots/${bot.id}`} className="block">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{bot.name}</span>
-                <span className="text-xs uppercase text-muted-foreground">{bot.status}</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {bot.channel} · instancia: {bot.evolutionInstance ?? "—"} · conexión:{" "}
-                {bot.connectionStatus}
-              </p>
+              <Card interactive className="group p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-forest text-lime">
+                      <BotIcon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="font-display text-lg leading-tight text-fg">{bot.name}</p>
+                      <p className="mt-0.5 font-mono text-xs uppercase tracking-wide text-fg3">
+                        {bot.channel}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge tone={STATUS_TONE[bot.status] ?? "neutral"} dot>
+                    {bot.status}
+                  </Badge>
+                </div>
+                <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-sm text-fg2">
+                  <span>
+                    Instancia: {bot.evolutionInstance ?? "—"} · {bot.connectionStatus}
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-fg3 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-accent" />
+                </div>
+              </Card>
             </Link>
           </li>
         ))}
-        {bots?.length === 0 && (
-          <li className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-            {isAdmin
-              ? "Aún no hay bots en este tenant. Crea el primero."
-              : "No tienes bots asignados todavía."}
-          </li>
-        )}
       </ul>
+
+      {bots?.length === 0 && (
+        <EmptyState
+          icon={<BotIcon className="h-7 w-7" />}
+          title="Sin bots todavía"
+          description={
+            isAdmin
+              ? "Aún no hay bots en este tenant. Crea el primero arriba."
+              : "No tienes bots asignados todavía."
+          }
+        />
+      )}
     </section>
   );
 }

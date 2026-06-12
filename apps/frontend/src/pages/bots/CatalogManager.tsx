@@ -2,6 +2,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { CURRENCIES, type CatalogItem, type CatalogItemInput, type ImportReport } from "@bot/shared";
 import { useApi } from "@/lib/useApi";
+import {
+  Badge,
+  Button,
+  Card,
+  ErrorText,
+  Input,
+  Select,
+  Textarea,
+} from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 const AVAILABILITY_LABEL: Record<string, string> = {
   available: "Disponible",
@@ -32,7 +42,8 @@ export function CatalogManager({ botId, isAdmin }: { botId: string; isAdmin: boo
 
   const { data: items } = useQuery({
     queryKey: ["catalog", botId, q, availability],
-    queryFn: () => api.listCatalog(botId, { q: q || undefined, availability: availability || undefined }),
+    queryFn: () =>
+      api.listCatalog(botId, { q: q || undefined, availability: availability || undefined }),
   });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["catalog", botId] });
@@ -80,23 +91,25 @@ export function CatalogManager({ botId, isAdmin }: { botId: string; isAdmin: boo
         availability: item.availability,
         attributes: item.attributes,
       });
-      setAttrsText(Object.keys(item.attributes).length ? JSON.stringify(item.attributes, null, 2) : "");
+      setAttrsText(
+        Object.keys(item.attributes).length ? JSON.stringify(item.attributes, null, 2) : "",
+      );
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2">
-        <input
+        <Input
+          className="w-56"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Filtrar por texto…"
-          className="rounded-md border px-3 py-2 text-sm"
         />
-        <select
+        <Select
+          className="w-48"
           value={availability}
           onChange={(e) => setAvailability(e.target.value)}
-          className="rounded-md border px-3 py-2 text-sm"
         >
           <option value="">Toda disponibilidad</option>
           {Object.entries(AVAILABILITY_LABEL).map(([k, v]) => (
@@ -104,12 +117,12 @@ export function CatalogManager({ botId, isAdmin }: { botId: string; isAdmin: boo
               {v}
             </option>
           ))}
-        </select>
+        </Select>
         {isAdmin && (
           <div className="ml-auto flex gap-2">
-            <button onClick={() => csvInput.current?.click()} className="rounded-md border px-3 py-2 text-sm">
+            <Button variant="outline" onClick={() => csvInput.current?.click()}>
               Importar CSV
-            </button>
+            </Button>
             <input
               ref={csvInput}
               type="file"
@@ -117,27 +130,22 @@ export function CatalogManager({ botId, isAdmin }: { botId: string; isAdmin: boo
               className="hidden"
               onChange={(e) => e.target.files?.[0] && importCsv.mutate(e.target.files[0])}
             />
-            <button
-              onClick={() => openEditor("new")}
-              className="rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground"
-            >
-              + Ítem
-            </button>
+            <Button onClick={() => openEditor("new")}>+ Ítem</Button>
           </div>
         )}
       </div>
 
-      {importCsv.error && <p className="text-sm text-red-600">{(importCsv.error as Error).message}</p>}
+      {importCsv.error && <ErrorText>{(importCsv.error as Error).message}</ErrorText>}
       {report && (
-        <div className="rounded-lg border p-3 text-sm">
-          <p>
-            Import: <span className="font-medium text-green-700">{report.created} creadas</span>
+        <Card className="p-4 text-sm">
+          <p className="text-fg2">
+            Import: <span className="font-medium text-ok">{report.created} creadas</span>
             {report.rejected.length > 0 && (
-              <span className="text-red-600"> · {report.rejected.length} rechazadas</span>
+              <span className="text-danger"> · {report.rejected.length} rechazadas</span>
             )}
           </p>
           {report.rejected.length > 0 && (
-            <ul className="mt-1 list-inside list-disc text-xs text-red-600">
+            <ul className="mt-1 list-inside list-disc text-xs text-danger">
               {report.rejected.map((r) => (
                 <li key={r.row}>
                   Fila {r.row}: {r.reason}
@@ -145,114 +153,124 @@ export function CatalogManager({ botId, isAdmin }: { botId: string; isAdmin: boo
               ))}
             </ul>
           )}
-          <button onClick={() => setReport(null)} className="mt-2 text-xs underline">
+          <Button variant="ghost" size="sm" className="mt-2" onClick={() => setReport(null)}>
             Cerrar
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {editing && (
-        <div className="space-y-2 rounded-lg border p-4">
-          <h3 className="font-medium">{editing === "new" ? "Nuevo ítem" : "Editar ítem"}</h3>
-          <input
+        <Card className="space-y-3 p-5">
+          <h3 className="font-display text-lg text-fg">
+            {editing === "new" ? "Nuevo ítem" : "Editar ítem"}
+          </h3>
+          <Input
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             placeholder="Nombre"
-            className="w-full rounded-md border px-3 py-2 text-sm"
           />
-          <textarea
+          <Textarea
             value={draft.description ?? ""}
             onChange={(e) => setDraft({ ...draft, description: e.target.value || null })}
             placeholder="Descripción"
             rows={2}
-            className="w-full rounded-md border px-3 py-2 text-sm"
           />
           <div className="flex gap-2">
-            <input
+            <Input
+              className="flex-1"
               value={draft.price}
               onChange={(e) => setDraft({ ...draft, price: e.target.value })}
               placeholder="Precio (ej. 25000.00)"
-              className="flex-1 rounded-md border px-3 py-2 text-sm"
             />
-            <select
+            <Select
               value={draft.currency}
-              onChange={(e) => setDraft({ ...draft, currency: e.target.value as CatalogItemInput["currency"] })}
-              className="rounded-md border px-3 py-2 text-sm"
+              onChange={(e) =>
+                setDraft({ ...draft, currency: e.target.value as CatalogItemInput["currency"] })
+              }
             >
               {CURRENCIES.map((c) => (
                 <option key={c}>{c}</option>
               ))}
-            </select>
-            <select
+            </Select>
+            <Select
               value={draft.availability}
               onChange={(e) =>
-                setDraft({ ...draft, availability: e.target.value as CatalogItemInput["availability"] })
+                setDraft({
+                  ...draft,
+                  availability: e.target.value as CatalogItemInput["availability"],
+                })
               }
-              className="rounded-md border px-3 py-2 text-sm"
             >
               {Object.entries(AVAILABILITY_LABEL).map(([k, v]) => (
                 <option key={k} value={k}>
                   {v}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
-          <textarea
+          <Textarea
+            className="font-mono text-xs"
             value={attrsText}
             onChange={(e) => setAttrsText(e.target.value)}
             placeholder='Atributos JSON, ej. {"talla": "M", "color": "azul"}'
             rows={2}
-            className="w-full rounded-md border px-3 py-2 font-mono text-xs"
           />
           <div className="flex gap-2">
-            <button
+            <Button
               onClick={() => save.mutate()}
               disabled={!draft.name || !draft.price || save.isPending}
-              className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
             >
               Guardar
-            </button>
-            <button onClick={() => setEditing(null)} className="rounded-md border px-4 py-2 text-sm">
+            </Button>
+            <Button variant="outline" onClick={() => setEditing(null)}>
               Cancelar
-            </button>
+            </Button>
           </div>
-          {save.error && <p className="text-sm text-red-600">{(save.error as Error).message}</p>}
-        </div>
+          {save.error && <ErrorText>{(save.error as Error).message}</ErrorText>}
+        </Card>
       )}
 
-      <div className="overflow-x-auto rounded-lg border">
+      <Card className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
+          <thead className="border-b border-line bg-soft text-left font-mono text-[11px] uppercase tracking-wide text-fg3">
             <tr>
-              <th className="p-3">Nombre</th>
-              <th className="p-3">Precio</th>
-              <th className="p-3">Disponibilidad</th>
-              <th className="p-3">Estado</th>
+              <th className="p-3 font-medium">Nombre</th>
+              <th className="p-3 font-medium">Precio</th>
+              <th className="p-3 font-medium">Disponibilidad</th>
+              <th className="p-3 font-medium">Estado</th>
               {isAdmin && <th className="p-3" />}
             </tr>
           </thead>
           <tbody>
             {items?.map((item) => (
-              <tr key={item.id} className={`border-t ${item.archivedAt ? "opacity-50" : ""}`}>
+              <tr
+                key={item.id}
+                className={cn("border-t border-line", item.archivedAt && "opacity-50")}
+              >
                 <td className="p-3">
-                  <p className="font-medium">{item.name}</p>
+                  <p className="font-medium text-fg">{item.name}</p>
                   {item.description && (
-                    <p className="max-w-md truncate text-xs text-muted-foreground">{item.description}</p>
+                    <p className="max-w-md truncate text-xs text-fg3">{item.description}</p>
                   )}
                 </td>
-                {/* price es string decimal — se muestra tal cual, sin redondeos. */}
-                <td className="p-3 font-mono">
+                <td className="p-3 font-mono text-fg2">
                   {item.price} {item.currency}
                 </td>
-                <td className="p-3">{AVAILABILITY_LABEL[item.availability]}</td>
-                <td className="p-3 text-xs">{item.archivedAt ? "Archivado" : "Activo"}</td>
+                <td className="p-3 text-fg2">{AVAILABILITY_LABEL[item.availability]}</td>
+                <td className="p-3">
+                  <Badge tone={item.archivedAt ? "neutral" : "ok"}>
+                    {item.archivedAt ? "Archivado" : "Activo"}
+                  </Badge>
+                </td>
                 {isAdmin && (
                   <td className="p-3 text-right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => openEditor(item)} className="rounded-md border px-2 py-1 text-xs">
+                      <Button variant="outline" size="sm" onClick={() => openEditor(item)}>
                         Editar
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
                           if (
                             item.archivedAt ||
@@ -261,10 +279,9 @@ export function CatalogManager({ botId, isAdmin }: { botId: string; isAdmin: boo
                             archive.mutate({ id: item.id, archived: !item.archivedAt });
                           }
                         }}
-                        className="rounded-md border px-2 py-1 text-xs"
                       >
                         {item.archivedAt ? "Restaurar" : "Archivar"}
-                      </button>
+                      </Button>
                     </div>
                   </td>
                 )}
@@ -272,14 +289,14 @@ export function CatalogManager({ botId, isAdmin }: { botId: string; isAdmin: boo
             ))}
             {items?.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-6 text-center text-muted-foreground">
+                <td colSpan={5} className="p-8 text-center text-fg3">
                   El catálogo está vacío.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -1,13 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { Trash2, UploadCloud } from "lucide-react";
 import type { ScoredChunk } from "@bot/shared";
 import { useApi } from "@/lib/useApi";
+import {
+  Badge,
+  Button,
+  Card,
+  ErrorText,
+  Input,
+  Textarea,
+  type BadgeProps,
+} from "@/components/ui";
+import { cn } from "@/lib/utils";
 
-const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
-  pending: { text: "En cola", cls: "bg-yellow-100 text-yellow-800" },
-  indexing: { text: "Indexando…", cls: "bg-blue-100 text-blue-800" },
-  ready: { text: "Lista", cls: "bg-green-100 text-green-800" },
-  failed: { text: "Falló", cls: "bg-red-100 text-red-800" },
+const STATUS_LABEL: Record<string, { text: string; tone: BadgeProps["tone"] }> = {
+  pending: { text: "En cola", tone: "warn" },
+  indexing: { text: "Indexando…", tone: "info" },
+  ready: { text: "Lista", tone: "ok" },
+  failed: { text: "Falló", tone: "danger" },
 };
 
 /** Base de conocimiento del bot: fuentes, upload, FAQs y playground (US-009). */
@@ -27,7 +38,6 @@ export function KnowledgeManager({ botId, isAdmin }: { botId: string; isAdmin: b
   const { data: sources } = useQuery({
     queryKey: ["knowledge", botId],
     queryFn: () => api.listKnowledge(botId),
-    // Auto-refresh mientras haya fuentes procesándose (2.2).
     refetchInterval: (q) =>
       q.state.data?.some((s) => s.status === "pending" || s.status === "indexing") ? 3000 : false,
   });
@@ -85,10 +95,14 @@ export function KnowledgeManager({ botId, isAdmin }: { botId: string; isAdmin: b
             onFiles(e.dataTransfer.files);
           }}
           onClick={() => fileInput.current?.click()}
-          className={`cursor-pointer rounded-lg border-2 border-dashed p-6 text-center text-sm ${
-            dragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25 text-muted-foreground"
-          }`}
+          className={cn(
+            "ds-dotgrid flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 text-center text-sm transition-colors duration-200",
+            dragOver
+              ? "border-accent text-fg"
+              : "border-line-strong text-fg3 hover:border-accent",
+          )}
         >
+          <UploadCloud className="h-6 w-6" />
           Arrastra archivos md, txt o pdf (máx. 10 MB) o haz clic para subir
           <input
             ref={fileInput}
@@ -100,157 +114,145 @@ export function KnowledgeManager({ botId, isAdmin }: { botId: string; isAdmin: b
           />
         </div>
       )}
-      {upload.error && <p className="text-sm text-red-600">{(upload.error as Error).message}</p>}
+      {upload.error && <ErrorText>{(upload.error as Error).message}</ErrorText>}
 
       {isAdmin && (
         <div className="flex gap-2">
-          <button onClick={() => setForm(form === "text" ? null : "text")} className="rounded-md border px-3 py-1.5 text-sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setForm(form === "text" ? null : "text")}
+          >
             + Texto
-          </button>
-          <button onClick={() => setForm(form === "faq" ? null : "faq")} className="rounded-md border px-3 py-1.5 text-sm">
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setForm(form === "faq" ? null : "faq")}
+          >
             + FAQ
-          </button>
+          </Button>
         </div>
       )}
 
       {form === "text" && (
-        <div className="space-y-2 rounded-lg border p-4">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Título"
-            className="w-full rounded-md border px-3 py-2 text-sm"
-          />
-          <textarea
+        <Card className="space-y-3 p-5">
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título" />
+          <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Pega aquí el contenido…"
             rows={6}
-            className="w-full rounded-md border px-3 py-2 text-sm"
           />
-          <button
+          <Button
             onClick={() => createSource.mutate()}
             disabled={!title || !content || createSource.isPending}
-            className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
           >
             Guardar fuente
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {form === "faq" && (
-        <div className="space-y-2 rounded-lg border p-4">
-          <input
+        <Card className="space-y-3 p-5">
+          <Input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Pregunta"
-            className="w-full rounded-md border px-3 py-2 text-sm"
           />
-          <textarea
+          <Textarea
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             placeholder="Respuesta"
             rows={3}
-            className="w-full rounded-md border px-3 py-2 text-sm"
           />
-          <button
+          <Button
             onClick={() => createSource.mutate()}
             disabled={!question || !answer || createSource.isPending}
-            className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
           >
             Guardar FAQ
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
-      {createSource.error && (
-        <p className="text-sm text-red-600">{(createSource.error as Error).message}</p>
-      )}
+      {createSource.error && <ErrorText>{(createSource.error as Error).message}</ErrorText>}
 
       <div>
-        <h3 className="mb-2 font-medium">Fuentes ({sources?.length ?? 0})</h3>
+        <h3 className="mb-3 font-display text-lg text-fg">Fuentes ({sources?.length ?? 0})</h3>
         <ul className="space-y-2">
           {sources?.map((s) => {
             const st = STATUS_LABEL[s.status] ?? STATUS_LABEL.pending!;
             return (
-              <li key={s.id} className="rounded-lg border p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{s.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {s.kind} · {new Date(s.createdAt).toLocaleString()}
-                    </p>
+              <li key={s.id}>
+                <Card className="p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-fg">{s.title}</p>
+                      <p className="font-mono text-xs uppercase tracking-wide text-fg3">
+                        {s.kind} · {new Date(s.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Badge tone={st.tone}>{st.text}</Badge>
+                      {isAdmin && s.status === "failed" && (
+                        <Button variant="outline" size="sm" onClick={() => reindex.mutate(s.id)}>
+                          Reintentar
+                        </Button>
+                      )}
+                      {isAdmin && (
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => {
+                            if (confirm(`¿Eliminar "${s.title}" y su índice?`)) remove.mutate(s.id);
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs ${st.cls}`}>{st.text}</span>
-                    {isAdmin && s.status === "failed" && (
-                      <button
-                        onClick={() => reindex.mutate(s.id)}
-                        className="rounded-md border px-2 py-1 text-xs"
-                      >
-                        Reintentar
-                      </button>
-                    )}
-                    {isAdmin && (
-                      <button
-                        onClick={() => {
-                          if (confirm(`¿Eliminar "${s.title}" y su índice?`)) remove.mutate(s.id);
-                        }}
-                        className="rounded-md border px-2 py-1 text-xs text-red-600"
-                      >
-                        Eliminar
-                      </button>
-                    )}
-                  </div>
-                </div>
-                {s.status === "failed" && s.error && (
-                  <p className="mt-1 text-xs text-red-600">{s.error}</p>
-                )}
+                  {s.status === "failed" && s.error && (
+                    <ErrorText className="mt-1 text-xs">{s.error}</ErrorText>
+                  )}
+                </Card>
               </li>
             );
           })}
           {sources?.length === 0 && (
-            <p className="text-sm text-muted-foreground">Aún no hay fuentes de conocimiento.</p>
+            <p className="text-sm text-fg3">Aún no hay fuentes de conocimiento.</p>
           )}
         </ul>
       </div>
 
-      <div className="rounded-lg border p-4">
-        <h3 className="mb-2 font-medium">Probar búsqueda</h3>
+      <Card className="p-5">
+        <h3 className="mb-3 font-display text-lg text-fg">Probar búsqueda</h3>
         <div className="flex gap-2">
-          <input
+          <Input
+            className="flex-1"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && query && search.mutate()}
             placeholder="¿Qué buscaría un cliente?"
-            className="flex-1 rounded-md border px-3 py-2 text-sm"
           />
-          <button
-            onClick={() => search.mutate()}
-            disabled={!query || search.isPending}
-            className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
-          >
+          <Button onClick={() => search.mutate()} disabled={!query || search.isPending}>
             {search.isPending ? "Buscando…" : "Buscar"}
-          </button>
+          </Button>
         </div>
-        {search.error && (
-          <p className="mt-2 text-sm text-red-600">{(search.error as Error).message}</p>
-        )}
+        {search.error && <ErrorText className="mt-2">{(search.error as Error).message}</ErrorText>}
         {results && (
           <ul className="mt-3 space-y-2">
             {results.length === 0 && (
-              <p className="text-sm text-muted-foreground">Sin resultados sobre el umbral.</p>
+              <p className="text-sm text-fg3">Sin resultados sobre el umbral.</p>
             )}
             {results.map((r, i) => (
-              <li key={i} className="rounded-md border bg-muted/30 p-3">
-                <p className="mb-1 text-xs font-mono text-muted-foreground">
-                  score {r.score.toFixed(3)}
-                </p>
-                <p className="whitespace-pre-wrap text-sm">{r.content}</p>
+              <li key={i} className="rounded-sm border border-line bg-soft p-3">
+                <p className="mb-1 font-mono text-xs text-fg3">score {r.score.toFixed(3)}</p>
+                <p className="whitespace-pre-wrap text-sm text-fg2">{r.content}</p>
               </li>
             ))}
           </ul>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import type { ConversationMode } from "@bot/shared";
 import { useApi } from "@/lib/useApi";
+import { Badge, Button, Card, ErrorText, type BadgeProps } from "@/components/ui";
 
-const MODE_BADGE: Record<ConversationMode, { text: string; cls: string }> = {
-  bot: { text: "Bot", cls: "bg-green-100 text-green-800" },
-  human: { text: "Humano", cls: "bg-orange-100 text-orange-800" },
-  paused: { text: "Pausada", cls: "bg-gray-200 text-gray-700" },
+const MODE_BADGE: Record<ConversationMode, { text: string; tone: BadgeProps["tone"] }> = {
+  bot: { text: "Bot", tone: "ok" },
+  human: { text: "Humano", tone: "warn" },
+  paused: { text: "Pausada", tone: "neutral" },
 };
 
 const CAUSE_LABEL: Record<string, string> = {
@@ -47,57 +48,63 @@ export function ConversationsPanel({ botId, isAdmin }: { botId: string; isAdmin:
   return (
     <div className="space-y-3">
       {convos?.length === 0 && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-fg3">
           Aún no hay conversaciones. Llegarán cuando los clientes escriban por WhatsApp.
         </p>
       )}
       {convos?.map((c) => {
         const badge = MODE_BADGE[c.mode];
         return (
-          <div key={c.id} className="rounded-lg border p-3">
+          <Card key={c.id} className="p-4">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <p className="text-sm font-medium">{c.phoneE164}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm font-medium text-fg">{c.phoneE164}</p>
+                <p className="text-xs text-fg3">
                   Último mensaje: {new Date(c.lastMsgAt).toLocaleString()}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className={`rounded-full px-2 py-0.5 text-xs ${badge.cls}`}>{badge.text}</span>
+                <Badge tone={badge.tone} dot>
+                  {badge.text}
+                </Badge>
                 {c.mode !== "human" && (
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setMode.mutate({ id: c.id, mode: "human" })}
-                    className="rounded-md border px-2 py-1 text-xs"
                   >
                     Tomar
-                  </button>
+                  </Button>
                 )}
                 {c.mode !== "bot" && (
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setMode.mutate({ id: c.id, mode: "bot" })}
-                    className="rounded-md border px-2 py-1 text-xs"
                   >
                     Devolver al bot
-                  </button>
+                  </Button>
                 )}
                 {isAdmin && c.mode !== "paused" && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setMode.mutate({ id: c.id, mode: "paused" })}
-                    className="rounded-md border px-2 py-1 text-xs"
                   >
                     Pausar
-                  </button>
+                  </Button>
                 )}
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setExpanded(expanded === c.id ? null : c.id)}
-                  className="text-xs text-muted-foreground underline"
                 >
                   {expanded === c.id ? "Ocultar" : "Historial"}
-                </button>
+                </Button>
               </div>
             </div>
             {expanded === c.id && (
-              <ul className="mt-3 space-y-1 border-t pt-2 text-xs text-muted-foreground">
+              <ul className="mt-3 space-y-1 border-t border-line pt-2 text-xs text-fg3">
                 {transitions?.length === 0 && <li>Sin transiciones registradas.</li>}
                 {transitions?.map((t) => (
                   <li key={t.id}>
@@ -107,10 +114,10 @@ export function ConversationsPanel({ botId, isAdmin }: { botId: string; isAdmin:
                 ))}
               </ul>
             )}
-          </div>
+          </Card>
         );
       })}
-      {setMode.error && <p className="text-sm text-red-600">{(setMode.error as Error).message}</p>}
+      {setMode.error && <ErrorText>{(setMode.error as Error).message}</ErrorText>}
     </div>
   );
 }

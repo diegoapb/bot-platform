@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Check } from "lucide-react";
 import { useApi } from "@/lib/useApi";
+import { Button, Card, ErrorText, Loading } from "@/components/ui";
 
 /** Provisión de Chatwoot del bot + alta de agentes del tenant. */
 export function ChatwootSettings({ botId, isAdmin }: { botId: string; isAdmin: boolean }) {
@@ -29,19 +31,19 @@ export function ChatwootSettings({ botId, isAdmin }: { botId: string; isAdmin: b
     onSuccess: (_d, userId) => setAddedAgents((s) => new Set(s).add(userId)),
   });
 
-  if (isLoading) return <p className="text-muted-foreground">Cargando…</p>;
+  if (isLoading) return <Loading />;
 
   const provisioned = !!cw?.accountId && !!cw?.inboxId;
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border p-4">
-        <div className="flex items-center justify-between">
+    <div className="max-w-2xl space-y-6">
+      <Card className="p-6">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="font-medium">
+            <p className="font-medium text-fg">
               {provisioned ? "Chatwoot provisionado" : "Chatwoot sin provisionar"}
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-0.5 text-sm text-fg3">
               {provisioned
                 ? `Cuenta #${cw!.accountId} · Inbox #${cw!.inboxId}`
                 : "Crea la cuenta e inbox del tenant para centralizar la atención."}
@@ -49,58 +51,54 @@ export function ChatwootSettings({ botId, isAdmin }: { botId: string; isAdmin: b
           </div>
           {provisioned ? (
             cw!.dashboardUrl && (
-              <a
-                href={cw!.dashboardUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-md border px-4 py-2 text-sm"
-              >
-                Abrir Chatwoot ↗
+              <a href={cw!.dashboardUrl} target="_blank" rel="noreferrer">
+                <Button variant="outline">Abrir Chatwoot ↗</Button>
               </a>
             )
           ) : (
             isAdmin && (
-              <button
-                onClick={() => provision.mutate()}
-                disabled={provision.isPending}
-                className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
-              >
+              <Button onClick={() => provision.mutate()} disabled={provision.isPending}>
                 {provision.isPending ? "Provisionando…" : "Provisionar"}
-              </button>
+              </Button>
             )
           )}
         </div>
         {provision.error && (
-          <p className="mt-2 text-sm text-red-600">{(provision.error as Error).message}</p>
+          <ErrorText className="mt-2">{(provision.error as Error).message}</ErrorText>
         )}
-      </div>
+      </Card>
 
       {isAdmin && provisioned && (
         <div>
-          <h3 className="mb-2 font-medium">Agentes</h3>
+          <h3 className="mb-3 font-display text-lg text-fg">Agentes</h3>
           <ul className="space-y-2">
             {members?.map((m) => (
-              <li key={m.userId} className="flex items-center justify-between rounded-lg border p-3">
-                <div>
-                  <p className="text-sm font-medium">{m.name}</p>
-                  <p className="text-xs text-muted-foreground">{m.email}</p>
-                </div>
-                {addedAgents.has(m.userId) ? (
-                  <span className="text-xs text-green-600">Agente dado de alta ✓</span>
-                ) : (
-                  <button
-                    onClick={() => addAgent.mutate(m.userId)}
-                    disabled={addAgent.isPending}
-                    className="rounded-md border px-3 py-1.5 text-xs disabled:opacity-50"
-                  >
-                    Dar de alta en Chatwoot
-                  </button>
-                )}
+              <li key={m.userId}>
+                <Card className="flex items-center justify-between p-4">
+                  <div>
+                    <p className="text-sm font-medium text-fg">{m.name}</p>
+                    <p className="text-xs text-fg3">{m.email}</p>
+                  </div>
+                  {addedAgents.has(m.userId) ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-ok">
+                      <Check className="h-3.5 w-3.5" /> Agente dado de alta
+                    </span>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addAgent.mutate(m.userId)}
+                      disabled={addAgent.isPending}
+                    >
+                      Dar de alta en Chatwoot
+                    </Button>
+                  )}
+                </Card>
               </li>
             ))}
           </ul>
           {addAgent.error && (
-            <p className="mt-2 text-sm text-red-600">{(addAgent.error as Error).message}</p>
+            <ErrorText className="mt-2">{(addAgent.error as Error).message}</ErrorText>
           )}
         </div>
       )}

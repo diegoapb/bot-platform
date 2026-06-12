@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { IDENTITY_TYPES, IDENTITY_TEMPLATES, IDENTITY_MAX_CHARS } from "@bot/shared";
 import type { IdentityType } from "@bot/shared";
 import { useApi } from "@/lib/useApi";
+import { Button, Card, ErrorText, Loading, Tabs, Textarea } from "@/components/ui";
+import { cn } from "@/lib/utils";
 
 const LABELS: Record<IdentityType, string> = {
   SOUL: "SOUL.md",
@@ -31,7 +33,6 @@ export function IdentityEditor({ botId, isAdmin }: { botId: string; isAdmin: boo
 
   const current = docs?.[type] ?? null;
 
-  // Al cambiar de tab o llegar datos: contenido vigente o plantilla inicial.
   useEffect(() => {
     if (docs) setContent(current?.content ?? IDENTITY_TEMPLATES[type]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,89 +54,89 @@ export function IdentityEditor({ botId, isAdmin }: { botId: string; isAdmin: boo
     },
   });
 
-  if (isLoading) return <p className="text-muted-foreground">Cargando…</p>;
+  if (isLoading) return <Loading />;
 
   const overLimit = content.length > IDENTITY_MAX_CHARS;
   const dirty = content !== (current?.content ?? IDENTITY_TEMPLATES[type]);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-1 border-b">
-        {IDENTITY_TYPES.map((t) => (
-          <button
-            key={t}
-            onClick={() => {
-              setType(t);
-              setShowHistory(false);
-            }}
-            className={`px-3 py-2 text-sm ${
-              type === t ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
-            }`}
-          >
-            {LABELS[t]}
-            {docs?.[t] && <span className="ml-1 text-xs">v{docs[t]!.version}</span>}
-          </button>
-        ))}
-        <div className="flex-1" />
-        <button
-          onClick={() => setShowHistory((v) => !v)}
-          className="px-3 py-2 text-sm text-muted-foreground"
-        >
-          {showHistory ? "Ocultar historial" : "Historial"}
-        </button>
-      </div>
+      <Tabs
+        value={type}
+        onChange={(k) => {
+          setType(k as IdentityType);
+          setShowHistory(false);
+        }}
+        items={IDENTITY_TYPES.map((t) => ({
+          key: t,
+          label: (
+            <>
+              {LABELS[t]}
+              {docs?.[t] && (
+                <span className="ml-1 font-mono text-[11px] text-fg3">v{docs[t]!.version}</span>
+              )}
+            </>
+          ),
+        }))}
+        end={
+          <Button variant="ghost" size="sm" onClick={() => setShowHistory((v) => !v)}>
+            {showHistory ? "Ocultar historial" : "Historial"}
+          </Button>
+        }
+      />
 
       {showHistory && (
-        <ul className="space-y-1 rounded-lg border p-3">
-          {versions?.length === 0 && (
-            <li className="text-sm text-muted-foreground">Sin versiones guardadas.</li>
-          )}
-          {versions?.map((v) => (
-            <li key={v.version} className="flex items-center justify-between text-sm">
-              <span>
-                v{v.version} · {new Date(v.createdAt).toLocaleString()} · {v.createdBy}
-              </span>
-              {isAdmin && v.version !== current?.version && (
-                <button
-                  onClick={() => restore.mutate(v.version)}
-                  disabled={restore.isPending}
-                  className="rounded border px-2 py-0.5 text-xs disabled:opacity-50"
-                >
-                  Restaurar
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
+        <Card className="p-4">
+          <ul className="space-y-1.5">
+            {versions?.length === 0 && (
+              <li className="text-sm text-fg3">Sin versiones guardadas.</li>
+            )}
+            {versions?.map((v) => (
+              <li key={v.version} className="flex items-center justify-between text-sm text-fg2">
+                <span>
+                  <span className="font-mono text-fg">v{v.version}</span> ·{" "}
+                  {new Date(v.createdAt).toLocaleString()} · {v.createdBy}
+                </span>
+                {isAdmin && v.version !== current?.version && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => restore.mutate(v.version)}
+                    disabled={restore.isPending}
+                  >
+                    Restaurar
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
 
-      <textarea
+      <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
         readOnly={!isAdmin}
         rows={18}
-        className="w-full rounded-lg border p-3 font-mono text-sm"
+        className="font-mono text-sm"
       />
 
       <div className="flex items-center justify-between">
-        <span className={`text-xs ${overLimit ? "text-red-600" : "text-muted-foreground"}`}>
+        <span className={cn("font-mono text-xs", overLimit ? "text-danger" : "text-fg3")}>
           {content.length.toLocaleString()} / {IDENTITY_MAX_CHARS.toLocaleString()} caracteres
         </span>
         {isAdmin && (
-          <button
+          <Button
             onClick={() => save.mutate()}
             disabled={save.isPending || overLimit || !dirty}
-            className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
           >
             {save.isPending ? "Guardando…" : "Guardar nueva versión"}
-          </button>
+          </Button>
         )}
       </div>
 
       {(save.error || restore.error) && (
-        <p className="text-sm text-red-600">
-          {((save.error ?? restore.error) as Error).message}
-        </p>
+        <ErrorText>{((save.error ?? restore.error) as Error).message}</ErrorText>
       )}
     </div>
   );

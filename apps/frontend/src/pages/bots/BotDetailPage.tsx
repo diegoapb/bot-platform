@@ -2,7 +2,9 @@ import { useAuth } from "@clerk/clerk-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { useApi } from "@/lib/useApi";
+import { Badge, ErrorText, Loading, Tabs } from "@/components/ui";
 import { ConnectWhatsApp } from "./ConnectWhatsApp";
 import { ChatwootSettings } from "./ChatwootSettings";
 import { AudienceSettings } from "./AudienceSettings";
@@ -40,35 +42,40 @@ export function BotDetailPage() {
     enabled: !!botId,
   });
 
-  if (isLoading) return <p className="text-muted-foreground">Cargando…</p>;
+  if (isLoading) return <Loading />;
   if (error || !bot)
-    return <p className="text-red-600">Error: {(error as Error)?.message ?? "No encontrado"}</p>;
+    return <ErrorText>Error: {(error as Error)?.message ?? "No encontrado"}</ErrorText>;
+
+  const visibleTabs = TABS.filter((t) => !("adminOnly" in t && t.adminOnly) || isAdmin);
 
   return (
     <section>
       <header className="mb-6">
-        <Link to="/" className="text-sm text-muted-foreground hover:underline">
-          ← Bots
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-sm text-fg3 transition-colors hover:text-accent"
+        >
+          <ArrowLeft className="h-4 w-4" /> Bots
         </Link>
-        <h1 className="text-2xl font-semibold">{bot.name}</h1>
-        <p className="text-sm text-muted-foreground">
-          {bot.channel} · {bot.status}
+        <div className="mt-3 flex items-center gap-3">
+          <h1 className="font-display text-3xl font-medium tracking-tight text-fg">
+            {bot.name}
+          </h1>
+          <Badge tone="neutral" mono>
+            {bot.status}
+          </Badge>
+        </div>
+        <p className="mt-1 font-mono text-xs uppercase tracking-wide text-fg3">
+          {bot.channel}
         </p>
       </header>
 
-      <nav className="mb-6 flex gap-1 border-b">
-        {TABS.filter((t) => !("adminOnly" in t && t.adminOnly) || isAdmin).map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm ${
-              tab === t.key ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      <Tabs
+        className="mb-8"
+        value={tab}
+        onChange={(k) => setTab(k as TabKey)}
+        items={visibleTabs.map((t) => ({ key: t.key, label: t.label }))}
+      />
 
       {tab === "whatsapp" && <ConnectWhatsApp botId={bot.id} isAdmin={isAdmin} />}
       {tab === "chatwoot" && <ChatwootSettings botId={bot.id} isAdmin={isAdmin} />}
