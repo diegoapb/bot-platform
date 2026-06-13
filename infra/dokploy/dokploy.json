@@ -27,7 +27,7 @@
   "domains": [
     {
       "domainId": "TBD",
-      "host": "bots.diegop.com",
+      "host": "sira.opensolvex.co",
       "https": true,
       "port": 80,
       "serviceName": "frontend",
@@ -36,7 +36,7 @@
     },
     {
       "domainId": "TBD",
-      "host": "api.bots.diegop.com",
+      "host": "api.sira.opensolvex.co",
       "https": true,
       "port": 3000,
       "serviceName": "backend",
@@ -73,14 +73,14 @@
       "composeId": "1H2YPyc4ma1GNlZ26XgQN",
       "public_url": "https://evolutionapi.diegop.com",
       "auth": "header apikey",
-      "_note": "WhatsApp gateway. Se consume por HTTPS. Registrar webhook entrante -> https://api.bots.diegop.com/webhooks/evolution?secret=WEBHOOK_SECRET"
+      "_note": "WhatsApp gateway. Se consume por HTTPS. Registrar webhook entrante -> https://api.sira.opensolvex.co/webhooks/evolution?secret=WEBHOOK_SECRET"
     },
     "chatwoot": {
       "projectId": "7e_WSizxJ9WeDi9dgRngn",
       "composeId": "u6mZVHhqYlHghqVaycUsw",
       "public_url": "https://chatwoot.diegop.com",
       "auth": "header api_access_token",
-      "_note": "Atención humana. Se consume por HTTPS (Application API). Registrar webhook -> https://api.bots.diegop.com/webhooks/chatwoot?secret=WEBHOOK_SECRET"
+      "_note": "Atención humana. Se consume por HTTPS (Application API). Registrar webhook -> https://api.sira.opensolvex.co/webhooks/chatwoot?secret=WEBHOOK_SECRET"
     }
   },
   "networks": ["dokploy-network"]

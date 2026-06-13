@@ -7,16 +7,16 @@ Despliegue del monorepo (backend Hono + frontend React) en `https://dokploy.dieg
 | Host Dokploy | `https://dokploy.diegop.com` |
 | Proyecto | `bot-plataform` (ver `dokploy.json`) |
 | Compose | build desde GitHub, `./infra/dokploy/docker-compose.yml` |
-| Frontend | `https://bots.diegop.com` → service `frontend:80` |
-| Backend | `https://api.bots.diegop.com` → service `backend:3000` |
+| Frontend | `https://sira.opensolvex.co` → service `frontend:80` |
+| Backend | `https://api.sira.opensolvex.co` → service `backend:3000` |
 
 ## Arquitectura en el host
 
 ```mermaid
 flowchart LR
   Internet((Internet)) -->|HTTPS| Traefik["Traefik (Dokploy) · LetsEncrypt"]
-  Traefik -->|bots.diegop.com| FE["frontend (nginx :80)"]
-  Traefik -->|api.bots.diegop.com| BE["backend (Hono :3000)"]
+  Traefik -->|sira.opensolvex.co| FE["frontend (nginx :80)"]
+  Traefik -->|api.sira.opensolvex.co| BE["backend (Hono :3000)"]
 
   subgraph Compose["compose: bot-plataform"]
     FE
@@ -52,7 +52,7 @@ flowchart LR
    CREATE DATABASE botplatform OWNER botplatform;
    GRANT ALL PRIVILEGES ON DATABASE botplatform TO botplatform;
    ```
-2. **DNS** de `bots.diegop.com` y `api.bots.diegop.com` apuntando al host (Cloudflare).
+2. **DNS** de `sira.opensolvex.co` y `api.sira.opensolvex.co` apuntando al host (Cloudflare).
 3. **GitHub provider** conectado en Dokploy (Settings → Git Providers) y el repo del submódulo `bot-plataform` accesible.
 4. **Clerk**: app creada, **Organizations habilitado** (Configure → Organizations) y claves `sk_*` / `pk_*` a mano. El multitenancy depende de Organizations.
 5. **Tokens**: `apikey` de Evolution API y `api_access_token` de Chatwoot.
@@ -81,9 +81,9 @@ python3 <skill>/deploy_compose_from_github.py \
 
 # 5) Dominios
 python3 <skill>/add_domain.py --compose-id <COMPOSE_ID> \
-  --host bots.diegop.com --service-name frontend --port 80
+  --host sira.opensolvex.co --service-name frontend --port 80
 python3 <skill>/add_domain.py --compose-id <COMPOSE_ID> \
-  --host api.bots.diegop.com --service-name backend --port 3000
+  --host api.sira.opensolvex.co --service-name backend --port 3000
 
 # 6) Migraciones de DB (una vez): generar y aplicar
 #    Local, apuntando DATABASE_URL al postgres (vía SSH tunnel):
@@ -97,7 +97,7 @@ python3 <skill>/tail_deployment.py --compose-id <COMPOSE_ID> --watch
 ## Webhooks entrantes
 
 No hay que registrarlos a mano: el backend los configura al provisionar cada
-bot usando `PUBLIC_WEBHOOK_BASE_URL` (debe ser `https://api.bots.diegop.com`):
+bot usando `PUBLIC_WEBHOOK_BASE_URL` (debe ser `https://api.sira.opensolvex.co`):
 
 - **Evolution API** → `POST /webhooks/evolution/:instance`, autenticado con el
   header `x-webhook-token` = `EVOLUTION_WEBHOOK_TOKEN` (se configura al crear
@@ -111,7 +111,7 @@ bot usando `PUBLIC_WEBHOOK_BASE_URL` (debe ser `https://api.bots.diegop.com`):
 ## Smoke test post-deploy
 
 ```bash
-node scripts/smoke-prod.mjs --backend https://api.bots.diegop.com --frontend https://bots.diegop.com
+node scripts/smoke-prod.mjs --backend https://api.sira.opensolvex.co --frontend https://sira.opensolvex.co
 ```
 
 Valida: health extendido (db/evolution/chatwoot), frontend servido, y que los

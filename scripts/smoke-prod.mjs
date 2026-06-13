@@ -2,7 +2,7 @@
 /**
  * Smoke test post-deploy (US-014 T7). Sin dependencias; ejecutable manual o CI.
  *
- *   node scripts/smoke-prod.mjs --backend https://api.bots.diegop.com --frontend https://bots.diegop.com
+ *   node scripts/smoke-prod.mjs --backend https://api.sira.opensolvex.co --frontend https://sira.opensolvex.co
  *
  * Valida:
  *  1. /health responde y reporta checks de db/evolution/chatwoot (P4).

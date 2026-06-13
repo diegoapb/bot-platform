@@ -4,17 +4,17 @@ Paso a paso para desplegar bot-plataform en producción. Complementa `infra/dokp
 
 ## 0. Pre-requisitos (una sola vez)
 
-- Acceso a Cloudflare (zona `diegop.com`), a Dokploy (`https://dokploy.diegop.com`) y SSH al host.
+- Acceso a Cloudflare (zona `opensolvex.co`), a Dokploy (`https://dokploy.diegop.com`) y SSH al host.
 - Repo `bot-plataform` accesible desde el Git Provider conectado en Dokploy (Settings → Git Providers).
 
 ## 1. DNS en Cloudflare
 
-En la zona `diegop.com` crear 2 registros:
+En la zona `opensolvex.co` crear 2 registros:
 
 | Tipo | Nombre | Contenido | Proxy |
 |---|---|---|---|
-| A (o CNAME) | `bots` | IP del host Dokploy | **DNS only (gris)** al inicio |
-| A (o CNAME) | `api.bots` | IP del host Dokploy | **DNS only (gris)** al inicio |
+| A (o CNAME) | `sira` | IP del host Dokploy | **DNS only (gris)** al inicio |
+| A (o CNAME) | `api.sira` | IP del host Dokploy | **DNS only (gris)** al inicio |
 
 > Empezar en "DNS only" para que LetsEncrypt (Traefik) pueda emitir los certificados. Una vez emitidos puedes activar el proxy naranja si quieres; si lo haces, en Cloudflare → SSL/TLS poner modo **Full (strict)**.
 
@@ -41,7 +41,7 @@ DATABASE_URL=postgresql://botplatform:<password>@localhost:<puerto-tunel>/botpla
 
 1. En Clerk crear la **app de producción** (o promover la actual) con **Organizations habilitado**.
 2. Anotar `sk_live_…` y `pk_live_…`.
-3. En Clerk → Domains agregar `https://bots.diegop.com`.
+3. En Clerk → Domains agregar `https://sira.opensolvex.co`.
 4. Tras el primer login en prod, copiar tu `user_…` a `SUPERADMIN_USER_IDS`.
 
 ## 4. Proyecto + compose en Dokploy
@@ -56,7 +56,7 @@ Con la skill `dokploy-api` (comandos completos en `infra/dokploy/README.md`):
 
 Pegar en Dokploy → Compose → Environment el contenido de `infra/dokploy/.env.example` con valores reales:
 
-- `CORS_ORIGIN=https://bots.diegop.com`, `PUBLIC_WEBHOOK_BASE_URL=https://api.bots.diegop.com`, `VITE_API_URL=https://api.bots.diegop.com`
+- `CORS_ORIGIN=https://sira.opensolvex.co`, `PUBLIC_WEBHOOK_BASE_URL=https://api.sira.opensolvex.co`, `VITE_API_URL=https://api.sira.opensolvex.co`
 - `DATABASE_URL` (paso 2), Clerk live (paso 3), tokens de Evolution/Chatwoot
 - `EVOLUTION_WEBHOOK_TOKEN` y `WEBHOOK_SECRET`: generar valores nuevos (no reusar dev)
 - `ANTHROPIC_API_KEY` (+ `LLM_MODEL=claude-haiku-4-5-20251001`; para demos: `claude-opus-4-8`)
@@ -66,8 +66,8 @@ Pegar en Dokploy → Compose → Environment el contenido de `infra/dokploy/.env
 
 Agregar al compose (Traefik + LetsEncrypt):
 
-- `bots.diegop.com` → service `frontend`, puerto 80, HTTPS
-- `api.bots.diegop.com` → service `backend`, puerto 3000, HTTPS
+- `sira.opensolvex.co` → service `frontend`, puerto 80, HTTPS
+- `api.sira.opensolvex.co` → service `backend`, puerto 3000, HTTPS
 
 ## 7. Deploy
 
@@ -81,14 +81,14 @@ Seguir logs hasta que ambos servicios queden healthy (el backend tiene healthche
 ## 8. Verificación (smoke)
 
 ```bash
-node scripts/smoke-prod.mjs --backend https://api.bots.diegop.com --frontend https://bots.diegop.com
+node scripts/smoke-prod.mjs --backend https://api.sira.opensolvex.co --frontend https://sira.opensolvex.co
 ```
 
 Debe dar `Smoke OK ✅` (health con db/evolution/chatwoot arriba, frontend sirviendo HTML, webhooks rechazando tokens inválidos).
 
 ## 9. Primer tenant real
 
-1. Login en `https://bots.diegop.com` → crear organización (tenant).
+1. Login en `https://sira.opensolvex.co` → crear organización (tenant).
 2. Crear bot → conectar WhatsApp (QR) → provisionar Chatwoot.
    - La provisión registra automáticamente los webhooks usando `PUBLIC_WEBHOOK_BASE_URL` — no hay que configurarlos a mano.
 3. Cargar identidad, conocimiento y catálogo.
