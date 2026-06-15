@@ -18,6 +18,9 @@ services:
       - "3000"
     environment:
       NODE_ENV: production
+      # Ambiente lógico: prefija las instancias Evolution (prod-bot-<id>) en la
+      # infra compartida. Sin esto el backend tomaría el default "dev".
+      DEPLOY_ENV: ${DEPLOY_ENV:-prod}
       PORT: 3000
       CORS_ORIGIN: ${CORS_ORIGIN}
       DATABASE_URL: ${DATABASE_URL}

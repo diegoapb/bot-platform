@@ -2,16 +2,16 @@
   "_comment": "Snapshot de IDs y metadatos del proyecto bot-plataform en Dokploy. NO contiene secretos. Los campos TBD se rellenan tras crear el proyecto/compose/dominios con la skill dokploy-api.",
   "host": "https://dokploy.diegop.com",
   "project": {
-    "projectId": "TBD",
+    "projectId": "O-pOI45CIwsGreKvcpudM",
     "name": "bot-plataform",
     "description": "Plataforma de bots sobre Evolution API (WhatsApp) + Chatwoot"
   },
   "environment": {
-    "environmentId": "TBD",
+    "environmentId": "DAPGgzQUgoA0vf7_TtqDn",
     "name": "production"
   },
   "compose": {
-    "composeId": "TBD",
+    "composeId": "GS4X0Dgc7J-vIJZNlHnKU",
     "name": "bot-plataform",
     "sourceType": "github",
     "composeType": "docker-compose",
@@ -26,7 +26,7 @@
   ],
   "domains": [
     {
-      "domainId": "TBD",
+      "domainId": "Am_UGDhjPUnHfuPj_Fx5e",
       "host": "sira.opensolvex.co",
       "https": true,
       "port": 80,
@@ -35,7 +35,7 @@
       "domainType": "compose"
     },
     {
-      "domainId": "TBD",
+      "domainId": "wWoFRBKKrm9k1lsgdDsqA",
       "host": "api.sira.opensolvex.co",
       "https": true,
       "port": 3000,
