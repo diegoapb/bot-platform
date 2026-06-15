@@ -9,7 +9,9 @@ ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 
-COPY pnpm-workspace.yaml package.json ./
+# tsconfig.base.json es necesario: packages/shared/tsconfig.json lo extiende
+# (../../tsconfig.base.json) y sin él el `vite build` falla al resolver "extends".
+COPY pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/
 COPY apps/frontend/package.json apps/frontend/
 RUN pnpm install --frozen-lockfile=false
