@@ -18,17 +18,24 @@ En la zona `opensolvex.co` crear 2 registros:
 
 > Empezar en "DNS only" para que LetsEncrypt (Traefik) pueda emitir los certificados. Una vez emitidos puedes activar el proxy naranja si quieres; si lo haces, en Cloudflare → SSL/TLS poner modo **Full (strict)**.
 
-## 2. Base de datos en el Postgres compartido `labs`
+## 2. Base de datos en el Postgres compartido `labs-vector`
 
-SSH al host Dokploy y dentro del contenedor de Postgres:
+> Usa **`labs-vector`** (`pgvector/pgvector:pg15`), la única instancia con la extensión
+> `vector`; el schema usa `vector(1536)`+HNSW. Ver detalle en PLAN-PROD §4.1.
+
+SSH al host Dokploy, como superuser `chatwoot` (pgvector no es "trusted",
+`CREATE EXTENSION` requiere superuser):
 
 ```sql
 CREATE USER botplatform WITH PASSWORD '<genera-uno-fuerte>';
 CREATE DATABASE botplatform OWNER botplatform;
 GRANT ALL PRIVILEGES ON DATABASE botplatform TO botplatform;
+\c botplatform
+CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
-> Si reutilizas la DB de dev actual, salta este paso — pero lo recomendado es separar dev y prod.
+> Crea DB+user dedicados `botplatform`: NO reutilices la db `chatwoot` (Chatwoot prod)
+> ni `botplatform_dev` (desarrollo) de la misma instancia.
 
 Aplicar migraciones desde tu máquina (túnel SSH al Postgres):
 
@@ -97,7 +104,7 @@ Debe dar `Smoke OK ✅` (health con db/evolution/chatwoot arriba, frontend sirvi
 ## 10. Post-deploy
 
 - [ ] Rotar la `ANTHROPIC_API_KEY` temporal de las pruebas de dev.
-- [ ] Verificar que el tunel/instancia de dev no comparte instancias Evolution con prod (1 bot = 1 instancia `bot-<botId>`; con DB separada no hay colisión).
+- [ ] Confirmar `DEPLOY_ENV=prod` en el Environment → instancias `prod-bot-<botId>` (Evolution compartido entre ambientes hasta el aislamiento total; ver PLAN-PROD §9). **Regla del número:** un mismo WhatsApp nunca en dev y prod a la vez.
 - [ ] Activar proxy naranja en Cloudflare (opcional) con SSL Full (strict).
 - [ ] Backup del Postgres `labs` (ya cubierto si el host tiene backups de Dokploy).
 

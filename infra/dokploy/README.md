@@ -24,7 +24,7 @@ flowchart LR
   end
 
   subgraph Net["network: dokploy-network (external)"]
-    PG[("labs · postgres:15<br/>db: botplatform")]
+    PG[("labs-vector · pgvector:pg15<br/>db: botplatform")]
     RD[("Redis · redis:7.2<br/>db index: 5")]
   end
   subgraph Dokploy["otros proyectos Dokploy"]
@@ -46,11 +46,13 @@ flowchart LR
 
 ## Pre-requisitos
 
-1. **DB en el postgres compartido `labs`.** Conéctate por SSH al host Dokploy (Cloudflare bloquea el puerto externo — ver memoria `dokploy_external_access`) y crea:
+1. **DB en el postgres compartido `labs-vector`** (`pgvector/pgvector:pg15`, la instancia que tiene la extensión `vector`; el schema usa `vector(1536)`+HNSW). Conéctate por SSH al host Dokploy (Cloudflare bloquea el puerto externo — ver memoria `dokploy_external_access`) y, como superuser `chatwoot` (pgvector no es "trusted", `CREATE EXTENSION` requiere superuser), crea:
    ```sql
    CREATE USER botplatform WITH PASSWORD '<genera-uno>';
    CREATE DATABASE botplatform OWNER botplatform;
    GRANT ALL PRIVILEGES ON DATABASE botplatform TO botplatform;
+   \c botplatform
+   CREATE EXTENSION IF NOT EXISTS vector;
    ```
 2. **DNS** de `sira.opensolvex.co` y `api.sira.opensolvex.co` apuntando al host (Cloudflare).
 3. **GitHub provider** conectado en Dokploy (Settings → Git Providers) y el repo del submódulo `bot-plataform` accesible.

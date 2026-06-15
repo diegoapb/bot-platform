@@ -47,16 +47,17 @@
   "external_dependencies": {
     "_comment": "Recursos reutilizados desde el proyecto 'databases' vía la red Docker interna 'dokploy-network', y servicios Dokploy consumidos por HTTPS.",
     "postgres": {
-      "postgresId": "WgL72uS6QfLnl5AfozN_k",
-      "name": "labs",
-      "appName": "databases-labs-bkbvsy",
-      "internal_host": "databases-labs-bkbvsy",
+      "postgresId": "y52-adByCoHY9pGKck4SI",
+      "name": "labs-vector",
+      "appName": "labs-vector-uvatca",
+      "internal_host": "labs-vector-uvatca",
       "internal_port": 5432,
-      "dockerImage": "postgres:15",
+      "dockerImage": "pgvector/pgvector:pg15",
       "database_used": "botplatform",
       "user_used": "botplatform",
-      "extensions_required": [],
-      "_setup": "CREATE USER botplatform WITH PASSWORD '...'; CREATE DATABASE botplatform OWNER botplatform; GRANT ALL PRIVILEGES ON DATABASE botplatform TO botplatform;"
+      "extensions_required": ["vector"],
+      "_note": "Instancia con pgvector (vector 0.8.2). El schema usa vector(1536)+HNSW, por eso NO se usa el postgres 'labs' (postgres:15, sin pgvector). Compartida con Chatwoot (db 'chatwoot') y la DB de dev (db 'botplatform_dev'): aislar prod en su propia db 'botplatform'.",
+      "_setup": "Como superuser 'chatwoot' (pgvector no es trusted): CREATE USER botplatform WITH PASSWORD '...'; CREATE DATABASE botplatform OWNER botplatform; \\c botplatform; CREATE EXTENSION IF NOT EXISTS vector;"
     },
     "redis": {
       "redisId": "Q-MmIZ-Q5tKwFe-asy0pp",

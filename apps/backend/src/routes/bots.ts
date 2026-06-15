@@ -210,8 +210,11 @@ botsRoutes.post("/:id/connection", requireAdmin, async (c) => {
         );
       }
 
-      // 1 bot = 1 instancia; nombre determinístico para no duplicar (P3).
-      instance = `bot-${bot.id}`;
+      // 1 bot = 1 instancia; nombre determinístico con prefijo de ambiente
+      // (dev-/qa-/prod-) para diferenciar las instancias en el Evolution
+      // compartido sin que colisionen (P3). El nombre completo se persiste en
+      // bots.evolutionInstance, así findBotByInstance lo resuelve sin cambios.
+      instance = `${env.DEPLOY_ENV}-bot-${bot.id}`;
       const webhookUrl = `${env.PUBLIC_WEBHOOK_BASE_URL}/webhooks/evolution/${instance}`;
       await evolution.createInstance(instance, webhookUrl);
       await db

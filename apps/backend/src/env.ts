@@ -3,6 +3,10 @@ import { z } from "zod";
 /** Validación de variables de entorno al arrancar. Falla rápido si falta algo. */
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  // Ambiente lógico de despliegue. Prefija las instancias Evolution (dev-/qa-/prod-)
+  // para diferenciarlas en la infra COMPARTIDA (Evolution/Chatwoot únicos) mientras
+  // no haya aislamiento total — planificado al superar 20 clientes en producción.
+  DEPLOY_ENV: z.enum(["dev", "qa", "prod"]).default("dev"),
   PORT: z.coerce.number().default(3000),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
 

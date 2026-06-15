@@ -16,8 +16,8 @@ Detectados al revisar el código e infra (bloquean o condicionan el despliegue):
 | # | Hallazgo | Impacto | Acción |
 |---|---|---|---|
 | H1 | ~~**pgvector NO está en uso.** Los embeddings se guardaban como `jsonb` y la similitud coseno se calculaba **en proceso**.~~ ✅ **Resuelto en código** (sección 4): `vector(1536)` + HNSW + búsqueda en SQL. Falta aplicar la migración en la DB. | — | Hecho; aplicar migración en deploy. |
-| H2 | El compose apunta al Postgres **`labs` (postgres:15, SIN pgvector)** ([dokploy.json](../infra/dokploy/dokploy.json)), pero la instancia con pgvector es **`labs-vector` (pgvector/pgvector:pg15)** ([PGVECTOR.md](PGVECTOR.md)). | Si se promueve pgvector hay que decidir qué instancia usa el backend. | Decisión en sección 4.1. |
-| H3 | La rama actual del submódulo es **`260612`**, pero Dokploy/DEPLOY-PROD usan **`main`**. | El auto-deploy escucha `main`; lo trabajado no saldría. | Merge/push a `main` antes de conectar el compose. |
+| H2 | ~~El compose apuntaba al Postgres **`labs` (postgres:15, SIN pgvector)**, pero la instancia con pgvector es **`labs-vector` (pgvector/pgvector:pg15)**.~~ ✅ **Resuelto:** `dokploy.json`, ambos `.env.example` y el README ya apuntan a **`labs-vector`** (`labs-vector-uvatca`, postgresId `y52-adByCoHY9pGKck4SI`). | — | Hecho. Falta crear DB+user+extensión (1.3). |
+| H3 | ~~La rama del submódulo era **`260612`**, Dokploy usa **`main`**.~~ ✅ **Resuelto:** todo mergeado y pusheado a `main`. | — | Hecho. |
 | H4 | `dokploy.json` tiene `projectId`, `composeId`, `environmentId` y `domainId` en **`TBD`**. | El proyecto/compose aún no existen en Dokploy. | Crearlos (sección 5) y guardar IDs. |
 | H5 | `pgvector-proxy` se creó con `docker run` directo (no lo gestiona Dokploy). | Riesgo de quedar fuera de inventario. | Documentado; solo afecta acceso local por túnel, no a prod. |
 
@@ -29,7 +29,7 @@ Detectados al revisar el código e infra (bloquean o condicionan el despliegue):
 - [x] **Migración a pgvector** implementada y migración drizzle generada (sección 4). *Pendiente: mergear a `main` y aplicar en DB.*
 - [x] `pnpm typecheck` y `pnpm build` del backend sin errores (validar también `vite build` del frontend).
 - [ ] Healthchecks vivos: backend `/health/live` (compose) y `/health` extendido (db/evolution/chatwoot) para el smoke.
-- [ ] Rama `main` actualizada y pusheada al repo `bot-platform` (H3).
+- [x] Rama `main` actualizada y pusheada al repo `bot-platform` (H3).
 
 ### 1.2 Infra Dokploy
 - [ ] Proyecto `bot-plataform` + environment `production` creados (H4).
@@ -38,7 +38,7 @@ Detectados al revisar el código e infra (bloquean o condicionan el despliegue):
 - [ ] IDs guardados en `infra/dokploy/dokploy.json`.
 
 ### 1.3 Bases de datos
-- [ ] DB+user de aplicación creados (Postgres compartido — decisión en 4.1).
+- [ ] DB+user de aplicación `botplatform` creados en **`labs-vector`** (decisión 4.1 ✅).
 - [ ] **pgvector** habilitado en la DB de aplicación (`CREATE EXTENSION vector`).
 - [ ] Migraciones aplicadas (incluida la de la columna `vector` + índice HNSW).
 - [ ] Redis: índice `5` reservado (no colisiona con Postiz=2/Chatwoot=3/Evolution=4).
@@ -59,7 +59,8 @@ Detectados al revisar el código e infra (bloquean o condicionan el despliegue):
 - [ ] Secretos solo en el Environment de Dokploy (nunca en el repo).
 - [ ] Rotar la `ANTHROPIC_API_KEY` temporal de pruebas tras el deploy.
 - [ ] Backups del Postgres (cubierto si el host tiene backups de Dokploy).
-- [ ] Verificar aislamiento dev/prod (instancias Evolution `bot-<botId>` y DB separadas).
+- [ ] `DEPLOY_ENV=prod` en el Environment (prefija las instancias Evolution → `prod-bot-<id>`). Ver §9.
+- [ ] Verificar aislamiento dev/qa/prod (prefijo `DEPLOY_ENV` + DB separadas + **regla del número**, §9).
 
 ---
 
@@ -105,25 +106,26 @@ documentado en DEPLOY-PROD §2.
 Objetivo: dejar de cargar todos los chunks en memoria y delegar la búsqueda
 semántica a Postgres con tipo `vector` + índice **HNSW** y operador `<->`.
 
-### 4.1 Decisión de instancia (resuelve H2)
-La extensión `vector` solo existe en la instancia **`labs-vector`** (`pgvector/pgvector:pg15`),
-no en `labs` (`postgres:15`). Dos caminos:
+### 4.1 Decisión de instancia (resuelve H2) — ✅ DECIDIDO
+**Una sola DB de app sobre `labs-vector`** (`pgvector/pgvector:pg15`, postgresId
+`y52-adByCoHY9pGKck4SI`, host interno `labs-vector-uvatca`). Es la única instancia con la
+extensión `vector`, y el schema usa `vector(1536)`+HNSW. Toda la app (incluida la búsqueda
+semántica) vive en una sola DB con pgvector. Los docs ya apuntan ahí (H2 resuelto).
 
-- **(Recomendado) Una sola DB de app sobre `labs-vector`.** Crear DB dedicada
-  `botplatform` en `labs-vector` (la misma instancia que ya tiene la extensión) y
-  apuntar `DATABASE_URL` ahí. Toda la app (incluida la búsqueda) en una sola DB con pgvector.
-  ```bash
-  ssh dokploy "docker exec \$(docker ps -q -f name=labs-vector) \
-    psql -U chatwoot -c \"CREATE DATABASE botplatform OWNER chatwoot;\""
-  ssh dokploy "docker exec \$(docker ps -q -f name=labs-vector) \
-    psql -U chatwoot -d botplatform -c 'CREATE EXTENSION IF NOT EXISTS vector;'"
-  ```
-  `DATABASE_URL=postgresql://chatwoot:<pwd>@labs-vector-uvatca:5432/botplatform`
-  (host interno en `dokploy-network`; el `.env.example` debe actualizarse para no usar `databases-labs-bkbvsy`).
-
-- **(Alternativa) DB de app en `labs` + DB de vectores en `labs-vector`.** Mantiene la
-  app en `labs` y solo los embeddings en `labs-vector_`. Requiere una segunda conexión
-  (`VECTOR_DATABASE_URL`) en el backend. Más complejo; solo si hay razón para no mover la app.
+Crear una **DB y un user dedicados** `botplatform` (NO reutilizar el superuser `chatwoot`
+ni la db `chatwoot` de Chatwoot, ni la db `botplatform_dev` de desarrollo). Como superuser
+`chatwoot` (pgvector no es "trusted", `CREATE EXTENSION` requiere superuser), una sola vez:
+```bash
+C=$(ssh dokploy "docker ps -q -f name=labs-vector")
+ssh dokploy "docker exec \$C psql -U chatwoot -c \
+  \"CREATE USER botplatform WITH PASSWORD '<genera-uno-fuerte>';\""
+ssh dokploy "docker exec \$C psql -U chatwoot -c \
+  \"CREATE DATABASE botplatform OWNER botplatform;\""
+ssh dokploy "docker exec \$C psql -U chatwoot -d botplatform -c \
+  'CREATE EXTENSION IF NOT EXISTS vector;'"
+```
+`DATABASE_URL=postgresql://botplatform:<pwd>@labs-vector-uvatca:5432/botplatform`
+(host interno en `dokploy-network`).
 
 ### 4.2 Cambios de código (backend) — ✅ IMPLEMENTADO
 1. **Schema** ([schema.ts:345-379](../apps/backend/src/db/schema.ts#L345-L379)): `embedding` pasa de `jsonb`
@@ -227,5 +229,32 @@ Post-deploy:
 6. Aplicar migraciones por túnel SSH (4.3).
 7. Deploy + tail → smoke (6).
 8. Primer tenant + post-deploy (7).
-</content>
-</invoke>
+
+---
+
+## 9. Aislamiento dev / qa / prod (infra compartida)
+
+> **Decisión vigente:** dev, qa y prod **comparten** un único Evolution API
+> (`evolutionapi.diegop.com`) y un único Chatwoot (`chatwoot.diegop.com`). El
+> aislamiento total (instancias Evolution/Chatwoot propias por ambiente) se hará
+> **al superar 20 clientes en producción**, no antes.
+
+Cómo se diferencian los ambientes mientras tanto:
+
+| Mecanismo | Detalle |
+|---|---|
+| **Prefijo de instancia Evolution** | `DEPLOY_ENV` (`dev`/`qa`/`prod`) prefija el nombre: `prod-bot-<botId>`, `dev-bot-<botId>`. Se persiste completo en `bots.evolutionInstance`; el ruteo de webhooks (`findBotByInstance`) lo resuelve sin cambios. Implementado en `routes/bots.ts` + `env.ts`. |
+| **DB separada** | Cada ambiente tiene su DB en `labs-vector` (`botplatform_dev` vs `botplatform`), así los `botId` (UUID) y los nombres de instancia nunca colisionan. |
+| **Webhooks por URL** | El webhook se hornea con el `PUBLIC_WEBHOOK_BASE_URL` del ambiente que crea la instancia → cada instancia avisa solo a su backend. |
+| **Chatwoot por tenant** | La cuenta Chatwoot es por tenant (= Clerk org). Con apps Clerk distintas (test/live) los tenants no se cruzan entre ambientes. *(El nombre de cuenta aún NO lleva prefijo `DEPLOY_ENV`; ver nota abajo.)* |
+
+> ⚠️ **Regla del número (crítica, operativa):** un **mismo número de WhatsApp NO
+> debe conectarse en dos ambientes a la vez.** Aunque las instancias tengan
+> prefijos distintos, WhatsApp entrega los mensajes entrantes a todos los
+> dispositivos vinculados → ambos bots responderían y el cliente recibiría
+> respuestas duplicadas. Usa números de prueba propios en dev/qa.
+
+**Pendiente opcional:** prefijar también el **nombre de la cuenta/inbox de
+Chatwoot** con `DEPLOY_ENV` para distinguir a simple vista los recursos de prueba
+de los productivos en el Chatwoot compartido (hoy solo se diferencian por el
+nombre del tenant). No bloquea el deploy.
