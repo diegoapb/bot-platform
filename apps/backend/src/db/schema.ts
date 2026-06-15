@@ -10,6 +10,7 @@ import {
   index,
   jsonb,
   numeric,
+  vector,
 } from "drizzle-orm/pg-core";
 
 export const botChannel = pgEnum("bot_channel", ["whatsapp"]);
@@ -343,10 +344,10 @@ export const knowledgeSources = pgTable(
 );
 
 /**
- * Chunk indexado de una fuente. El embedding se guarda como jsonb (number[]):
- * el Postgres de Dokploy no trae pgvector; la similitud coseno se calcula
- * in-process en `retrieve()` — suficiente a escala MVP. Deuda: migrar a
- * pgvector + HNSW cuando la imagen de Postgres lo soporte.
+ * Chunk indexado de una fuente. El embedding se guarda como `vector(1536)`
+ * (pgvector, dimensión de `text-embedding-3-small`). La búsqueda semántica se
+ * delega a Postgres vía el operador de distancia coseno con índice HNSW
+ * (`retrieve()` en knowledge.ts). Requiere `CREATE EXTENSION vector` en la DB.
  */
 export const knowledgeChunks = pgTable(
   "knowledge_chunks",
@@ -361,12 +362,17 @@ export const knowledgeChunks = pgTable(
       .references(() => knowledgeSources.id, { onDelete: "cascade" }),
     seq: integer("seq").notNull(),
     content: text("content").notNull(),
-    embedding: jsonb("embedding").$type<number[]>().notNull(),
+    embedding: vector("embedding", { dimensions: 1536 }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
     byBot: index("knowledge_chunks_bot_idx").on(t.botId),
     bySource: index("knowledge_chunks_source_idx").on(t.sourceId),
+    // HNSW para la búsqueda por distancia coseno (`<=>`).
+    byEmbedding: index("knowledge_chunks_embedding_hnsw").using(
+      "hnsw",
+      t.embedding.op("vector_cosine_ops"),
+    ),
   }),
 );
 

@@ -50,6 +50,13 @@
       "when": 1781233572598,
       "tag": "0006_dusty_captain_britain",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781391651145,
+      "tag": "0007_great_stryfe",
+      "breakpoints": true
     }
   ]
 }

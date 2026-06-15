@@ -56,53 +56,33 @@ Monorepo pnpm: instala backend, frontend y el paquete compartido de una vez.
 
 ## 4. Base de datos de desarrollo (Dokploy)
 
-La DB de dev se crea **una vez** en Dokploy y se reutiliza. Dos formas:
+> **Ya está montada** sobre la instancia compartida **`labs-vector`** (`pgvector/pgvector:pg15`,
+> extensión `vector 0.8.2`). El schema usa la columna `vector(1536)` + índice HNSW, así que la DB
+> de dev **debe** tener pgvector — por eso ya **no** se usa el viejo recurso `botplatform-dev`
+> (`postgres:15`, sin pgvector), que queda obsoleto.
 
-### Opción A — recurso Postgres dedicado (con la skill dokploy-api) · recomendada
+| Campo | Valor |
+|---|---|
+| Instancia | `labs-vector` (`labs-vector-uvatca`, `dokploy-network`) |
+| Database | `botplatform_dev` |
+| Usuario | `botplatform_dev` (rol propio, no el superuser `chatwoot`) |
+| Password | en `apps/backend/.env` (no se versiona) |
+| Acceso local | túnel SSH `5432 → proxy socat 8680 → labs-vector:5432` |
 
-Crea un recurso aislado solo para dev:
-
-```bash
-SKILL=_system/dokploy/skills/dokploy-api/scripts
-
-# 1) Crear el recurso en el proyecto "databases" (env production)
-python3 - <<'PY'
-import sys; sys.path.insert(0, "_system/dokploy/skills/dokploy-api/scripts")
-from dokploy_client import DokployClient
-import secrets
-c = DokployClient.from_env()
-pwd = secrets.token_hex(24)                       # password apto para Dokploy
-pg = c.postgres.create(
-    name="botplatform-dev", appName="botplatform-dev",
-    environmentId="v7SEBV4M77jY2BPe5g1ST",        # databases / production
-    databaseName="botplatform", databaseUser="botplatform",
-    databasePassword=pwd, dockerImage="postgres:15",
-)
-pid = pg["postgresId"]
-c.postgres.save_external_port(postgresId=pid, externalPort=8679)  # para el túnel
-c.postgres.deploy(postgresId=pid)
-print("postgresId:", pid)
-print("externalPort: 8679")
-print("DATABASE_URL=postgresql://botplatform:%s@localhost:5432/botplatform" % pwd)
-PY
-```
-
-Guarda el `DATABASE_URL` que imprime en `apps/backend/.env` (apunta a `localhost:5432`, que es la **boca local del túnel** del paso 6).
-
-### Opción B — base de datos sobre el Postgres compartido `labs`
-
-Si prefieres no crear un contenedor nuevo, crea solo una DB en el `labs` existente (vía SSH, auth por socket):
+La DB y el usuario se crearon **una sola vez** así (vía SSH, como superuser `chatwoot`):
 
 ```bash
-ssh dokploy 'docker exec -i $(docker ps -q -f name=databases-labs-bkbvsy | head -1) \
-  psql -U joadsckldf -d postgres -v ON_ERROR_STOP=1' <<SQL
-CREATE USER botplatform WITH PASSWORD 'PON_UNA_PASSWORD';
-CREATE DATABASE botplatform_dev OWNER botplatform;
-GRANT ALL PRIVILEGES ON DATABASE botplatform_dev TO botplatform;
-SQL
+C=$(ssh dokploy "docker ps -q -f name=labs-vector")
+ssh dokploy "docker exec \$C psql -U chatwoot -d chatwoot \
+  -c \"CREATE USER botplatform_dev WITH PASSWORD '<pwd>';\""
+ssh dokploy "docker exec \$C psql -U chatwoot -d chatwoot \
+  -c \"CREATE DATABASE botplatform_dev OWNER botplatform_dev;\""
+# La extensión la crea el superuser DENTRO de la nueva DB (pgvector no es 'trusted'):
+ssh dokploy "docker exec \$C psql -U chatwoot -d botplatform_dev \
+  -c 'CREATE EXTENSION IF NOT EXISTS vector;'"
 ```
 
-En este caso el túnel apunta al puerto de `labs` (**8678**) y el `DATABASE_URL` usa la DB `botplatform_dev`.
+> Si necesitas resetear la DB de dev: `DROP DATABASE botplatform_dev` y repetir los 3 pasos.
 
 ---
 
@@ -120,9 +100,8 @@ NODE_ENV=development
 PORT=3000
 # Coma-separados. Añade el host del túnel si vas a usar el paso 9 (probar desde celular).
 CORS_ORIGIN=http://localhost:5173,https://bot-dev.tusolvex.com
-# La boca local del túnel SSH (paso 6) — Opción A:
-DATABASE_URL=postgresql://botplatform:<pwd>@localhost:5432/botplatform
-# (Opción B: .../botplatform_dev)
+# Boca local del túnel SSH (paso 6) -> labs-vector (pgvector). DB y user "botplatform_dev".
+DATABASE_URL=postgresql://botplatform_dev:<pwd>@localhost:5432/botplatform_dev
 CLERK_SECRET_KEY=sk_test_…
 CLERK_PUBLISHABLE_KEY=pk_test_…
 SUPERADMIN_USER_IDS=user_tuId        # opcional
@@ -151,10 +130,10 @@ VITE_CLERK_PUBLISHABLE_KEY=pk_test_…
 El túnel mapea `localhost:5432` (local) → la DB de dev en el host Dokploy. Déjalo abierto mientras desarrollas:
 
 ```bash
-./scripts/dev-tunnel.sh        # o: ssh -N -L 5432:localhost:8679 dokploy
+./scripts/dev-tunnel.sh        # o: ssh -N -L 5432:localhost:8680 dokploy
 ```
 
-(Opción B: usa el puerto **8678**.)
+> `8680` es el proxy socat del host hacia `labs-vector` (pgvector). Ver [PGVECTOR.md](PGVECTOR.md).
 
 ---
 
@@ -220,7 +199,7 @@ cloudflared tunnel --url http://localhost:3000
 |---|---|
 | Backend (Hono) | `:3000` |
 | Frontend (Vite) | `:5173` |
-| DB de dev (boca del túnel) | `:5432` → Dokploy `:8679` (A) / `:8678` (B) |
+| DB de dev (boca del túnel) | `:5432` → Dokploy `:8680` → `labs-vector` (pgvector) |
 
 ---
 

@@ -15,7 +15,7 @@ Detectados al revisar el código e infra (bloquean o condicionan el despliegue):
 
 | # | Hallazgo | Impacto | Acción |
 |---|---|---|---|
-| H1 | **pgvector NO está en uso.** Los embeddings se guardan como `jsonb` y la similitud coseno se calcula **en proceso** cargando *todos* los chunks del bot ([schema.ts:345-371](../apps/backend/src/db/schema.ts#L345-L371), [knowledge.ts:175-201](../apps/backend/src/services/knowledge.ts#L175-L201)). | No escala: cada query lee todos los chunks a memoria. | Migrar a pgvector (sección 4). |
+| H1 | ~~**pgvector NO está en uso.** Los embeddings se guardaban como `jsonb` y la similitud coseno se calculaba **en proceso**.~~ ✅ **Resuelto en código** (sección 4): `vector(1536)` + HNSW + búsqueda en SQL. Falta aplicar la migración en la DB. | — | Hecho; aplicar migración en deploy. |
 | H2 | El compose apunta al Postgres **`labs` (postgres:15, SIN pgvector)** ([dokploy.json](../infra/dokploy/dokploy.json)), pero la instancia con pgvector es **`labs-vector` (pgvector/pgvector:pg15)** ([PGVECTOR.md](PGVECTOR.md)). | Si se promueve pgvector hay que decidir qué instancia usa el backend. | Decisión en sección 4.1. |
 | H3 | La rama actual del submódulo es **`260612`**, pero Dokploy/DEPLOY-PROD usan **`main`**. | El auto-deploy escucha `main`; lo trabajado no saldría. | Merge/push a `main` antes de conectar el compose. |
 | H4 | `dokploy.json` tiene `projectId`, `composeId`, `environmentId` y `domainId` en **`TBD`**. | El proyecto/compose aún no existen en Dokploy. | Crearlos (sección 5) y guardar IDs. |
@@ -26,8 +26,8 @@ Detectados al revisar el código e infra (bloquean o condicionan el despliegue):
 ## 1. Requerimientos para producción (checklist)
 
 ### 1.1 Código / aplicación
-- [ ] **Migración a pgvector** mergeada y migraciones generadas (sección 4).
-- [ ] `pnpm typecheck` y build de ambas imágenes (backend `tsc`, frontend `vite build`) sin errores.
+- [x] **Migración a pgvector** implementada y migración drizzle generada (sección 4). *Pendiente: mergear a `main` y aplicar en DB.*
+- [x] `pnpm typecheck` y `pnpm build` del backend sin errores (validar también `vite build` del frontend).
 - [ ] Healthchecks vivos: backend `/health/live` (compose) y `/health` extendido (db/evolution/chatwoot) para el smoke.
 - [ ] Rama `main` actualizada y pusheada al repo `bot-platform` (H3).
 
@@ -125,31 +125,36 @@ no en `labs` (`postgres:15`). Dos caminos:
   app en `labs` y solo los embeddings en `labs-vector_`. Requiere una segunda conexión
   (`VECTOR_DATABASE_URL`) en el backend. Más complejo; solo si hay razón para no mover la app.
 
-### 4.2 Cambios de código (backend)
-1. **Schema** ([schema.ts:345-371](../apps/backend/src/db/schema.ts#L345-L371)): cambiar `embedding: jsonb` →
-   columna `vector(1536)` (dimensión de `text-embedding-3-small`). Usar el tipo `vector`
-   de `drizzle-orm/pg-core` o un `customType`. Añadir índice HNSW:
-   ```sql
-   CREATE INDEX knowledge_chunks_embedding_hnsw
-     ON knowledge_chunks USING hnsw (embedding vector_cosine_ops);
-   ```
-2. **retrieve()** ([knowledge.ts:175-201](../apps/backend/src/services/knowledge.ts#L175-L201)): reemplazar el
-   `select all + cosineSimilarity` en JS por una query con orden por distancia y `LIMIT k`
-   en SQL, p.ej. `ORDER BY embedding <=> $queryVec LIMIT k`, filtrando por `botId` y umbral.
-3. **embeddings.ts**: `cosineSimilarity` en JS queda obsoleta para retrieval (puede borrarse
-   o conservarse para tests).
-4. Actualizar el comentario de deuda técnica del schema.
+### 4.2 Cambios de código (backend) — ✅ IMPLEMENTADO
+1. **Schema** ([schema.ts:345-379](../apps/backend/src/db/schema.ts#L345-L379)): `embedding` pasa de `jsonb`
+   a `vector("embedding", { dimensions: 1536 })` (tipo nativo de `drizzle-orm/pg-core`) + índice
+   HNSW `knowledge_chunks_embedding_hnsw` con `vector_cosine_ops`.
+2. **retrieve()** ([knowledge.ts:171-200](../apps/backend/src/services/knowledge.ts#L171-L200)): el
+   `select all + cosineSimilarity` en JS se reemplazó por una query SQL
+   `score = 1 - (embedding <=> $query::vector)`, con `WHERE botId AND score >= minScore`,
+   `ORDER BY score DESC` y `LIMIT k`. La firma y el tipo `ScoredChunk` no cambian.
+3. **embeddings.ts**: `cosineSimilarity` ya no se usa en retrieval (se conserva el export por si hace falta en tests).
+4. Comentario de deuda técnica del schema actualizado.
 
-### 4.3 Migración de datos / migraciones drizzle
+> Verificado: `pnpm typecheck` y `pnpm build` pasan.
+
+### 4.3 Migración de datos / migraciones drizzle — ✅ GENERADA
+Migración [`drizzle/0007_great_stryfe.sql`](../apps/backend/drizzle/0007_great_stryfe.sql):
+- `ALTER COLUMN embedding SET DATA TYPE vector(1536) USING embedding::text::vector(1536)` — el
+  `USING` castea los embeddings jsonb existentes, así es segura en DB vacía (prod) **y** con datos (dev);
+  no requiere re-indexar.
+- `CREATE INDEX ... USING hnsw (embedding vector_cosine_ops)`.
+
+**Prerequisito (una vez, como superuser — NO el user de app):** crear la extensión antes de migrar.
+pgvector no es "trusted", así que `CREATE EXTENSION` necesita superuser y se ejecuta por SSH:
 ```bash
-cd apps/backend
-pnpm db:generate          # genera la migración del cambio de columna + índice
-# con túnel SSH abierto y DATABASE_URL apuntando a la DB de app:
-pnpm db:migrate
+ssh dokploy "docker exec \$(docker ps -q -f name=labs-vector) \
+  psql -U chatwoot -d botplatform -c 'CREATE EXTENSION IF NOT EXISTS vector;'"
 ```
-> Si ya hay chunks en `jsonb`, la migración debe **re-castear o re-indexar**: lo más simple
-> en MVP es re-procesar las fuentes (status → `pending` → re-embed) tras migrar el esquema,
-> ya que el volumen es bajo.
+Luego, con el túnel SSH abierto y `DATABASE_URL` apuntando a la DB de app:
+```bash
+cd apps/backend && pnpm db:migrate
+```
 
 ---
 

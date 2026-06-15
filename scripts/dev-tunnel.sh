@@ -6,9 +6,9 @@ set -euo pipefail
 
 SSH_ALIAS="${DOKPLOY_SSH:-dokploy}"   # alias en ~/.ssh/config
 LOCAL_PORT="${LOCAL_PORT:-5432}"      # boca local (la que usa DATABASE_URL)
-REMOTE_PORT="${REMOTE_PORT:-8679}"    # externalPort de la DB de dev en el host
-                                      #   8679 = recurso botplatform-dev (Opción A)
-                                      #   8678 = postgres compartido labs   (Opción B)
+REMOTE_PORT="${REMOTE_PORT:-8680}"    # puerto en el host hacia la DB de dev
+                                      #   8680 = proxy socat -> labs-vector (pgvector)  [ACTUAL]
+                                      #   8679 = recurso botplatform-dev (postgres:15, sin pgvector)  [OBSOLETO]
 
 echo "Túnel: localhost:${LOCAL_PORT} -> ${SSH_ALIAS}:localhost:${REMOTE_PORT}  (Ctrl-C para cerrar)"
 exec ssh -N -L "${LOCAL_PORT}:localhost:${REMOTE_PORT}" "${SSH_ALIAS}"

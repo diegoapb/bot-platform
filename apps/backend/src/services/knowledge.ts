@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, lte, sql } from "drizzle-orm";
 import { PDFParse } from "pdf-parse";
 import { db } from "../db/client.js";
 import {
@@ -6,15 +6,16 @@ import {
   knowledgeSources,
   type KnowledgeSourceRow,
 } from "../db/schema.js";
-import { embed, cosineSimilarity } from "../integrations/embeddings.js";
+import { embed } from "../integrations/embeddings.js";
 import { chunkText, faqChunk } from "./chunker.js";
 
 /**
  * Base de conocimiento por bot (US-009): ingestión → chunking → embeddings →
  * índice. Indexado async in-process (sin cola externa en MVP).
  *
- * Los embeddings se guardan como jsonb y la similitud se calcula in-process
- * porque el Postgres de Dokploy no trae pgvector (ver nota en schema.ts).
+ * Los embeddings se guardan como `vector(1536)` (pgvector) y la búsqueda
+ * semántica se resuelve en Postgres con el operador de distancia coseno e
+ * índice HNSW (ver `retrieve()` y la nota en schema.ts).
  */
 
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -170,7 +171,10 @@ export async function listSources(botId: string): Promise<KnowledgeSourceRow[]> 
 
 /**
  * Búsqueda semántica interna (3.1–3.3). Solo chunks del bot (P1), scores
- * descendentes (P3), umbral mínimo de similitud.
+ * descendentes (P3), umbral mínimo de similitud. La distancia coseno la resuelve
+ * Postgres (pgvector) con el operador `<=>`. Se ordena por la **distancia cruda
+ * ascendente** (no por `1 - dist` desc) para que el planner pueda usar el índice
+ * HNSW; el `score = 1 - distancia` se calcula al mapear el resultado.
  */
 export async function retrieve(
   botId: string,
@@ -180,22 +184,23 @@ export async function retrieve(
 ): Promise<ScoredChunk[]> {
   if (!query.trim()) return [];
   const [qv] = await embed([query]);
+  // distancia coseno en [0,2]; similitud = 1 - distancia. minScore -> distancia máx.
+  const distance = sql<number>`${knowledgeChunks.embedding} <=> ${JSON.stringify(qv)}::vector`;
+
   const rows = await db
     .select({
       content: knowledgeChunks.content,
-      embedding: knowledgeChunks.embedding,
       sourceId: knowledgeChunks.sourceId,
+      distance,
     })
     .from(knowledgeChunks)
-    .where(eq(knowledgeChunks.botId, botId));
+    .where(and(eq(knowledgeChunks.botId, botId), lte(distance, 1 - minScore)))
+    .orderBy(distance) // ASC -> habilita el índice HNSW
+    .limit(k);
 
-  return rows
-    .map((r) => ({
-      content: r.content,
-      sourceId: r.sourceId,
-      score: cosineSimilarity(qv!, r.embedding),
-    }))
-    .filter((r) => r.score >= minScore)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, k);
+  return rows.map((r) => ({
+    content: r.content,
+    sourceId: r.sourceId,
+    score: 1 - r.distance,
+  }));
 }
