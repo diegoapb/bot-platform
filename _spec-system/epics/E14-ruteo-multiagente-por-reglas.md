@@ -44,4 +44,17 @@ Escenario guía: Juan (post-compra) → agente de **garantías**; Felipe (client
 - [ ] La UI permite configurar agentes del canal, reglas, orquestador y simular el ruteo para un contacto de ejemplo.
 
 <!-- DASHBOARD:START — auto-generado por _system/scripts/dashboards.mjs, no editar a mano -->
+
+## Historias de la épica (5)
+
+**Progreso:** 0/5 en producción (0%) · Levantamiento de requerimientos: 5
+
+| ID | Título | Ciclo | Estado | Prioridad |
+| --- | --- | --- | --- | --- |
+| [US-035](../stories/US-035-multiagente-canal-etapa-contacto/index.md) | Multiples agentes por canal y etapa del contacto | — | Levantamiento de requerimientos | P1 |
+| [US-036](../stories/US-036-motor-reglas-ruteo/index.md) | Motor de reglas de ruteo declarativas | — | Levantamiento de requerimientos | P1 |
+| [US-037](../stories/US-037-agente-orquestador-fallback/index.md) | Agente orquestador de ruteo (fallback LLM) | — | Levantamiento de requerimientos | P2 |
+| [US-038](../stories/US-038-resolucion-fijacion-agente-conversacion/index.md) | Resolucion y fijacion del agente al inicio de la conversacion | — | Levantamiento de requerimientos | P1 |
+| [US-039](../stories/US-039-ui-configuracion-ruteo/index.md) | UI de configuracion de ruteo multi-agente | — | Levantamiento de requerimientos | P2 |
+
 <!-- DASHBOARD:END -->

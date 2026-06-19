@@ -47,4 +47,17 @@ Base de la fase 2 (E14: ruteo multi-agente por reglas dentro de un mismo canal).
 - [ ] El pipeline conversacional opera sobre `agentId` sin romper conversaciones existentes.
 
 <!-- DASHBOARD:START — auto-generado por _system/scripts/dashboards.mjs, no editar a mano -->
+
+## Historias de la épica (5)
+
+**Progreso:** 0/5 en producción (0%) · Levantamiento de requerimientos: 5
+
+| ID | Título | Ciclo | Estado | Prioridad |
+| --- | --- | --- | --- | --- |
+| [US-030](../stories/US-030-entidad-agente-migracion/index.md) | Entidad Agente y migracion bot->agente | — | Levantamiento de requerimientos | P0 |
+| [US-031](../stories/US-031-asignacion-canal-agente-ruteo/index.md) | Asignación N:M canal-agente y ruteo de inbound por agente | — | Levantamiento de requerimientos | P0 |
+| [US-032](../stories/US-032-biblioteca-conocimiento-colecciones/index.md) | Biblioteca de conocimiento reutilizable y enlace a agentes | — | Levantamiento de requerimientos | P0 |
+| [US-033](../stories/US-033-identidad-contacto-unificada/index.md) | Identidad de contacto unificada entre canales | — | Levantamiento de requerimientos | P1 |
+| [US-034](../stories/US-034-ui-gestion-agentes/index.md) | UI de gestion de agentes | — | Levantamiento de requerimientos | P1 |
+
 <!-- DASHBOARD:END -->
