@@ -82,9 +82,21 @@ Flujo: el middleware [`auth.ts`](apps/backend/src/middleware/auth.ts) verifica e
 
 ## Desarrollo local
 
-> 📖 Guía completa de onboarding: [`docs/GETTING-STARTED.md`](docs/GETTING-STARTED.md) (Clerk, DB de dev en Dokploy vía túnel SSH, migraciones, primer arranque).
+Dos formas de trabajar en local:
+
+- 🐳 **Todo en Docker (recomendado para empezar):** stack completo en tu máquina
+  (Postgres con pgvector + Redis + backend + frontend) y **data de prueba** lista
+  para distintos escenarios, con un comando: `make up`. Ver
+  [`docs/LOCAL-DOCKER.md`](docs/LOCAL-DOCKER.md).
+- 🔌 **Apps en el host + DB de dev remota (túnel SSH a Dokploy):** el flujo
+  clásico de onboarding. Ver [`docs/GETTING-STARTED.md`](docs/GETTING-STARTED.md)
+  (Clerk, túnel a la DB de dev, migraciones, primer arranque).
 
 ```bash
+# Opción Docker:
+make up        # build + levantar + migrar + cargar data de prueba (make help para más)
+
+# Opción host:
 pnpm install
 
 # Copia y rellena los .env de cada app
@@ -102,6 +114,7 @@ El frontend hace proxy de `/api` al backend en dev (ver `vite.config.ts`).
 ```bash
 pnpm db:generate   # genera migraciones desde apps/backend/src/db/schema.ts
 pnpm db:migrate    # aplica migraciones (necesita DATABASE_URL)
+pnpm db:seed       # carga data de prueba (idempotente; ver docs/LOCAL-DOCKER.md)
 ```
 
 ## Despliegue

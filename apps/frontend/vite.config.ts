@@ -2,6 +2,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 
+// Host público para el modo móvil/cloudflare (p.ej. bot-dev.tusolvex.com). Si se
+// define, se permite ese host y se fuerza HMR sobre wss:443; si no (local/docker),
+// Vite usa el host de la página y HMR funciona en localhost sin configurar nada.
+const publicHost = process.env.VITE_PUBLIC_HOST;
+// Destino del proxy /api. En docker apunta al servicio `backend`; en host, a localhost.
+const proxyTarget = process.env.BACKEND_PROXY_TARGET ?? "http://localhost:3000";
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -12,18 +19,13 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    allowedHosts: ["bot-dev.tusolvex.com", ".trycloudflare.com"],
-    hmr: {
-      host: "bot-dev.tusolvex.com",
-      protocol: "wss",
-      clientPort: 443,
-    },
+    allowedHosts: publicHost ? [publicHost, ".trycloudflare.com"] : undefined,
+    hmr: publicHost ? { host: publicHost, protocol: "wss", clientPort: 443 } : undefined,
     proxy: {
-      // En dev, proxy al backend Hono local.
-      "/api": "http://localhost:3000",
-      // Webhooks entrantes (Evolution/Chatwoot) hacia el backend, vía la URL
-      // pública bot-dev.tusolvex.com (PUBLIC_WEBHOOK_BASE_URL).
-      "/webhooks": "http://localhost:3000",
+      // En dev, proxy al backend Hono.
+      "/api": proxyTarget,
+      // Webhooks entrantes (Evolution/Chatwoot) hacia el backend.
+      "/webhooks": proxyTarget,
     },
   },
 });

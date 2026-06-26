@@ -13,10 +13,11 @@
     "dev:backend": "pnpm --filter @bot/backend dev",
     "dev:frontend": "pnpm --filter @bot/frontend dev",
     "tunnel": "cloudflared tunnel --config ~/.cloudflared/config.yml run bot-plataform-dev",
-    "dev:mobile": "pnpm --parallel --filter \"./apps/*\" dev & cloudflared tunnel --config ~/.cloudflared/config.yml run bot-plataform-dev",
+    "dev:mobile": "VITE_PUBLIC_HOST=bot-dev.tusolvex.com pnpm --parallel --filter \"./apps/*\" dev & cloudflared tunnel --config ~/.cloudflared/config.yml run bot-plataform-dev",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "db:generate": "pnpm --filter @bot/backend db:generate",
-    "db:migrate": "pnpm --filter @bot/backend db:migrate"
+    "db:migrate": "pnpm --filter @bot/backend db:migrate",
+    "db:seed": "pnpm --filter @bot/backend db:seed"
   }
 }

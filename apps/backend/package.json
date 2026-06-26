@@ -9,7 +9,9 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:migrate-local": "tsx scripts/migrate-local.ts",
+    "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@bot/shared": "workspace:*",

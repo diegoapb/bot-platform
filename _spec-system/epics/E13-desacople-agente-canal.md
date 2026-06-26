@@ -46,6 +46,11 @@ Base de la fase 2 (E14: ruteo multi-agente por reglas dentro de un mismo canal).
 - [ ] La UI permite crear/editar agentes, editar su identidad y modelo, asignarles canales y enlazar colecciones.
 - [ ] El pipeline conversacional opera sobre `agentId` sin romper conversaciones existentes.
 
+## Pruebas y despliegue
+
+- [Guía de pruebas en dev](../../docs/E13-testing.md) — validación manual por capas (smoke SQL, UI, casos negativos, E2E, regresión).
+- [Runbook de salida a producción](../../docs/E13-DEPLOY-PROD.md) — backup + migración `0008`/`0009` con backfill + orden migrar→desplegar + rollback.
+
 <!-- DASHBOARD:START — auto-generado por _system/scripts/dashboards.mjs, no editar a mano -->
 
 ## Historias de la épica (5)

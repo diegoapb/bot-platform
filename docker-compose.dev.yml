@@ -1,0 +1,130 @@
+# ===========================================================================
+# bot-plataform — entorno de DESARROLLO 100% local.
+#
+# Levanta TODO el stack en tu máquina (sin túnel SSH a Dokploy):
+#   db        Postgres 15 + pgvector (la extensión que exige el schema)
+#   redis     Redis (reservado a la plataforma; opcional)
+#   backend   Hono en modo watch (tsx) con hot-reload
+#   frontend  Vite dev server con HMR
+#
+# Uso recomendado vía Makefile:  `make up`  (bootstrap completo: build +
+# levantar + migrar + cargar data de prueba). Ver `make help`.
+#
+# Las dependencias node viven en volúmenes (no se mezclan con las del host),
+# así que el primer arranque instala y los siguientes son instantáneos.
+# ===========================================================================
+
+name: bot-plataform-dev
+
+services:
+  db:
+    image: pgvector/pgvector:pg15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-botplatform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-botplatform}
+      POSTGRES_DB: ${POSTGRES_DB:-botplatform}
+    ports:
+      # Boca local de la DB (cámbiala con DB_PORT si el 5432 ya está ocupado por
+      # el túnel a Dokploy). Por defecto 5433 para NO chocar con dev-tunnel.sh.
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./infra/dev/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-botplatform} -d ${POSTGRES_DB:-botplatform}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: infra/dev/Dockerfile
+    image: bot-plataform-dev
+    restart: unless-stopped
+    command: ["pnpm", "--filter", "@bot/backend", "exec", "tsx", "watch", "src/index.ts"]
+    env_file:
+      - .env.dev
+    environment:
+      NODE_ENV: development
+      PORT: "3000"
+      # Dentro de la red de compose, db/redis se resuelven por nombre de servicio.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-botplatform}:${POSTGRES_PASSWORD:-botplatform}@db:5432/${POSTGRES_DB:-botplatform}
+      REDIS_URL: redis://redis:6379/5
+      # Hot-reload fiable sobre bind mounts (macOS/Windows Docker no siempre
+      # propagan eventos de fs). Quítalo si tu Docker propaga eventos nativos.
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    volumes:
+      - .:/app
+      # Volúmenes que enmascaran node_modules del host (cada servicio gestiona
+      # los suyos; evita choques host/contenedor y entre backend/frontend).
+      - backend-root-nm:/app/node_modules
+      - backend-shared-nm:/app/packages/shared/node_modules
+      - backend-be-nm:/app/apps/backend/node_modules
+      - backend-fe-nm:/app/apps/frontend/node_modules
+      - pnpm-store:/pnpm
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/dev/Dockerfile
+    image: bot-plataform-dev
+    restart: unless-stopped
+    command: ["pnpm", "--filter", "@bot/frontend", "dev"]
+    # Sin env_file: el frontend lee sus VITE_* (Clerk pk) de apps/frontend/.env,
+    # igual que `pnpm dev`. El compose solo fuerza el proxy hacia el backend.
+    # (Vite da prioridad a process.env, así que inyectar VITE_CLERK_* aquí
+    #  pisaría la clave real del .env del frontend.)
+    environment:
+      # En docker el navegador pega a localhost:5173/api y Vite proxya al backend
+      # por nombre de servicio (ver apps/frontend/vite.config.ts).
+      BACKEND_PROXY_TARGET: http://backend:3000
+      VITE_API_URL: ""
+      # HMR fiable sobre bind mounts (ver nota en el servicio backend).
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - .:/app
+      - frontend-root-nm:/app/node_modules
+      - frontend-shared-nm:/app/packages/shared/node_modules
+      - frontend-be-nm:/app/apps/backend/node_modules
+      - frontend-fe-nm:/app/apps/frontend/node_modules
+      - pnpm-store:/pnpm
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
+  redis-data:
+  pnpm-store:
+  backend-root-nm:
+  backend-shared-nm:
+  backend-be-nm:
+  backend-fe-nm:
+  frontend-root-nm:
+  frontend-shared-nm:
+  frontend-be-nm:
+  frontend-fe-nm:
