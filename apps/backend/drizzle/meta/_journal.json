@@ -57,6 +57,20 @@
       "when": 1781391651145,
       "tag": "0007_great_stryfe",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781836828778,
+      "tag": "0008_milky_magma",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1781837052610,
+      "tag": "0009_spicy_sharon_carter",
+      "breakpoints": true
     }
   ]
 }

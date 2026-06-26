@@ -1,6 +1,6 @@
 import { OrganizationSwitcher, UserButton, useAuth } from "@clerk/clerk-react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Bot, Users, Shield, MessagesSquare, BarChart3 } from "lucide-react";
+import { Bot, BrainCircuit, Users, Shield, MessagesSquare, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMe } from "@/lib/useMe";
 import { Logo } from "@/components/ui";
@@ -30,6 +30,9 @@ export function Layout() {
                 <>
                   <NavLink to="/" end className={linkClass}>
                     <Bot className="h-4 w-4" /> Bots
+                  </NavLink>
+                  <NavLink to="/agents" className={linkClass}>
+                    <BrainCircuit className="h-4 w-4" /> Agentes
                   </NavLink>
                   <NavLink to="/conversations" className={linkClass}>
                     <MessagesSquare className="h-4 w-4" /> Conversaciones

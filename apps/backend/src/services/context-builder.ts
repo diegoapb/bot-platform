@@ -1,16 +1,18 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/client.js";
-import { channelLinks, tenants, type ConversationRow, type BotRow } from "../db/schema.js";
+import { channelLinks, tenants, type AgentRow, type ConversationRow } from "../db/schema.js";
 import { chatwoot } from "../integrations/chatwoot.js";
 import { compileIdentity } from "./identity.js";
 import { retrieve, type ScoredChunk } from "./knowledge.js";
-import { getMemory } from "./memory.js";
+import { getMemoryForLink } from "./memory.js";
 import type { LlmMessage } from "../integrations/llm.js";
 
 /**
- * Construye el contexto del LLM (US-011 T3): identidad compilada + memoria del
- * contacto (US-013) + chunks de conocimiento + historial reciente de Chatwoot.
- * Truncamiento por presupuesto: primero knowledge, luego history.
+ * Construye el contexto del LLM (US-011 T3) por **agente** (E13): identidad
+ * compilada del agente + memoria del **contacto unificado** (US-033) + chunks de
+ * conocimiento de las colecciones enlazadas al agente (US-032) + historial
+ * reciente de Chatwoot. Truncamiento por presupuesto: primero knowledge, luego
+ * history.
  */
 
 export type BuiltContext = {
@@ -26,7 +28,7 @@ const KNOWLEDGE_BUDGET_CHARS = 8_000;
 const HISTORY_BUDGET_CHARS = 12_000;
 
 export async function buildContext(
-  bot: BotRow,
+  agent: AgentRow,
   convo: ConversationRow,
   pendingTexts: string[],
 ): Promise<BuiltContext> {
@@ -38,10 +40,10 @@ export async function buildContext(
   const query = pendingTexts.join("\n").slice(0, 2000);
 
   const [identity, memory, knowledge] = await Promise.all([
-    compileIdentity(bot.id),
-    link ? getMemory(link.id) : Promise.resolve({ facts: [], summary: null, updatedAt: null }),
-    retrieve(bot.id, query, MAX_KNOWLEDGE_CHUNKS).catch((e) => {
-      // Sin embeddings configurados el bot responde solo con identidad+catálogo.
+    compileIdentity(agent.id),
+    link ? getMemoryForLink(link) : Promise.resolve({ facts: [], summary: null, updatedAt: null }),
+    retrieve(agent.id, query, MAX_KNOWLEDGE_CHUNKS).catch((e) => {
+      // Sin embeddings/colecciones el agente responde solo con identidad+catálogo.
       console.warn("[context] retrieve falló:", e instanceof Error ? e.message : e);
       return [] as ScoredChunk[];
     }),
@@ -93,7 +95,7 @@ export async function buildContext(
     }
   }
 
-  const history = await fetchHistory(bot, convo);
+  const history = await fetchHistory(agent.tenantId, convo);
   const messages: LlmMessage[] = [...history];
   // Los mensajes pendientes de la ráfaga van como último turno del usuario.
   messages.push({ role: "user", content: pendingTexts.join("\n") });
@@ -102,13 +104,13 @@ export async function buildContext(
 }
 
 /** Historial reciente desde Chatwoot, alternancia user/assistant válida. */
-async function fetchHistory(bot: BotRow, convo: ConversationRow): Promise<LlmMessage[]> {
+async function fetchHistory(tenantId: string, convo: ConversationRow): Promise<LlmMessage[]> {
   try {
     const [link] = await db
       .select()
       .from(channelLinks)
       .where(eq(channelLinks.id, convo.channelLinkId));
-    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, bot.tenantId));
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId));
     if (!link || !tenant?.chatwootAccountId) return [];
 
     const raw = await chatwoot.listMessages(tenant.chatwootAccountId, link.cwConversationId);

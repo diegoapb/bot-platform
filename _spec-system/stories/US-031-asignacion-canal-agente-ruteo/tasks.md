@@ -10,49 +10,49 @@ Primero el modelo: tipo `whatsapp_evolution`, tabla `agent_channels` y `conversa
 
 ## Tasks
 
-- [ ] **T1 — Migración Drizzle: `whatsapp_evolution`, `agent_channels`, `conversations.agent_id`**
+- [x] **T1 — Migración Drizzle: `whatsapp_evolution`, `agent_channels`, `conversations.agent_id`**
   - Archivos: `apps/backend/drizzle/00XX_agent_channels.sql`, `apps/backend/src/db/schema.ts`
   - PASS si: `pnpm db:migrate` aplica; `channel_type` incluye `whatsapp_evolution`; `agent_channels(id, tenant_id, agent_id fk, channel_id fk, created_at)` con `unique(channel_id)` e índices `(agent_id)`/`(tenant_id)`; `conversations.agent_id` (FK agents) creada con índice.
   - FAIL si: falta el `unique(channel_id)` o los nombres/tipos divergen del data model del diseño.
   - Properties: P1, P4
   - Requirements: 2.1, 5.1, 7.4
 
-- [ ] **T2 — `agentChannelService`: assign/unassign/list con invariante y tenant scope**
+- [x] **T2 — `agentChannelService`: assign/unassign/list con invariante y tenant scope**
   - Archivos: `apps/backend/src/services/agent-channels.ts`
   - PASS si: assign de canal libre crea enlace; canal ocupado por otro agente → rechazo; mismo agente → idempotente; cross-tenant rechazado; unassign elimina; list devuelve sólo canales del agente.
   - FAIL si: dos enlaces para un mismo canal pueden coexistir, o una query no filtra por `tenant_id`.
   - Properties: P1, P4
   - Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 3.1, 3.2
 
-- [ ] **T3 — `resolveChannelAgent`: ruteo por inbox y por instancia Evolution**
+- [x] **T3 — `resolveChannelAgent`: ruteo por inbox y por instancia Evolution**
   - Archivos: `apps/backend/src/services/routing/resolve-agent.ts`
   - PASS si: `resolveByInbox` y `resolveByEvolutionInstance` devuelven `{channel, agent}` del tenant correcto; canal sin agente enlazado → `null`; nunca resuelve agente de otro tenant.
   - FAIL si: resuelve por `channel.botId` legado en vez de `agent_channels`, o cruza tenants.
   - Properties: P2, P4
   - Requirements: 4.1, 4.2, 4.4, 4.5
 
-- [ ] **T4 — `conversation-state`: fijar `agent_id` en conversaciones nuevas**
+- [x] **T4 — `conversation-state`: fijar `agent_id` en conversaciones nuevas**
   - Archivos: `apps/backend/src/services/conversation-state.ts`
   - PASS si: `ensureConversation` persiste `agent_id` del agente resuelto al crear; si la conversación ya existe, su `agent_id` no se modifica; conversación nueva tras reasignación toma el agente vigente.
   - FAIL si: el `agent_id` de una conversación viva cambia al reasignar el canal.
   - Properties: P3
   - Requirements: 5.1, 5.2, 5.3, 5.4
 
-- [ ] **T5 — Reescritura del pipeline de inbound (botId → agentId)**
+- [x] **T5 — Reescritura del pipeline de inbound (botId → agentId)**
   - Archivos: `apps/backend/src/services/message-sync.ts`, `apps/backend/src/services/channel-inbound.ts`, `apps/backend/src/services/reply-engine.ts`, `apps/backend/src/services/context-builder.ts`
   - PASS si: el pipeline opera sobre el agente resuelto (identidad/modelo por agente); inbound por canal sin agente se descarta sin error visible; `tryMarkProcessed` y audiencia usan agente/canal resueltos.
   - FAIL si: algún punto del pipeline sigue resolviendo `bot` por `channel.botId`/instancia en lugar de `resolveChannelAgent`.
   - Properties: P2, P5
   - Requirements: 4.1, 4.2, 4.3, 4.4, 6.1, 6.2, 6.3
 
-- [ ] **T6 — Rutas `POST/GET/DELETE /api/agents/:id/channels`**
+- [x] **T6 — Rutas `POST/GET/DELETE /api/agents/:id/channels`**
   - Archivos: `apps/backend/src/routes/agents.ts`, `apps/backend/src/index.ts`
   - PASS si: asignar válido → 200; canal ocupado → 409; cross-tenant → 403/404; listar devuelve canales del agente; desasignar → 200; sólo `org:admin` escribe, member lee.
   - FAIL si: acceso cross-tenant o un member puede asignar/desasignar.
   - Properties: P1, P4
   - Requirements: 1.1, 1.2, 1.3, 2.2, 3.1, 3.2
 
-- [ ] **T7 — Migración idempotente del canal legacy + siembra de `agent_channels`**
+- [x] **T7 — Migración idempotente del canal legacy + siembra de `agent_channels`**
   - Archivos: `apps/backend/src/db/migrations/00XX_seed_agent_channels.ts`
   - PASS si: crea una fila `channels(type=whatsapp_evolution)` por agente con `evolutionInstance`; enlaza cada canal preexistente a su agente; rellena `channel_links.channel_id` del Evolution legado; segunda ejecución no duplica; conversaciones/mensajes intactos.
   - FAIL si: tras correr dos veces hay canales o enlaces duplicados, o un canal queda con ≠1 agente.
@@ -81,7 +81,7 @@ Primero el modelo: tipo `whatsapp_evolution`, tabla `agent_channels` y `conversa
 
 ## Commits
 
-_(pendiente)_
+- 2026-06-18 · E13 implementado (solo implementación; tests pendientes por decisión). Migraciones `0008_milky_magma.sql` (+enum whatsapp_evolution) y `0009_spicy_sharon_carter.sql` (DDL + backfill idempotente + NOT NULL), aplicadas y verificadas en dev. Typecheck monorepo OK.
 
 ## Research consultada
 

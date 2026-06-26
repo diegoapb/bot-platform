@@ -42,12 +42,17 @@ export const channelType = pgEnum("channel_type", [
   "whatsapp_cloud",
   "instagram",
   "messenger",
+  // E13/US-031: el transporte WhatsApp vía Evolution se normaliza como canal
+  // real para uniformar el ruteo (webhook → channels → agent_channels → agente).
+  "whatsapp_evolution",
 ]);
 export const channelStatus = pgEnum("channel_status", [
   "connected",
   "disconnected",
   "error",
 ]);
+// E13/US-030: estado del agente (el "cerebro"), independiente del bot legacy.
+export const agentStatus = pgEnum("agent_status", ["draft", "active", "paused"]);
 
 /**
  * Estado de plataforma de cada tenant (organización de Clerk). La membresía y
@@ -117,6 +122,66 @@ export const bots = pgTable(
   },
   (t) => ({
     byTenant: index("bots_tenant_idx").on(t.tenantId),
+  }),
+);
+
+/**
+ * Agente (E13/US-030): el "cerebro" desacoplado del transporte. Captura la
+ * configuración que antes vivía fusionada en `bots` (identidad, modelo,
+ * extracción, audiencia, handoff). El transporte (Evolution/Chatwoot) sigue en
+ * `bots` durante la transición; `legacyBotId` materializa el mapeo 1:1 bot→agente
+ * de la migración. `model` NULL = usa el modelo global (`env.LLM_MODEL`).
+ */
+export const agents = pgTable(
+  "agents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    createdBy: text("created_by").notNull(),
+    name: text("name").notNull(),
+    status: agentStatus("status").notNull().default("draft"),
+    // NULL => usa env.LLM_MODEL (modelo global de la plataforma).
+    model: text("model"),
+    extractionSchema: jsonb("extraction_schema").$type<Record<string, unknown> | null>(),
+    whitelistEnabled: boolean("whitelist_enabled").notNull().default(false),
+    handoffMessage: text("handoff_message")
+      .notNull()
+      .default("Te comunico con una persona del equipo, en breve te atienden."),
+    // Puente 1:1 con el bot legacy (transporte). NULL para agentes creados
+    // directamente en la UI (US-034). Unique → a lo sumo un agente por bot.
+    legacyBotId: uuid("legacy_bot_id").references(() => bots.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byTenant: index("agents_tenant_idx").on(t.tenantId),
+    uniqLegacyBot: unique("agents_legacy_bot_uq").on(t.legacyBotId),
+  }),
+);
+
+/**
+ * Enlace N:M agente ↔ canal (E13/US-031). En fase 1 el `unique(channel_id)`
+ * impone el invariante un-canal-un-agente; se relaja en E14. El ruteo de inbound
+ * resuelve el agente a partir del canal por el que llega el mensaje.
+ */
+export const agentChannels = pgTable(
+  "agent_channels",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => agents.id, { onDelete: "cascade" }),
+    channelId: uuid("channel_id")
+      .notNull()
+      .references(() => channels.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    // Invariante fase 1: un canal pertenece a lo sumo a un agente.
+    uniqChannel: unique("agent_channels_channel_uq").on(t.channelId),
+    byAgent: index("agent_channels_agent_idx").on(t.agentId),
+    byTenant: index("agent_channels_tenant_idx").on(t.tenantId),
   }),
 );
 
@@ -262,6 +327,9 @@ export const channelLinks = pgTable(
       .notNull()
       .references(() => bots.id, { onDelete: "cascade" }),
     channelId: uuid("channel_id").references(() => channels.id, { onDelete: "set null" }),
+    // E13/US-033: contacto unificado del agente al que pertenece este link.
+    // NULL durante la transición / si aún no se resolvió.
+    contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "set null" }),
     waJid: text("wa_jid").notNull(),
     phoneE164: text("phone_e164").notNull(),
     cwContactId: integer("cw_contact_id").notNull(),
@@ -270,6 +338,7 @@ export const channelLinks = pgTable(
   },
   (t) => ({
     uniqBotJid: unique("channel_links_bot_jid_uq").on(t.botId, t.waJid),
+    byContact: index("channel_links_contact_idx").on(t.contactId),
   }),
 );
 
@@ -293,16 +362,21 @@ export const processedMessages = pgTable(
 
 /**
  * Documentos de identidad del agente, append-only: cada fila es una versión.
- * La vigente es la de mayor `version` por (bot_id, type).
+ * La vigente es la de mayor `version` por (agent_id, type) — E13/US-030 reapuntó
+ * el ancla de `bot_id` a `agent_id`. `bot_id` se conserva (nullable) durante la
+ * transición para rollback.
  */
 export const identityDocuments = pgTable(
   "identity_documents",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: text("tenant_id").notNull(),
-    botId: uuid("bot_id")
+    // Conservado para rollback; ya no es el ancla. Sin FK para desacoplar el
+    // ciclo de vida de la identidad del bot legacy.
+    botId: uuid("bot_id"),
+    agentId: uuid("agent_id")
       .notNull()
-      .references(() => bots.id, { onDelete: "cascade" }),
+      .references(() => agents.id, { onDelete: "cascade" }),
     type: identityType("type").notNull(),
     version: integer("version").notNull(),
     content: text("content").notNull(),
@@ -310,25 +384,77 @@ export const identityDocuments = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    uniqVersion: unique("identity_documents_bot_type_version_uq").on(t.botId, t.type, t.version),
-    byBot: index("identity_documents_bot_idx").on(t.botId, t.type),
+    uniqVersion: unique("identity_documents_agent_type_version_uq").on(
+      t.agentId,
+      t.type,
+      t.version,
+    ),
+    byAgent: index("identity_documents_agent_idx").on(t.agentId, t.type),
   }),
 );
 
 // --- Base de conocimiento (E05 / US-009) -----------------------------------
 
 /**
- * Fuente de conocimiento de un bot: texto pegado, archivo (md/txt/pdf) o FAQ.
- * `rawText` conserva el texto extraído para poder reindexar sin el archivo.
+ * Colección de conocimiento reutilizable (E13/US-032): unidad propia del tenant
+ * que agrupa fuentes y chunks y se enlaza a uno o varios agentes (referencia
+ * viva). El conocimiento deja de colgar del bot.
+ */
+export const knowledgeCollections = pgTable(
+  "knowledge_collections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    createdBy: text("created_by").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byTenant: index("knowledge_collections_tenant_idx").on(t.tenantId),
+  }),
+);
+
+/**
+ * Enlace N:M agente ↔ colección (E13/US-032). Referencia viva: editar la
+ * colección impacta a todos los agentes que la enlazan, sin copia por agente.
+ */
+export const agentKnowledgeCollections = pgTable(
+  "agent_knowledge_collections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => agents.id, { onDelete: "cascade" }),
+    collectionId: uuid("collection_id")
+      .notNull()
+      .references(() => knowledgeCollections.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqLink: unique("agent_knowledge_collections_uq").on(t.agentId, t.collectionId),
+    byAgent: index("agent_knowledge_collections_agent_idx").on(t.agentId),
+    byCollection: index("agent_knowledge_collections_collection_idx").on(t.collectionId),
+  }),
+);
+
+/**
+ * Fuente de conocimiento de una colección: texto pegado, archivo (md/txt/pdf) o
+ * FAQ. `rawText` conserva el texto extraído para poder reindexar sin el archivo.
+ * E13/US-032 reapuntó el ancla de `bot_id` a `collection_id`.
  */
 export const knowledgeSources = pgTable(
   "knowledge_sources",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: text("tenant_id").notNull(),
-    botId: uuid("bot_id")
+    // Conservado para rollback; ya no es el ancla ni FK obligatoria.
+    botId: uuid("bot_id"),
+    collectionId: uuid("collection_id")
       .notNull()
-      .references(() => bots.id, { onDelete: "cascade" }),
+      .references(() => knowledgeCollections.id, { onDelete: "cascade" }),
     kind: knowledgeSourceKind("kind").notNull(),
     title: text("title").notNull(),
     rawText: text("raw_text").notNull(),
@@ -339,7 +465,7 @@ export const knowledgeSources = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    byBot: index("knowledge_sources_bot_idx").on(t.botId),
+    byCollection: index("knowledge_sources_collection_idx").on(t.collectionId),
   }),
 );
 
@@ -354,9 +480,11 @@ export const knowledgeChunks = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: text("tenant_id").notNull(),
-    botId: uuid("bot_id")
+    // Conservado para rollback; ya no es el ancla ni FK obligatoria.
+    botId: uuid("bot_id"),
+    collectionId: uuid("collection_id")
       .notNull()
-      .references(() => bots.id, { onDelete: "cascade" }),
+      .references(() => knowledgeCollections.id, { onDelete: "cascade" }),
     sourceId: uuid("source_id")
       .notNull()
       .references(() => knowledgeSources.id, { onDelete: "cascade" }),
@@ -366,7 +494,7 @@ export const knowledgeChunks = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    byBot: index("knowledge_chunks_bot_idx").on(t.botId),
+    byCollection: index("knowledge_chunks_collection_idx").on(t.collectionId),
     bySource: index("knowledge_chunks_source_idx").on(t.sourceId),
     // HNSW para la búsqueda por distancia coseno (`<=>`).
     byEmbedding: index("knowledge_chunks_embedding_hnsw").using(
@@ -420,9 +548,16 @@ export const conversations = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: text("tenant_id").notNull(),
+    // Transporte legacy (Evolution/Chatwoot): por dónde se entrega la respuesta.
     botId: uuid("bot_id")
       .notNull()
       .references(() => bots.id, { onDelete: "cascade" }),
+    // E13/US-031: el "cerebro" fijado al crear la conversación. No cambia en
+    // caliente (decisión D3): aunque el canal se reasigne, esta conversación
+    // sigue con su agente.
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => agents.id, { onDelete: "cascade" }),
     channelLinkId: uuid("channel_link_id")
       .notNull()
       .references(() => channelLinks.id, { onDelete: "cascade" }),
@@ -436,6 +571,7 @@ export const conversations = pgTable(
     uniqLink: unique("conversations_channel_link_uq").on(t.channelLinkId),
     byTenant: index("conversations_tenant_idx").on(t.tenantId),
     byBot: index("conversations_bot_idx").on(t.botId),
+    byAgent: index("conversations_agent_idx").on(t.agentId),
   }),
 );
 
@@ -488,18 +624,62 @@ export const conversationTransitions = pgTable(
 
 // --- Memoria por cliente (E07 / US-013) --------------------------------------
 
-/** Resumen acumulado por contacto (anclado al channel_link → aislamiento por bot/tenant). */
-export const contactMemories = pgTable("contact_memories", {
-  channelLinkId: uuid("channel_link_id")
-    .primaryKey()
-    .references(() => channelLinks.id, { onDelete: "cascade" }),
-  tenantId: text("tenant_id").notNull(),
-  botId: uuid("bot_id")
-    .notNull()
-    .references(() => bots.id, { onDelete: "cascade" }),
-  summary: text("summary").notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+/**
+ * Contacto unificado del agente (E13/US-033): persona del lado del cliente,
+ * identificada por teléfono E.164 o email normalizado, propia de un agente.
+ * Agrupa los `channel_links` que comparten identificador → memoria compartida
+ * entre canales. Aislamiento estricto por (tenant, agente): nunca se unifica
+ * cross-agent ni cross-tenant (unique).
+ */
+export const contacts = pgTable(
+  "contacts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: text("tenant_id").notNull(),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => agents.id, { onDelete: "cascade" }),
+    // E.164, email normalizado, o id sintético del link si no hay identificador fiable.
+    primaryIdentifier: text("primary_identifier").notNull(),
+    displayName: text("display_name"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqIdentifier: unique("contacts_agent_identifier_uq").on(
+      t.tenantId,
+      t.agentId,
+      t.primaryIdentifier,
+    ),
+    byAgent: index("contacts_agent_idx").on(t.agentId),
+  }),
+);
+
+/**
+ * Resumen acumulado por contacto. E13/US-033 reapuntó el ancla de
+ * `channel_link_id` a `contact_id` (compartido entre canales del contacto).
+ * `channel_link_id` se conserva (PK legacy) durante la transición.
+ */
+export const contactMemories = pgTable(
+  "contact_memories",
+  {
+    channelLinkId: uuid("channel_link_id")
+      .primaryKey()
+      .references(() => channelLinks.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id")
+      .notNull()
+      .references(() => contacts.id, { onDelete: "cascade" }),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    summary: text("summary").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    // Un resumen vigente por contacto → lectura/escritura por contact_id.
+    uniqContact: unique("contact_memories_contact_uq").on(t.contactId),
+  }),
+);
 
 /** Hecho clave-valor sobre el contacto. A lo sumo un valor vigente por (contacto, clave). */
 export const contactFacts = pgTable(
@@ -510,6 +690,9 @@ export const contactFacts = pgTable(
     botId: uuid("bot_id")
       .notNull()
       .references(() => bots.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id")
+      .notNull()
+      .references(() => contacts.id, { onDelete: "cascade" }),
     channelLinkId: uuid("channel_link_id")
       .notNull()
       .references(() => channelLinks.id, { onDelete: "cascade" }),
@@ -520,8 +703,9 @@ export const contactFacts = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    uniqFact: unique("contact_facts_link_key_uq").on(t.channelLinkId, t.key),
-    byLink: index("contact_facts_link_idx").on(t.channelLinkId),
+    // E13/US-033: un valor vigente por (contacto, clave).
+    uniqFact: unique("contact_facts_contact_key_uq").on(t.contactId, t.key),
+    byContact: index("contact_facts_contact_idx").on(t.contactId),
   }),
 );
 
@@ -534,22 +718,32 @@ export const contactFacts = pgTable(
  *  - `manualKeys`: claves corregidas a mano; la extracción automática no las pisa.
  *  - `provenance`: por clave, de dónde salió el valor y cuándo.
  */
-export const extractedData = pgTable("extracted_data", {
-  channelLinkId: uuid("channel_link_id")
-    .primaryKey()
-    .references(() => channelLinks.id, { onDelete: "cascade" }),
-  tenantId: text("tenant_id").notNull(),
-  botId: uuid("bot_id")
-    .notNull()
-    .references(() => bots.id, { onDelete: "cascade" }),
-  data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
-  manualKeys: jsonb("manual_keys").$type<string[]>().notNull().default([]),
-  provenance: jsonb("provenance")
-    .$type<Record<string, { source: "bot" | "human"; at: string }>>()
-    .notNull()
-    .default({}),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const extractedData = pgTable(
+  "extracted_data",
+  {
+    channelLinkId: uuid("channel_link_id")
+      .primaryKey()
+      .references(() => channelLinks.id, { onDelete: "cascade" }),
+    // E13/US-033: ancla unificada por contacto (compartida entre canales).
+    contactId: uuid("contact_id")
+      .notNull()
+      .references(() => contacts.id, { onDelete: "cascade" }),
+    tenantId: text("tenant_id").notNull(),
+    botId: uuid("bot_id")
+      .notNull()
+      .references(() => bots.id, { onDelete: "cascade" }),
+    data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
+    manualKeys: jsonb("manual_keys").$type<string[]>().notNull().default([]),
+    provenance: jsonb("provenance")
+      .$type<Record<string, { source: "bot" | "human"; at: string }>>()
+      .notNull()
+      .default({}),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqContact: unique("extracted_data_contact_uq").on(t.contactId),
+  }),
+);
 
 export type ExtractedDataRow = typeof extractedData.$inferSelect;
 export type ChannelRow = typeof channels.$inferSelect;
@@ -571,3 +765,11 @@ export type BotRow = typeof bots.$inferSelect;
 export type NewBotRow = typeof bots.$inferInsert;
 export type BotAssignmentRow = typeof botAssignments.$inferSelect;
 export type NewBotAssignmentRow = typeof botAssignments.$inferInsert;
+
+// --- E13: desacople agente / canal / conocimiento ---------------------------
+export type AgentRow = typeof agents.$inferSelect;
+export type NewAgentRow = typeof agents.$inferInsert;
+export type AgentChannelRow = typeof agentChannels.$inferSelect;
+export type KnowledgeCollectionRow = typeof knowledgeCollections.$inferSelect;
+export type AgentKnowledgeCollectionRow = typeof agentKnowledgeCollections.$inferSelect;
+export type ContactRow = typeof contacts.$inferSelect;

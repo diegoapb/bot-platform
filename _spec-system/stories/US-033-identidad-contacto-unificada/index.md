@@ -3,7 +3,7 @@ id: US-033
 title: Identidad de contacto unificada entre canales
 epic: E13
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P1
 estimate: L
 owner: @diego

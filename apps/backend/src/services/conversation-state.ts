@@ -102,16 +102,19 @@ export async function getMode(conversationId: string): Promise<ConversationMode 
 
 /**
  * Resuelve (o crea) la fila de conversación de un channel_link y registra
- * actividad: actualiza last_msg_at y resetea consolidated_at (E07).
+ * actividad: actualiza last_msg_at y resetea consolidated_at (E07). E13/US-031:
+ * al crear, **fija** el `agentId` resuelto; si la conversación ya existe, su
+ * `agentId` NO se modifica (P3, decisión D3 — el agente no cambia en caliente).
  */
 export async function ensureConversation(
   tenantId: string,
   botId: string,
+  agentId: string,
   channelLinkId: string,
 ): Promise<ConversationRow> {
   const inserted = await db
     .insert(conversations)
-    .values({ tenantId, botId, channelLinkId })
+    .values({ tenantId, botId, agentId, channelLinkId })
     .onConflictDoNothing()
     .returning();
   if (inserted[0]) return inserted[0];

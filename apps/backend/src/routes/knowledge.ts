@@ -15,10 +15,14 @@ import {
   SUPPORTED_MIMES,
 } from "../services/knowledge.js";
 import { EmbeddingsError } from "../integrations/embeddings.js";
+import { resolveAgentForBot } from "../services/agents.js";
+import { ensureBotCollection } from "../services/collections.js";
 
 /**
- * Base de conocimiento (US-009): montado en /api/bots → /:id/knowledge*.
- * Admin escribe; member (asignado) lee y prueba búsquedas.
+ * Base de conocimiento por bot (US-009), reapuntada a colecciones (E13/US-032):
+ * montado en /api/bots → /:id/knowledge*. Resuelve la colección propia del bot
+ * (y su agente) y delega en el servicio por colección/agente. Admin escribe;
+ * member (asignado) lee y prueba búsquedas.
  */
 export const knowledgeRoutes = new Hono();
 knowledgeRoutes.use("*", requireAuth, requireTenant);
@@ -40,11 +44,19 @@ async function getTenantBot(c: any, botId: string): Promise<BotRow | null> {
   return bot;
 }
 
+/** Resuelve {collectionId, agentId} de la colección propia del bot. */
+async function botCollection(bot: BotRow): Promise<{ collectionId: string; agentId: string }> {
+  const agent = await resolveAgentForBot(bot);
+  const collectionId = await ensureBotCollection(bot, agent.id);
+  return { collectionId, agentId: agent.id };
+}
+
 /** Lista de fuentes con estado (4.1). */
 knowledgeRoutes.get("/:id/knowledge", async (c) => {
   const bot = await getTenantBot(c, c.req.param("id"));
   if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
-  const sources = await listSources(bot.id);
+  const { collectionId } = await botCollection(bot);
+  const sources = await listSources(bot.tenantId, collectionId);
   return c.json({
     ok: true,
     data: sources.map((s) => ({
@@ -63,6 +75,7 @@ knowledgeRoutes.get("/:id/knowledge", async (c) => {
 knowledgeRoutes.post("/:id/knowledge", requireAdmin, async (c) => {
   const bot = await getTenantBot(c, c.req.param("id"));
   if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+  const { collectionId } = await botCollection(bot);
 
   const contentType = c.req.header("content-type") ?? "";
   try {
@@ -83,7 +96,7 @@ knowledgeRoutes.post("/:id/knowledge", requireAdmin, async (c) => {
       const buffer = Buffer.from(await file.arrayBuffer());
       const result = await createSource(
         bot.tenantId,
-        bot.id,
+        collectionId,
         { kind: "file", title, buffer, mime },
         c.get("userId"),
       );
@@ -98,12 +111,8 @@ knowledgeRoutes.post("/:id/knowledge", requireAdmin, async (c) => {
     const input =
       parsed.data.kind === "text"
         ? { kind: "text" as const, title: parsed.data.title, content: parsed.data.content }
-        : {
-            kind: "faq" as const,
-            question: parsed.data.question,
-            answer: parsed.data.answer,
-          };
-    const result = await createSource(bot.tenantId, bot.id, input, c.get("userId"));
+        : { kind: "faq" as const, question: parsed.data.question, answer: parsed.data.answer };
+    const result = await createSource(bot.tenantId, collectionId, input, c.get("userId"));
     return c.json({ ok: true, data: result }, 202);
   } catch (e) {
     if (e instanceof KnowledgeValidationError) {
@@ -117,7 +126,8 @@ knowledgeRoutes.post("/:id/knowledge", requireAdmin, async (c) => {
 knowledgeRoutes.delete("/:id/knowledge/:sourceId", requireAdmin, async (c) => {
   const bot = await getTenantBot(c, c.req.param("id"));
   if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
-  const deleted = await deleteSource(bot.id, c.req.param("sourceId"));
+  const { collectionId } = await botCollection(bot);
+  const deleted = await deleteSource(bot.tenantId, collectionId, c.req.param("sourceId"));
   if (!deleted) return c.json({ ok: false, error: "Fuente no encontrada" }, 404);
   return c.json({ ok: true, data: { id: c.req.param("sourceId") } });
 });
@@ -126,22 +136,24 @@ knowledgeRoutes.delete("/:id/knowledge/:sourceId", requireAdmin, async (c) => {
 knowledgeRoutes.post("/:id/knowledge/:sourceId/reindex", requireAdmin, async (c) => {
   const bot = await getTenantBot(c, c.req.param("id"));
   if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
-  const queued = await reindex(bot.id, c.req.param("sourceId"));
+  const { collectionId } = await botCollection(bot);
+  const queued = await reindex(bot.tenantId, collectionId, c.req.param("sourceId"));
   if (!queued) return c.json({ ok: false, error: "Fuente no encontrada" }, 404);
   return c.json({ ok: true, data: { id: c.req.param("sourceId") } }, 202);
 });
 
-/** Playground de búsqueda (4.2): chunks con score. */
+/** Playground de búsqueda (4.2): chunks con score, por el agente del bot. */
 knowledgeRoutes.post("/:id/knowledge/search", async (c) => {
   const bot = await getTenantBot(c, c.req.param("id"));
   if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+  const { agentId } = await botCollection(bot);
   const body = await c.req.json().catch(() => null);
   const parsed = knowledgeSearchSchema.safeParse(body);
   if (!parsed.success) {
     return c.json({ ok: false, error: "Payload inválido", issues: parsed.error.issues }, 422);
   }
   try {
-    const chunks = await retrieve(bot.id, parsed.data.query, parsed.data.k ?? 5);
+    const chunks = await retrieve(agentId, parsed.data.query, parsed.data.k ?? 5);
     return c.json({ ok: true, data: chunks });
   } catch (e) {
     if (e instanceof EmbeddingsError) {

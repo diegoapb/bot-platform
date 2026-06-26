@@ -1,17 +1,18 @@
 import { eq } from "drizzle-orm";
 import { db } from "../db/client.js";
 import {
+  agents,
   bots,
   channelLinks,
   conversations,
   generations,
   tenants,
+  type AgentRow,
   type BotRow,
   type ConversationRow,
 } from "../db/schema.js";
 import { chatwoot } from "../integrations/chatwoot.js";
 import { evolution } from "../integrations/evolution.js";
-import { env } from "../env.js";
 import { generate, textOf, type LlmMessage, type LlmTool } from "../integrations/llm.js";
 import { buildContext } from "./context-builder.js";
 import { searchCatalog } from "./catalog.js";
@@ -19,12 +20,14 @@ import { acquireLock, releaseLock, setMode } from "./conversation-state.js";
 import { tryMarkProcessed } from "./message-sync.js";
 import { isBotActive } from "./bot-activation.js";
 import { runExtraction } from "./extraction.js";
+import { resolveModel } from "./agents.js";
 
 /**
- * Motor de respuesta automática (US-011) + handoff (US-012).
- * Debounce de ráfagas en memoria (8s) por conversación, lock con TTL en DB,
- * tool-use de catálogo y de escalamiento a humano.
- * Limitación documentada: el buffer es in-process → válido con 1 réplica.
+ * Motor de respuesta automática (US-011) + handoff (US-012). E13: opera sobre el
+ * **agente** fijado en la conversación (identidad, modelo, conocimiento,
+ * handoff), usando el **bot** como transporte (Evolution/Chatwoot) y para el
+ * catálogo. Debounce de ráfagas en memoria (8s) por conversación, lock con TTL
+ * en DB, tool-use de catálogo y de escalamiento a humano.
  */
 
 const DEBOUNCE_MS = 8_000;
@@ -60,11 +63,7 @@ const TOOLS: LlmTool[] = [
  * Punto de entrada desde el sync de mensajes (US-007). El mensaje ya está
  * deduplicado; aquí solo se bufferiza la ráfaga y se agenda el procesamiento.
  */
-export function onInboundMessage(
-  bot: BotRow,
-  convo: ConversationRow,
-  text: string | null,
-): void {
+export function onInboundMessage(convo: ConversationRow, text: string | null): void {
   if (convo.mode !== "bot") return; // 1.4
   const burst = bursts.get(convo.id);
   const texts = burst?.texts ?? [];
@@ -73,19 +72,19 @@ export function onInboundMessage(
   bursts.set(convo.id, {
     texts,
     timer: setTimeout(() => {
-      void processBurst(bot.id, convo.id);
+      void processBurst(convo.id);
     }, DEBOUNCE_MS),
   });
 }
 
-async function processBurst(botId: string, conversationId: string): Promise<void> {
+async function processBurst(conversationId: string): Promise<void> {
   // Drain del buffer; si no hay texto (solo media) no se genera.
   const burst = bursts.get(conversationId);
   if (!burst) return;
 
   if (!(await acquireLock(conversationId))) {
     // Otra generación en curso: re-agenda; al terminar se reprocesa (2.2).
-    burst.timer = setTimeout(() => void processBurst(botId, conversationId), DEBOUNCE_MS);
+    burst.timer = setTimeout(() => void processBurst(conversationId), DEBOUNCE_MS);
     return;
   }
 
@@ -99,13 +98,15 @@ async function processBurst(botId: string, conversationId: string): Promise<void
       .select()
       .from(conversations)
       .where(eq(conversations.id, conversationId));
-    const [bot] = await db.select().from(bots).where(eq(bots.id, botId));
-    if (!convo || !bot || convo.mode !== "bot") return; // P2
+    if (!convo || convo.mode !== "bot") return; // P2
+    const [bot] = await db.select().from(bots).where(eq(bots.id, convo.botId));
+    const [agent] = await db.select().from(agents).where(eq(agents.id, convo.agentId));
+    if (!bot || !agent) return;
     // E10: recheck con datos frescos — si pausaron el bot durante el debounce,
     // la ráfaga se descarta sin responder.
     if (!isBotActive(bot)) return;
 
-    await respond(bot, convo, texts);
+    await respond(bot, agent, convo, texts);
     // E12: extracción incremental tras la ráfaga (fire-and-forget; no bloquea
     // el lock ni la respuesta). Los fallos quedan logueados dentro.
     void runExtraction(convo);
@@ -115,18 +116,24 @@ async function processBurst(botId: string, conversationId: string): Promise<void
     if (bursts.get(conversationId)?.texts.length) {
       const pending = bursts.get(conversationId)!;
       clearTimeout(pending.timer);
-      pending.timer = setTimeout(() => void processBurst(botId, conversationId), 100);
+      pending.timer = setTimeout(() => void processBurst(conversationId), 100);
     }
   }
 }
 
-async function respond(bot: BotRow, convo: ConversationRow, texts: string[]): Promise<void> {
+async function respond(
+  bot: BotRow,
+  agent: AgentRow,
+  convo: ConversationRow,
+  texts: string[],
+): Promise<void> {
   const ctxInfo = await contactInfo(convo);
   const started = Date.now();
+  const model = resolveModel(agent); // E13/US-030: modelo efectivo del agente
   let promptForTrace: unknown = null;
 
   try {
-    const ctx = await buildContext(bot, convo, texts);
+    const ctx = await buildContext(agent, convo, texts);
     const messages: LlmMessage[] = [...ctx.messages];
     promptForTrace = { system: ctx.system, messages };
 
@@ -134,7 +141,7 @@ async function respond(bot: BotRow, convo: ConversationRow, texts: string[]): Pr
     let totalOut = 0;
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-      const result = await generate({ system: ctx.system, messages, tools: TOOLS });
+      const result = await generate({ system: ctx.system, messages, tools: TOOLS, model });
       totalIn += result.inputTokens;
       totalOut += result.outputTokens;
 
@@ -150,9 +157,9 @@ async function respond(bot: BotRow, convo: ConversationRow, texts: string[]): Pr
         // P4 (US-012): se descarta cualquier texto del LLM; solo va la plantilla.
         const reason = String(handoff.input?.reason ?? "El bot decidió escalar");
         await setMode(convo.id, "human", "llm:request_human");
-        await deliver(bot, convo, ctxInfo, bot.handoffMessage);
+        await deliver(bot, convo, ctxInfo, agent.handoffMessage);
         await privateNote(ctxInfo, `🤝 Handoff del bot. Motivo: ${reason}`);
-        await trace(bot, convo, {
+        await trace(bot, agent, convo, model, {
           prompt: promptForTrace,
           response: `[handoff] ${reason}`,
           inputTokens: totalIn,
@@ -189,7 +196,7 @@ async function respond(bot: BotRow, convo: ConversationRow, texts: string[]): Pr
       if (!text) throw new Error("El LLM no devolvió texto");
 
       await deliver(bot, convo, ctxInfo, text);
-      await trace(bot, convo, {
+      await trace(bot, agent, convo, model, {
         prompt: promptForTrace,
         response: text,
         inputTokens: totalIn,
@@ -208,7 +215,7 @@ async function respond(bot: BotRow, convo: ConversationRow, texts: string[]): Pr
       ctxInfo,
       `⚠️ El bot no pudo responder y transfirió la conversación. Error: ${msg}`,
     ).catch(() => undefined);
-    await trace(bot, convo, {
+    await trace(bot, agent, convo, model, {
       prompt: promptForTrace,
       error: msg,
       latencyMs: Date.now() - started,
@@ -234,6 +241,9 @@ async function contactInfo(convo: ConversationRow): Promise<ContactInfo> {
     accountId: tenant?.chatwootAccountId ?? null,
     cwConversationId: link?.cwConversationId ?? null,
     phone: link?.phoneE164 ?? null,
+    // channelId null = WhatsApp/Evolution legacy (entrega por Evolution); no null
+    // = canal nativo de Chatwoot (entrega por Chatwoot). Las filas Evolution
+    // conservan channelId null tras la migración para preservar este discriminante.
     nativeChannel: link?.channelId != null,
   };
 }
@@ -282,9 +292,6 @@ async function deliver(
   }
   if (info.accountId && info.cwConversationId) {
     try {
-      // from_bot evita que el webhook message_created rebote esta respuesta a
-      // WhatsApp (anti-loop); el dedupe por id cubre el caso de que Chatwoot
-      // no eche de vuelta los content_attributes.
       const created = await chatwoot.createMessage(
         info.accountId,
         info.cwConversationId,
@@ -294,10 +301,7 @@ async function deliver(
       );
       if (created?.id) await tryMarkProcessed(bot, "chatwoot", String(created.id));
     } catch (e) {
-      console.warn(
-        "[engine] registro en Chatwoot falló:",
-        e instanceof Error ? e.message : e,
-      );
+      console.warn("[engine] registro en Chatwoot falló:", e instanceof Error ? e.message : e);
     }
   }
 }
@@ -309,10 +313,12 @@ async function privateNote(info: ContactInfo, text: string): Promise<void> {
   });
 }
 
-/** P4 de US-011: toda invocación (éxito o error) deja fila en generations. */
+/** P4 de US-011: toda invocación (éxito o error) deja fila en generations con el modelo efectivo. */
 async function trace(
   bot: BotRow,
+  agent: AgentRow,
   convo: ConversationRow,
+  model: string,
   data: {
     prompt: unknown;
     response?: string;
@@ -323,10 +329,10 @@ async function trace(
   },
 ): Promise<void> {
   await db.insert(generations).values({
-    tenantId: bot.tenantId,
+    tenantId: agent.tenantId,
     botId: bot.id,
     conversationId: convo.id,
-    model: env.LLM_MODEL,
+    model, // E13/US-030: modelo efectivo realmente usado (4.4)
     prompt: data.prompt ?? {},
     response: data.response ?? null,
     error: data.error ?? null,

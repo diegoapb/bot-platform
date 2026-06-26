@@ -3,7 +3,7 @@ id: US-030
 title: Entidad Agente y migracion bot->agente
 epic: E13
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P0
 estimate: L
 owner: @diego

@@ -10,8 +10,9 @@ import {
   contactMemories,
 } from "../db/schema.js";
 import { requireAuth, requireTenant, requireAdmin, ADMIN_ROLE } from "../middleware/auth.js";
-import { getMemory, upsertFact, deleteFact, wipe } from "../services/memory.js";
-import { getExtraction, updateExtractionManual } from "../services/extraction.js";
+import { getMemoryForLink, upsertFact, deleteFact, wipe } from "../services/memory.js";
+import { getExtractionForLink, updateExtractionManual } from "../services/extraction.js";
+import { resolveAgentForBot } from "../services/agents.js";
 
 /**
  * Contactos y su memoria (US-013): lista por bot + gestión de hechos/resumen.
@@ -57,12 +58,12 @@ contactsRoutes.get("/bots/:id/contacts", async (c) => {
   const rows = await db
     .select({
       link: channelLinks,
-      factsCount: sql<number>`(SELECT count(*) FROM ${contactFacts} WHERE ${contactFacts.channelLinkId} = ${channelLinks.id})`,
+      factsCount: sql<number>`(SELECT count(*) FROM ${contactFacts} WHERE ${contactFacts.contactId} = ${channelLinks.contactId})`,
       summary: contactMemories.summary,
       memoryUpdatedAt: contactMemories.updatedAt,
     })
     .from(channelLinks)
-    .leftJoin(contactMemories, eq(contactMemories.channelLinkId, channelLinks.id))
+    .leftJoin(contactMemories, eq(contactMemories.contactId, channelLinks.contactId))
     .where(eq(channelLinks.botId, botId))
     .orderBy(desc(channelLinks.createdAt));
 
@@ -82,7 +83,7 @@ contactsRoutes.get("/bots/:id/contacts", async (c) => {
 contactsRoutes.get("/contacts/:linkId/memory", async (c) => {
   const link = await getTenantLink(c, c.req.param("linkId"));
   if (!link) return c.json({ ok: false, error: "No encontrado" }, 404);
-  const memory = await getMemory(link.id);
+  const memory = await getMemoryForLink(link);
   return c.json({
     ok: true,
     data: {
@@ -107,7 +108,7 @@ contactsRoutes.patch("/contacts/:linkId/memory", requireAdmin, async (c) => {
   if (!parsed.success) {
     return c.json({ ok: false, error: "Payload inválido", issues: parsed.error.issues }, 422);
   }
-  await upsertFact(link.id, parsed.data.key, parsed.data.value, "human", c.get("userId"));
+  await upsertFact(link, parsed.data.key, parsed.data.value, "human", c.get("userId"));
   return c.json({ ok: true, data: { key: parsed.data.key } });
 });
 
@@ -115,7 +116,7 @@ contactsRoutes.patch("/contacts/:linkId/memory", requireAdmin, async (c) => {
 contactsRoutes.delete("/contacts/:linkId/memory/facts/:key", requireAdmin, async (c) => {
   const link = await getTenantLink(c, c.req.param("linkId"));
   if (!link) return c.json({ ok: false, error: "No encontrado" }, 404);
-  const deleted = await deleteFact(link.id, decodeURIComponent(c.req.param("key")));
+  const deleted = await deleteFact(link, decodeURIComponent(c.req.param("key")));
   if (!deleted) return c.json({ ok: false, error: "Hecho no encontrado" }, 404);
   return c.json({ ok: true, data: { key: c.req.param("key") } });
 });
@@ -127,11 +128,13 @@ contactsRoutes.get("/contacts/:linkId/extraction", async (c) => {
   const link = await getTenantLink(c, c.req.param("linkId"));
   if (!link) return c.json({ ok: false, error: "No encontrado" }, 404);
   const [bot] = await db.select().from(bots).where(eq(bots.id, link.botId));
-  const extraction = await getExtraction(link.id);
+  // E13: el esquema de extracción vive en el agente (cerebro).
+  const agent = bot ? await resolveAgentForBot(bot) : null;
+  const extraction = await getExtractionForLink(link);
   return c.json({
     ok: true,
     data: {
-      schema: bot?.extractionSchema ?? null,
+      schema: agent?.extractionSchema ?? null,
       data: extraction.data,
       manualKeys: extraction.manualKeys,
       provenance: extraction.provenance,
@@ -150,6 +153,7 @@ contactsRoutes.put("/contacts/:linkId/extraction", requireAdmin, async (c) => {
   if (!link) return c.json({ ok: false, error: "No encontrado" }, 404);
   const [bot] = await db.select().from(bots).where(eq(bots.id, link.botId));
   if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+  const agent = await resolveAgentForBot(bot);
 
   const body = await c.req.json().catch(() => null);
   const parsed = updateExtractedDataSchema.safeParse(body);
@@ -157,7 +161,7 @@ contactsRoutes.put("/contacts/:linkId/extraction", requireAdmin, async (c) => {
     return c.json({ ok: false, error: "Payload inválido", issues: parsed.error.issues }, 422);
   }
 
-  const result = await updateExtractionManual(link, bot, parsed.data.data);
+  const result = await updateExtractionManual(link, agent, parsed.data.data);
   if (result.errors.length > 0) {
     return c.json({ ok: false, error: result.errors.join("; ") }, 422);
   }
@@ -165,7 +169,7 @@ contactsRoutes.put("/contacts/:linkId/extraction", requireAdmin, async (c) => {
   return c.json({
     ok: true,
     data: {
-      schema: bot.extractionSchema ?? null,
+      schema: agent.extractionSchema ?? null,
       data: e.data,
       manualKeys: e.manualKeys,
       provenance: e.provenance,
@@ -178,6 +182,6 @@ contactsRoutes.put("/contacts/:linkId/extraction", requireAdmin, async (c) => {
 contactsRoutes.delete("/contacts/:linkId/memory", requireAdmin, async (c) => {
   const link = await getTenantLink(c, c.req.param("linkId"));
   if (!link) return c.json({ ok: false, error: "No encontrado" }, 404);
-  await wipe(link.id);
+  await wipe(link);
   return c.json({ ok: true, data: { wiped: true } });
 });

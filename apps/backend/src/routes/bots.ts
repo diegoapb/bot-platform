@@ -20,6 +20,7 @@ import {
   type BotRow,
 } from "../db/schema.js";
 import { setBotStatus } from "../services/bot-activation.js";
+import { resolveAgentForBot, update as updateAgent } from "../services/agents.js";
 import { requireAuth, requireTenant, requireAdmin, ADMIN_ROLE } from "../middleware/auth.js";
 import { evolution, mapConnectionState, EvolutionError } from "../integrations/evolution.js";
 import { provisionChatwoot, provisionAgent } from "../services/chatwoot-provisioning.js";
@@ -354,20 +355,23 @@ botsRoutes.post("/:id/chatwoot/agents", requireAdmin, async (c) => {
 
 // --- Extracción de información estructurada (E12 / US-027) ------------------
 
-/** Esquema de extracción vigente del bot. */
+/** Esquema de extracción vigente. E13: vive en el agente (cerebro). */
 botsRoutes.get("/:id/extraction-schema", async (c) => {
   const bot = await getTenantBot(c, c.req.param("id"));
   if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
-  return c.json({ ok: true, data: { schema: bot.extractionSchema ?? null } });
+  const agent = await resolveAgentForBot(bot);
+  return c.json({ ok: true, data: { schema: agent.extractionSchema ?? null } });
 });
 
 /**
- * Guarda (o desactiva con null) el esquema de extracción. Se valida que sea un
- * subset de JSON Schema bien formado; los datos ya extraídos no se tocan.
+ * Guarda (o desactiva con null) el esquema de extracción del agente del bot. Se
+ * valida que sea un subset de JSON Schema bien formado; los datos ya extraídos
+ * no se tocan. (E13: el esquema es propio del agente.)
  */
 botsRoutes.put("/:id/extraction-schema", requireAdmin, async (c) => {
   const bot = await getTenantBot(c, c.req.param("id"));
   if (!bot) return c.json({ ok: false, error: "No encontrado" }, 404);
+  const agent = await resolveAgentForBot(bot);
 
   const body = await c.req.json().catch(() => null);
   const parsed = saveExtractionSchemaSchema.safeParse(body);
@@ -381,12 +385,10 @@ botsRoutes.put("/:id/extraction-schema", requireAdmin, async (c) => {
     }
   }
 
-  const [row] = await db
-    .update(bots)
-    .set({ extractionSchema: parsed.data.schema, updatedAt: new Date() })
-    .where(eq(bots.id, bot.id))
-    .returning();
-  return c.json({ ok: true, data: { schema: row?.extractionSchema ?? null } });
+  const updated = await updateAgent(bot.tenantId, agent.id, {
+    extractionSchema: parsed.data.schema,
+  });
+  return c.json({ ok: true, data: { schema: updated?.extractionSchema ?? null } });
 });
 
 // --- Audiencia: lista blanca / negra de teléfonos --------------------------

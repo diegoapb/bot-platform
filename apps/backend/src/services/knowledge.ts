@@ -1,21 +1,22 @@
-import { and, desc, eq, lte, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lte, sql } from "drizzle-orm";
 import { PDFParse } from "pdf-parse";
 import { db } from "../db/client.js";
 import {
+  agents,
   knowledgeChunks,
+  knowledgeCollections,
   knowledgeSources,
   type KnowledgeSourceRow,
 } from "../db/schema.js";
 import { embed } from "../integrations/embeddings.js";
 import { chunkText, faqChunk } from "./chunker.js";
+import { linkedCollectionIds } from "./collections.js";
 
 /**
- * Base de conocimiento por bot (US-009): ingestión → chunking → embeddings →
- * índice. Indexado async in-process (sin cola externa en MVP).
- *
- * Los embeddings se guardan como `vector(1536)` (pgvector) y la búsqueda
- * semántica se resuelve en Postgres con el operador de distancia coseno e
- * índice HNSW (ver `retrieve()` y la nota en schema.ts).
+ * Base de conocimiento por colección (E13/US-032): ingestión → chunking →
+ * embeddings → índice. El conocimiento cuelga de `collection_id` (no del bot) y
+ * `retrieve()` opera por agente sobre las colecciones que enlaza (referencia
+ * viva). Indexado async in-process (sin cola externa en MVP).
  */
 
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -33,6 +34,8 @@ export type SourceInput =
 
 export type ScoredChunk = { content: string; score: number; sourceId: string };
 
+export class KnowledgeValidationError extends Error {}
+
 /** Extrae el texto plano de un archivo soportado. */
 async function extractText(buffer: Buffer, mime: string): Promise<string> {
   if (SUPPORTED_MIMES[mime] === "pdf") {
@@ -47,13 +50,27 @@ async function extractText(buffer: Buffer, mime: string): Promise<string> {
   return buffer.toString("utf-8");
 }
 
-/** Crea la fuente y dispara el indexado async. Devuelve el id de inmediato. */
+/** Colección del tenant, o null (aislamiento R2.2, R2.5). */
+async function getCollection(tenantId: string, collectionId: string) {
+  const [row] = await db
+    .select()
+    .from(knowledgeCollections)
+    .where(
+      and(eq(knowledgeCollections.id, collectionId), eq(knowledgeCollections.tenantId, tenantId)),
+    );
+  return row ?? null;
+}
+
+/** Crea la fuente en una colección del tenant y dispara el indexado async (2.1, 2.2). */
 export async function createSource(
   tenantId: string,
-  botId: string,
+  collectionId: string,
   input: SourceInput,
   userId: string,
 ): Promise<{ id: string }> {
+  const collection = await getCollection(tenantId, collectionId);
+  if (!collection) throw new KnowledgeValidationError("La colección no existe o es de otro tenant");
+
   let title: string;
   let rawText: string;
   if (input.kind === "text") {
@@ -75,19 +92,16 @@ export async function createSource(
 
   const [row] = await db
     .insert(knowledgeSources)
-    .values({ tenantId, botId, kind: input.kind, title, rawText, status: "pending", createdBy: userId })
+    .values({ tenantId, collectionId, kind: input.kind, title, rawText, status: "pending", createdBy: userId })
     .returning({ id: knowledgeSources.id });
 
-  // Indexado fuera del request; el estado de la fuente refleja el progreso.
   setImmediate(() => {
     indexSource(row!.id).catch((e) => console.error("[knowledge] indexSource", e));
   });
   return { id: row!.id };
 }
 
-export class KnowledgeValidationError extends Error {}
-
-/** Pipeline de indexado: chunk → embed → reemplazo atómico de chunks. */
+/** Pipeline de indexado: chunk → embed → reemplazo atómico de chunks (2.3, 2.4). */
 export async function indexSource(sourceId: string): Promise<void> {
   const [source] = await db
     .select()
@@ -101,20 +115,19 @@ export async function indexSource(sourceId: string): Promise<void> {
     .where(eq(knowledgeSources.id, sourceId));
 
   try {
-    const pieces =
-      source.kind === "faq" ? [source.rawText] : chunkText(source.rawText);
+    const pieces = source.kind === "faq" ? [source.rawText] : chunkText(source.rawText);
     if (pieces.length === 0) {
       throw new Error("La fuente no tiene texto extraíble");
     }
     const vectors = await embed(pieces);
 
-    // Reemplazo sin huérfanos (P2): delete + insert + ready en una transacción.
+    // Reemplazo sin huérfanos (P4): delete + insert + ready en una transacción.
     await db.transaction(async (tx) => {
       await tx.delete(knowledgeChunks).where(eq(knowledgeChunks.sourceId, sourceId));
       await tx.insert(knowledgeChunks).values(
         pieces.map((content, seq) => ({
           tenantId: source.tenantId,
-          botId: source.botId,
+          collectionId: source.collectionId,
           sourceId,
           seq,
           content,
@@ -135,12 +148,22 @@ export async function indexSource(sourceId: string): Promise<void> {
   }
 }
 
-/** Reindexa una fuente existente (2.3, 2.4). */
-export async function reindex(botId: string, sourceId: string): Promise<boolean> {
+/** Reindexa una fuente de una colección del tenant (2.4). */
+export async function reindex(
+  tenantId: string,
+  collectionId: string,
+  sourceId: string,
+): Promise<boolean> {
   const [source] = await db
     .select({ id: knowledgeSources.id })
     .from(knowledgeSources)
-    .where(and(eq(knowledgeSources.id, sourceId), eq(knowledgeSources.botId, botId)));
+    .where(
+      and(
+        eq(knowledgeSources.id, sourceId),
+        eq(knowledgeSources.collectionId, collectionId),
+        eq(knowledgeSources.tenantId, tenantId),
+      ),
+    );
   if (!source) return false;
   await db
     .update(knowledgeSources)
@@ -152,39 +175,61 @@ export async function reindex(botId: string, sourceId: string): Promise<boolean>
   return true;
 }
 
-/** Elimina la fuente; los chunks caen por FK cascade (1.5). */
-export async function deleteSource(botId: string, sourceId: string): Promise<boolean> {
+/** Elimina la fuente; los chunks caen por FK cascade (P4). */
+export async function deleteSource(
+  tenantId: string,
+  collectionId: string,
+  sourceId: string,
+): Promise<boolean> {
   const rows = await db
     .delete(knowledgeSources)
-    .where(and(eq(knowledgeSources.id, sourceId), eq(knowledgeSources.botId, botId)))
+    .where(
+      and(
+        eq(knowledgeSources.id, sourceId),
+        eq(knowledgeSources.collectionId, collectionId),
+        eq(knowledgeSources.tenantId, tenantId),
+      ),
+    )
     .returning({ id: knowledgeSources.id });
   return rows.length > 0;
 }
 
-export async function listSources(botId: string): Promise<KnowledgeSourceRow[]> {
+export async function listSources(
+  tenantId: string,
+  collectionId: string,
+): Promise<KnowledgeSourceRow[]> {
   return db
     .select()
     .from(knowledgeSources)
-    .where(eq(knowledgeSources.botId, botId))
+    .where(
+      and(eq(knowledgeSources.collectionId, collectionId), eq(knowledgeSources.tenantId, tenantId)),
+    )
     .orderBy(desc(knowledgeSources.createdAt));
 }
 
 /**
- * Búsqueda semántica interna (3.1–3.3). Solo chunks del bot (P1), scores
- * descendentes (P3), umbral mínimo de similitud. La distancia coseno la resuelve
- * Postgres (pgvector) con el operador `<=>`. Se ordena por la **distancia cruda
- * ascendente** (no por `1 - dist` desc) para que el planner pueda usar el índice
- * HNSW; el `score = 1 - distancia` se calcula al mapear el resultado.
+ * Recuperación semántica por agente (E13/US-032, 4.1–4.5): busca solo en las
+ * colecciones enlazadas al agente (P1) y del mismo tenant (P2), scores
+ * descendentes (P3) sobre el umbral. Agente sin colecciones → [] (4.4). La
+ * distancia cosena la resuelve Postgres (pgvector) con `<=>` e índice HNSW.
  */
 export async function retrieve(
-  botId: string,
+  agentId: string,
   query: string,
   k = 5,
   minScore = 0.35,
 ): Promise<ScoredChunk[]> {
   if (!query.trim()) return [];
+  const linked = await linkedCollectionIds(agentId);
+  if (linked.length === 0) return []; // R4.4
+
+  const [agent] = await db
+    .select({ tenantId: agents.tenantId })
+    .from(agents)
+    .where(eq(agents.id, agentId));
+  if (!agent) return [];
+
   const [qv] = await embed([query]);
-  // distancia coseno en [0,2]; similitud = 1 - distancia. minScore -> distancia máx.
   const distance = sql<number>`${knowledgeChunks.embedding} <=> ${JSON.stringify(qv)}::vector`;
 
   const rows = await db
@@ -194,13 +239,15 @@ export async function retrieve(
       distance,
     })
     .from(knowledgeChunks)
-    .where(and(eq(knowledgeChunks.botId, botId), lte(distance, 1 - minScore)))
+    .where(
+      and(
+        inArray(knowledgeChunks.collectionId, linked),
+        eq(knowledgeChunks.tenantId, agent.tenantId),
+        lte(distance, 1 - minScore),
+      ),
+    )
     .orderBy(distance) // ASC -> habilita el índice HNSW
     .limit(k);
 
-  return rows.map((r) => ({
-    content: r.content,
-    sourceId: r.sourceId,
-    score: 1 - r.distance,
-  }));
+  return rows.map((r) => ({ content: r.content, sourceId: r.sourceId, score: 1 - r.distance }));
 }

@@ -6,6 +6,8 @@ import { env } from "./env.js";
 import { health } from "./routes/health.js";
 import { meRoutes } from "./routes/me.js";
 import { botsRoutes } from "./routes/bots.js";
+import { agentsRoutes } from "./routes/agents.js";
+import { collectionsRoutes } from "./routes/collections.js";
 import { teamRoutes } from "./routes/team.js";
 import { adminRoutes } from "./routes/admin.js";
 import { webhooks } from "./routes/webhooks.js";
@@ -39,6 +41,9 @@ app.route("/api/bots", channelsRoutes);
 app.route("/api/bots", identityRoutes);
 app.route("/api/bots", knowledgeRoutes);
 app.route("/api/bots", catalogRoutes);
+// E13: agentes desacoplados + biblioteca de conocimiento.
+app.route("/api/agents", agentsRoutes);
+app.route("/api/collections", collectionsRoutes);
 app.route("/api", conversationsRoutes);
 app.route("/api", contactsRoutes);
 app.route("/api", generationsRoutes);

@@ -3,7 +3,7 @@ id: US-034
 title: UI de gestion de agentes
 epic: E13
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P1
 estimate: M
 owner: @diego

@@ -7,12 +7,12 @@
 
 | Estado | Conteo |
 | --- | --- |
-| Levantamiento de requerimientos | 14 |
+| Levantamiento de requerimientos | 9 |
 | Creación de diseño | 0 |
 | Levantamiento de tareas | 0 |
 | Pendiente desarrollo | 4 |
 | En implementación | 1 |
-| Pendiente de pruebas | 16 |
+| Pendiente de pruebas | 21 |
 | Probada | 0 |
 | En CA | 0 |
 | En producción | 4 |
@@ -66,11 +66,11 @@ _Entregar el MVP — bot de WhatsApp con identidad, conocimiento y memoria, oper
 | US-027 | Esquema de extracción configurable por bot | E12 | Pendiente de pruebas | P1 |
 | US-028 | Pipeline de extracción de información estructurada | E12 | Pendiente de pruebas | P1 |
 | US-029 | Vista amigable y edición JSON de los datos extraídos | E12 | Pendiente de pruebas | P1 |
-| US-030 | Entidad Agente y migracion bot->agente | E13 | Levantamiento de requerimientos | P0 |
-| US-031 | Asignación N:M canal-agente y ruteo de inbound por agente | E13 | Levantamiento de requerimientos | P0 |
-| US-032 | Biblioteca de conocimiento reutilizable y enlace a agentes | E13 | Levantamiento de requerimientos | P0 |
-| US-033 | Identidad de contacto unificada entre canales | E13 | Levantamiento de requerimientos | P1 |
-| US-034 | UI de gestion de agentes | E13 | Levantamiento de requerimientos | P1 |
+| US-030 | Entidad Agente y migracion bot->agente | E13 | Pendiente de pruebas | P0 |
+| US-031 | Asignación N:M canal-agente y ruteo de inbound por agente | E13 | Pendiente de pruebas | P0 |
+| US-032 | Biblioteca de conocimiento reutilizable y enlace a agentes | E13 | Pendiente de pruebas | P0 |
+| US-033 | Identidad de contacto unificada entre canales | E13 | Pendiente de pruebas | P1 |
+| US-034 | UI de gestion de agentes | E13 | Pendiente de pruebas | P1 |
 | US-035 | Multiples agentes por canal y etapa del contacto | E14 | Levantamiento de requerimientos | P1 |
 | US-036 | Motor de reglas de ruteo declarativas | E14 | Levantamiento de requerimientos | P1 |
 | US-037 | Agente orquestador de ruteo (fallback LLM) | E14 | Levantamiento de requerimientos | P2 |
@@ -159,11 +159,11 @@ _Entregar el MVP — bot de WhatsApp con identidad, conocimiento y memoria, oper
 ### E13 — Desacople agente ↔ canal y biblioteca de conocimiento  · _draft_
 | ID | Título | Ciclo | Estado |
 | --- | --- | --- | --- |
-| US-030 | Entidad Agente y migracion bot->agente | — | Levantamiento de requerimientos |
-| US-031 | Asignación N:M canal-agente y ruteo de inbound por agente | — | Levantamiento de requerimientos |
-| US-032 | Biblioteca de conocimiento reutilizable y enlace a agentes | — | Levantamiento de requerimientos |
-| US-033 | Identidad de contacto unificada entre canales | — | Levantamiento de requerimientos |
-| US-034 | UI de gestion de agentes | — | Levantamiento de requerimientos |
+| US-030 | Entidad Agente y migracion bot->agente | — | Pendiente de pruebas |
+| US-031 | Asignación N:M canal-agente y ruteo de inbound por agente | — | Pendiente de pruebas |
+| US-032 | Biblioteca de conocimiento reutilizable y enlace a agentes | — | Pendiente de pruebas |
+| US-033 | Identidad de contacto unificada entre canales | — | Pendiente de pruebas |
+| US-034 | UI de gestion de agentes | — | Pendiente de pruebas |
 
 ### E14 — Ruteo multi-agente por reglas dentro de un canal  · _draft_
 | ID | Título | Ciclo | Estado |

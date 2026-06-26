@@ -7,23 +7,24 @@ import {
 } from "@bot/shared";
 import { db } from "../db/client.js";
 import {
-  bots,
+  agents,
   channelLinks,
   extractedData,
   tenants,
-  type BotRow,
+  type AgentRow,
   type ChannelLinkRow,
   type ConversationRow,
   type ExtractedDataRow,
 } from "../db/schema.js";
 import { chatwoot } from "../integrations/chatwoot.js";
 import { generate, textOf } from "../integrations/llm.js";
+import { contactIdForLink } from "./memory.js";
 
 /**
- * Extracción de información estructurada (E12/US-028): el LLM completa el JSON
- * definido por el `extractionSchema` del bot a partir del transcript. Es
- * incremental (parte de los datos vigentes) y NUNCA pisa claves corregidas a
- * mano (`manualKeys`). Ante cualquier fallo, los datos previos quedan intactos.
+ * Extracción de información estructurada (E12/US-028) reanclada al contacto
+ * unificado (E13/US-033): el LLM completa el JSON definido por el
+ * `extractionSchema` del **agente**. Incremental, no pisa `manualKeys`. Los datos
+ * se comparten entre los canales del contacto.
  */
 
 export type Extraction = {
@@ -35,11 +36,12 @@ export type Extraction = {
 
 const EMPTY: Extraction = { data: {}, manualKeys: [], provenance: {}, updatedAt: null };
 
-export async function getExtraction(channelLinkId: string): Promise<Extraction> {
+/** Datos extraídos del contacto unificado. */
+export async function getExtraction(contactId: string): Promise<Extraction> {
   const [row] = await db
     .select()
     .from(extractedData)
-    .where(eq(extractedData.channelLinkId, channelLinkId));
+    .where(eq(extractedData.contactId, contactId));
   if (!row) return EMPTY;
   return {
     data: row.data,
@@ -49,31 +51,39 @@ export async function getExtraction(channelLinkId: string): Promise<Extraction> 
   };
 }
 
-/** Esquema vigente del bot, ya validado. null = extracción desactivada. */
-export function parseBotSchema(bot: Pick<BotRow, "extractionSchema">): ExtractionSchema | null {
-  if (!bot.extractionSchema) return null;
-  if (validateExtractionSchema(bot.extractionSchema).length > 0) return null;
-  return bot.extractionSchema as unknown as ExtractionSchema;
+/** Datos extraídos a partir de un channel_link (resuelve su contacto). */
+export async function getExtractionForLink(link: ChannelLinkRow): Promise<Extraction> {
+  if (!link.contactId) return EMPTY;
+  return getExtraction(link.contactId);
+}
+
+/** Esquema vigente del agente, ya validado. null = extracción desactivada. */
+export function parseAgentSchema(
+  agent: Pick<AgentRow, "extractionSchema">,
+): ExtractionSchema | null {
+  if (!agent.extractionSchema) return null;
+  if (validateExtractionSchema(agent.extractionSchema).length > 0) return null;
+  return agent.extractionSchema as unknown as ExtractionSchema;
 }
 
 /**
- * Edición manual (US-029): reemplaza los datos con el JSON del editor.
- *  - Valida contra el esquema (claves desconocidas o tipos inválidos = error).
- *  - Claves nuevas o con valor distinto quedan marcadas como manuales.
- *  - Claves eliminadas del JSON se borran (también su marca y procedencia).
+ * Edición manual (US-029): reemplaza los datos con el JSON del editor, validado
+ * contra el esquema del agente. Claves nuevas/cambiadas quedan marcadas como
+ * manuales; las eliminadas se borran (también su marca y procedencia).
  */
 export async function updateExtractionManual(
   link: ChannelLinkRow,
-  bot: BotRow,
+  agent: AgentRow,
   data: Record<string, unknown>,
 ): Promise<{ errors: string[]; extraction?: Extraction }> {
-  const schema = parseBotSchema(bot);
-  if (!schema) return { errors: ["El bot no tiene esquema de extracción configurado"] };
+  const schema = parseAgentSchema(agent);
+  if (!schema) return { errors: ["El agente no tiene esquema de extracción configurado"] };
 
   const errors = validateDataAgainstSchema(schema, data);
   if (errors.length > 0) return { errors };
 
-  const prev = await getExtraction(link.id);
+  const contactId = await contactIdForLink(link);
+  const prev = await getExtraction(contactId);
   const now = new Date().toISOString();
   const manual = new Set(prev.manualKeys.filter((k) => k in data));
   const provenance: Extraction["provenance"] = {};
@@ -85,7 +95,7 @@ export async function updateExtractionManual(
       : (prev.provenance[key] ?? { source: "human", at: now });
   }
 
-  const row = await upsert(link, bot, data, [...manual], provenance);
+  const row = await upsert(link, contactId, data, [...manual], provenance);
   return {
     errors: [],
     extraction: {
@@ -99,13 +109,14 @@ export async function updateExtractionManual(
 
 /**
  * Extracción automática sobre una conversación. Fire-and-forget desde el motor
- * (tras cada ráfaga respondida) y desde el job de consolidación (E07).
+ * (tras cada ráfaga) y desde el job de consolidación (E07). Usa el agente fijado
+ * en la conversación (E13/US-031).
  */
 export async function runExtraction(convo: ConversationRow): Promise<void> {
   try {
-    const [bot] = await db.select().from(bots).where(eq(bots.id, convo.botId));
-    if (!bot) return;
-    const schema = parseBotSchema(bot);
+    const [agent] = await db.select().from(agents).where(eq(agents.id, convo.agentId));
+    if (!agent) return;
+    const schema = parseAgentSchema(agent);
     if (!schema) return;
 
     const [link] = await db
@@ -114,6 +125,7 @@ export async function runExtraction(convo: ConversationRow): Promise<void> {
       .where(eq(channelLinks.id, convo.channelLinkId));
     const [tenant] = await db.select().from(tenants).where(eq(tenants.id, convo.tenantId));
     if (!link || !tenant?.chatwootAccountId) return;
+    const contactId = await contactIdForLink(link);
 
     const raw = await chatwoot.listMessages(tenant.chatwootAccountId, link.cwConversationId);
     const transcript = raw
@@ -123,7 +135,7 @@ export async function runExtraction(convo: ConversationRow): Promise<void> {
       .join("\n");
     if (!transcript) return;
 
-    const prev = await getExtraction(link.id);
+    const prev = await getExtraction(contactId);
     const result = await generate({
       system: [
         "Eres un extractor de datos estructurados para un negocio.",
@@ -148,13 +160,12 @@ export async function runExtraction(convo: ConversationRow): Promise<void> {
       JSON.parse(jsonText) as Record<string, unknown>,
     );
 
-    // Merge incremental: lo manual manda; lo demás se actualiza si cambió.
     const now = new Date().toISOString();
     const data = { ...prev.data };
     const provenance = { ...prev.provenance };
     let changed = false;
     for (const [key, value] of Object.entries(extracted)) {
-      if (prev.manualKeys.includes(key)) continue; // P: no pisar ediciones humanas.
+      if (prev.manualKeys.includes(key)) continue; // no pisar ediciones humanas
       if (JSON.stringify(data[key]) === JSON.stringify(value)) continue;
       data[key] = value;
       provenance[key] = { source: "bot", at: now };
@@ -162,27 +173,24 @@ export async function runExtraction(convo: ConversationRow): Promise<void> {
     }
     if (!changed) return;
 
-    await upsert(link, bot, data, prev.manualKeys, provenance);
+    await upsert(link, contactId, data, prev.manualKeys, provenance);
   } catch (e) {
-    // Datos previos intactos; la próxima ráfaga/consolidación reintenta.
-    console.warn(
-      `[extraction] fallo en convo ${convo.id}:`,
-      e instanceof Error ? e.message : e,
-    );
+    console.warn(`[extraction] fallo en convo ${convo.id}:`, e instanceof Error ? e.message : e);
   }
 }
 
 async function upsert(
   link: ChannelLinkRow,
-  bot: BotRow,
+  contactId: string,
   data: Record<string, unknown>,
   manualKeys: string[],
   provenance: Extraction["provenance"],
 ): Promise<ExtractedDataRow> {
   const values = {
     channelLinkId: link.id,
+    contactId,
     tenantId: link.tenantId,
-    botId: bot.id,
+    botId: link.botId,
     data,
     manualKeys,
     provenance,
@@ -191,7 +199,12 @@ async function upsert(
   const [row] = await db
     .insert(extractedData)
     .values(values)
-    .onConflictDoUpdate({ target: extractedData.channelLinkId, set: values })
+    // En conflicto por contact_id solo cambian los campos mutables; no se toca
+    // el ancla (channel_link_id es PK, contact_id/tenant/bot son estables).
+    .onConflictDoUpdate({
+      target: extractedData.contactId,
+      set: { data, manualKeys, provenance, updatedAt: values.updatedAt },
+    })
     .returning();
   return row!;
 }

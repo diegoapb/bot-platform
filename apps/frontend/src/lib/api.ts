@@ -31,6 +31,14 @@ import type {
   Channel,
   ConnectChannelInput,
   ExtractedData,
+  Agent,
+  AgentListItem,
+  AgentChannel,
+  CreateAgentInput,
+  UpdateAgentInput,
+  KnowledgeCollection,
+  CreateCollectionInput,
+  UpdateCollectionInput,
 } from "@bot/shared";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
@@ -331,6 +339,66 @@ export function createApi(getToken: () => Promise<string | null>) {
       ),
     wipeContactMemory: (linkId: string) =>
       request<{ wiped: boolean }>(`/api/contacts/${linkId}/memory`, { method: "DELETE" }),
+
+    // --- E13: Agentes desacoplados (US-030/031/032/034) ---
+    listAgents: () => request<AgentListItem[]>("/api/agents"),
+    getAgent: (id: string) => request<Agent>(`/api/agents/${id}`),
+    createAgent: (input: CreateAgentInput) =>
+      request<Agent>("/api/agents", { method: "POST", body: JSON.stringify(input) }),
+    updateAgent: (id: string, patch: UpdateAgentInput) =>
+      request<Agent>(`/api/agents/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
+    // Identidad del agente
+    getAgentIdentity: (id: string) =>
+      request<Record<IdentityType, IdentityDoc | null>>(`/api/agents/${id}/identity`),
+    saveAgentIdentity: (id: string, type: IdentityType, content: string) =>
+      request<{ version: number }>(`/api/agents/${id}/identity/${type}`, {
+        method: "PUT",
+        body: JSON.stringify({ content }),
+      }),
+    listAgentIdentityVersions: (id: string, type: IdentityType) =>
+      request<IdentityVersion[]>(`/api/agents/${id}/identity/${type}/versions`),
+    restoreAgentIdentityVersion: (id: string, type: IdentityType, version: number) =>
+      request<{ version: number }>(
+        `/api/agents/${id}/identity/${type}/versions/${version}/restore`,
+        { method: "POST" },
+      ),
+    // Canales del agente (N:M)
+    listAgentChannels: (id: string) =>
+      request<{ linked: AgentChannel[]; available: AgentChannel[] }>(`/api/agents/${id}/channels`),
+    linkChannel: (id: string, channelId: string) =>
+      request<{ channelId: string }>(`/api/agents/${id}/channels`, {
+        method: "POST",
+        body: JSON.stringify({ channelId }),
+      }),
+    unlinkChannel: (id: string, channelId: string) =>
+      request<{ channelId: string }>(`/api/agents/${id}/channels/${channelId}`, {
+        method: "DELETE",
+      }),
+    // Colecciones enlazadas al agente
+    listAgentCollections: (id: string) =>
+      request<{ linked: KnowledgeCollection[]; available: KnowledgeCollection[] }>(
+        `/api/agents/${id}/collections`,
+      ),
+    linkCollection: (id: string, collectionId: string) =>
+      request<{ collectionId: string }>(`/api/agents/${id}/collections`, {
+        method: "POST",
+        body: JSON.stringify({ collectionId }),
+      }),
+    unlinkCollection: (id: string, collectionId: string) =>
+      request<{ collectionId: string }>(`/api/agents/${id}/collections/${collectionId}`, {
+        method: "DELETE",
+      }),
+    // Biblioteca de colecciones (US-032)
+    listCollections: () => request<KnowledgeCollection[]>("/api/collections"),
+    createCollection: (input: CreateCollectionInput) =>
+      request<{ id: string }>("/api/collections", { method: "POST", body: JSON.stringify(input) }),
+    updateCollection: (id: string, patch: UpdateCollectionInput) =>
+      request<{ id: string }>(`/api/collections/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch),
+      }),
+    deleteCollection: (id: string) =>
+      request<{ id: string }>(`/api/collections/${id}`, { method: "DELETE" }),
 
     // Equipo (admin)
     listMembers: () => request<TenantMember[]>("/api/team/members"),

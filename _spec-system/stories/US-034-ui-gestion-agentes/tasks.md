@@ -10,49 +10,49 @@ Se construye de adentro hacia afuera: primero el cliente API y los tipos compart
 
 ## Tasks
 
-- [ ] **T1 — Cliente API de agentes + tipos compartidos**
+- [x] **T1 — Cliente API de agentes + tipos compartidos**
   - Archivos: `apps/frontend/src/lib/api.ts`, `packages/shared/src/index.ts`
   - PASS si: `useApi` expone `listAgents/getAgent/createAgent/updateAgent`, identidad de agente, `listAgentChannels/linkChannel/unlinkChannel` y `listAgentCollections/linkCollection/unlinkCollection`; los DTO de canal NO incluyen credenciales; tipos `AgentListItem`, `AgentChannel`, `KnowledgeCollection` exportados.
   - FAIL si: algun metodo proyecta `credentials` u otro secreto, o accede a recursos fuera del tenant del token.
   - Properties: P1, P2
   - Requirements: 1.1, 6.3, 6.5
 
-- [ ] **T2 — `AgentsPage`: lista, estados y creacion**
+- [x] **T2 — `AgentsPage`: lista, estados y creacion**
   - Archivos: `apps/frontend/src/pages/agents/AgentsPage.tsx`
   - PASS si: lista muestra nombre, estado y nro de canales; loading/error con reintento; estado vacio; member ve solo asignados y sin formulario de crear; admin crea con nombre no vacio y el agente aparece tras confirmar.
   - FAIL si: el boton de crear aparece para member, o el envio se permite con nombre vacio.
   - Properties: P3
   - Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
 
-- [ ] **T3 — `AgentDetailPage`: carga, tabs y acceso**
+- [x] **T3 — `AgentDetailPage`: carga, tabs y acceso**
   - Archivos: `apps/frontend/src/pages/agents/AgentDetailPage.tsx`, `apps/frontend/src/App.tsx`, `apps/frontend/src/components/Layout.tsx`
   - PASS si: rutas `/agents` y `/agents/:agentId` registradas + entrada de nav "Agentes"; detalle carga el agente y renderiza pestanas Identidad/Modelo/Canales/Conocimiento; member sin asignacion ve pantalla de acceso no permitido; navegacion lista→detalle funciona.
   - FAIL si: un member sin asignacion ve el contenido del detalle.
   - Properties: P1, P3
   - Requirements: 1.6, 6.1, 6.2, 6.4
 
-- [ ] **T4 — Identidad reapuntada + `ModelSelector`**
+- [x] **T4 — Identidad reapuntada + `ModelSelector`**
   - Archivos: `apps/frontend/src/pages/agents/IdentityEditor.tsx`, `apps/frontend/src/pages/agents/ModelSelector.tsx`
   - PASS si: identidad muestra contenido vigente y version por tipo, guarda nueva version, lista historial con fecha/autor; selector alterna "global por defecto" (null) y modelo concreto y persiste; member en solo lectura; error conserva cambios pendientes.
   - FAIL si: member puede guardar identidad o cambiar modelo, o "global por defecto" no envia `model: null`.
   - Properties: P3, P4
   - Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7
 
-- [ ] **T5 — `AgentChannelsPanel`: asignar/quitar canales**
+- [x] **T5 — `AgentChannelsPanel`: asignar/quitar canales**
   - Archivos: `apps/frontend/src/pages/agents/AgentChannelsPanel.tsx`
   - PASS si: muestra enlazados y disponibles con tipo y nombre visible (sin credenciales); enlaza/desenlaza con reflejo tras confirmar; canal tomado por otro agente se indica y no permite enlazar; error restaura estado previo; member en solo lectura.
   - FAIL si: se renderiza alguna credencial, o un canal ya enlazado a otro agente se puede enlazar.
   - Properties: P2, P4, P6
   - Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7
 
-- [ ] **T6 — `AgentKnowledgePanel`: colecciones + conocimiento efectivo**
+- [x] **T6 — `AgentKnowledgePanel`: colecciones + conocimiento efectivo**
   - Archivos: `apps/frontend/src/pages/agents/AgentKnowledgePanel.tsx`
   - PASS si: muestra colecciones enlazadas y disponibles; enlaza/desenlaza con reflejo; conocimiento efectivo = colecciones enlazadas; vacio muestra aviso; error conserva estado previo; member en solo lectura.
   - FAIL si: el conjunto efectivo difiere de las colecciones enlazadas (omision o duplicado).
   - Properties: P4, P5
   - Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7
 
-- [ ] **T7 — Gating de permisos y no-fuga de secretos transversal**
+- [x] **T7 — Gating de permisos y no-fuga de secretos transversal**
   - Archivos: `apps/frontend/src/pages/agents/AgentDetailPage.tsx`, `apps/frontend/src/pages/agents/AgentChannelsPanel.tsx`, `apps/frontend/src/pages/agents/AgentKnowledgePanel.tsx`
   - PASS si: con `orgRole == org:member` todos los controles de escritura estan ocultos o deshabilitados en lista, detalle y los tres paneles; ningun panel renderiza credenciales de canal.
   - FAIL si: cualquier control de escritura queda activo para member, o aparece un secreto en pantalla.
@@ -82,7 +82,7 @@ Se construye de adentro hacia afuera: primero el cliente API y los tipos compart
 
 ## Commits
 
-- _(pendiente)_
+- 2026-06-18 · E13 implementado (solo implementación; tests pendientes por decisión). Migraciones `0008_milky_magma.sql` (+enum whatsapp_evolution) y `0009_spicy_sharon_carter.sql` (DDL + backfill idempotente + NOT NULL), aplicadas y verificadas en dev. Typecheck monorepo OK.
 
 ## Research consultada
 

@@ -3,7 +3,7 @@ id: US-031
 title: Asignación N:M canal-agente y ruteo de inbound por agente
 epic: E13
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P0
 estimate: L
 owner: @diego

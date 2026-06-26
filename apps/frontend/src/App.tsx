@@ -10,6 +10,8 @@ import type { ReactNode } from "react";
 import { Layout } from "@/components/Layout";
 import { BotsPage } from "@/pages/BotsPage";
 import { BotDetailPage } from "@/pages/bots/BotDetailPage";
+import { AgentsPage } from "@/pages/agents/AgentsPage";
+import { AgentDetailPage } from "@/pages/agents/AgentDetailPage";
 import { TeamPage } from "@/pages/TeamPage";
 import { AdminPage } from "@/pages/AdminPage";
 import { ConversationsList } from "@/pages/conversations/ConversationsList";
@@ -116,6 +118,8 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<TenantGate><BotsPage /></TenantGate>} />
             <Route path="bots/:botId" element={<TenantGate><BotDetailPage /></TenantGate>} />
+            <Route path="agents" element={<TenantGate><AgentsPage /></TenantGate>} />
+            <Route path="agents/:agentId" element={<TenantGate><AgentDetailPage /></TenantGate>} />
             <Route path="conversations" element={<TenantGate><ConversationsList /></TenantGate>} />
             <Route path="conversations/:conversationId" element={<TenantGate><ConversationView /></TenantGate>} />
             <Route path="metrics" element={<TenantGate><MetricsDashboard /></TenantGate>} />

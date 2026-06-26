@@ -39,6 +39,8 @@ export async function generate(opts: {
   messages: LlmMessage[];
   tools?: LlmTool[];
   maxTokens?: number;
+  // E13/US-030: modelo efectivo del agente. Si se omite, cae al modelo global.
+  model?: string;
 }): Promise<LlmResult> {
   if (!env.ANTHROPIC_API_KEY) {
     throw new LlmError(0, "ANTHROPIC_API_KEY no configurada");
@@ -57,7 +59,7 @@ export async function generate(opts: {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: env.LLM_MODEL,
+        model: opts.model ?? env.LLM_MODEL,
         max_tokens: opts.maxTokens ?? 1024,
         system: opts.system,
         messages: opts.messages,

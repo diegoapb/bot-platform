@@ -15,6 +15,9 @@ import { provisionChatwoot } from "./chatwoot-provisioning.js";
 import { ensureConversation, setMode } from "./conversation-state.js";
 import { onInboundMessage } from "./reply-engine.js";
 import { isBotActive } from "./bot-activation.js";
+import { resolveLegacyForBot } from "./routing/resolve-agent.js";
+import { resolveContact } from "./contact.js";
+import { normalizeIdentifier } from "./identifier.js";
 
 /**
  * Sincronización bidireccional Evolution ↔ Chatwoot.
@@ -161,13 +164,23 @@ export async function handleInbound(bot: BotRow, data: any): Promise<void> {
 
   await chatwoot.createMessage(accountId, link.cwConversationId, body, "incoming");
 
-  // E06: resuelve la conversación propia (estado/lock) y dispara el motor.
-  // El reply del bot se crea vía API (sin sender) → no rebota por el webhook
-  // de Chatwoot (anti-loop) ni vuelve a entrar aquí (fromMe filtrado arriba).
+  // E13/US-031: resuelve el AGENTE del canal legacy (idempotente, self-healing).
+  const { agent } = await resolveLegacyForBot(bot);
+  // E13/US-033: resuelve/crea el contacto unificado por identificador (tel).
+  await resolveContact({
+    tenantId: bot.tenantId,
+    agentId: agent.id,
+    channelLinkId: link.id,
+    identifier: normalizeIdentifier(phone),
+  });
+
+  // E06: resuelve la conversación propia (estado/lock, agente fijado) y dispara
+  // el motor. El reply del bot se crea vía API (sin sender) → no rebota por el
+  // webhook de Chatwoot (anti-loop) ni vuelve a entrar aquí (fromMe filtrado).
   // E10: con el bot pausado el mensaje ya quedó en Chatwoot para atención
   // humana; el motor no se dispara.
-  const convo = await ensureConversation(bot.tenantId, bot.id, link.id);
-  if (isBotActive(bot)) onInboundMessage(bot, convo, text);
+  const convo = await ensureConversation(bot.tenantId, bot.id, agent.id, link.id);
+  if (isBotActive(bot)) onInboundMessage(convo, text);
 }
 
 /** Respuesta de agente en Chatwoot (webhook `message_created` outgoing) → WhatsApp. */

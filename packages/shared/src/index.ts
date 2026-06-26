@@ -462,6 +462,91 @@ export const connectChannelSchema = z.discriminatedUnion("type", [
 ]);
 export type ConnectChannelInput = z.infer<typeof connectChannelSchema>;
 
+// --- E13: Agentes desacoplados (US-030/031/032/034) --------------------------
+
+/** Estado del agente (cerebro), independiente del bot legacy. */
+export const agentStatusSchema = z.enum(["draft", "active", "paused"]);
+export type AgentStatus = z.infer<typeof agentStatusSchema>;
+
+/** Agente: el "cerebro" propio (identidad/modelo/conocimiento), aislado por tenant. */
+export const agentSchema = z.object({
+  id: z.string().uuid(),
+  tenantId: z.string(),
+  createdBy: z.string(),
+  name: z.string().min(1),
+  status: agentStatusSchema,
+  // null = usa el modelo global de la plataforma (env.LLM_MODEL).
+  model: z.string().nullable(),
+  whitelistEnabled: z.boolean(),
+  extractionSchema: z.record(z.unknown()).nullable().optional(),
+  // Conteo de canales enlazados (agregado por el backend para la lista).
+  channelCount: z.number().int().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type Agent = z.infer<typeof agentSchema>;
+
+/** Item de la lista de agentes (US-034). */
+export const agentListItemSchema = agentSchema.pick({
+  id: true,
+  name: true,
+  status: true,
+  channelCount: true,
+});
+export type AgentListItem = z.infer<typeof agentListItemSchema>;
+
+export const createAgentSchema = z.object({
+  name: z.string().min(1),
+});
+export type CreateAgentInput = z.infer<typeof createAgentSchema>;
+
+/** Patch del agente: modelo (null = global), estado, nombre, audiencia. */
+export const updateAgentSchema = z
+  .object({
+    name: z.string().min(1),
+    status: agentStatusSchema,
+    model: z.string().min(1).nullable(),
+    whitelistEnabled: z.boolean(),
+  })
+  .partial();
+export type UpdateAgentInput = z.infer<typeof updateAgentSchema>;
+
+/** Canal visible para la UI de agentes. Nunca incluye credenciales. */
+export const agentChannelSchema = z.object({
+  id: z.string(),
+  type: z.union([channelTypeSchema, z.literal("whatsapp_evolution")]),
+  status: z.union([channelStatusSchema, z.literal("qr")]),
+  displayName: z.string().nullable(),
+  // Agente al que ya está enlazado (null = libre). En fase 1, un canal → un agente.
+  linkedAgentId: z.string().nullable().optional(),
+});
+export type AgentChannel = z.infer<typeof agentChannelSchema>;
+
+// --- E13/US-032: Biblioteca de conocimiento (colecciones) --------------------
+
+export const knowledgeCollectionSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  description: z.string().nullable(),
+  sourceCount: z.number().int().optional(),
+  createdAt: z.string().optional(),
+});
+export type KnowledgeCollection = z.infer<typeof knowledgeCollectionSchema>;
+
+export const createCollectionSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().max(500).optional(),
+});
+export type CreateCollectionInput = z.infer<typeof createCollectionSchema>;
+
+export const updateCollectionSchema = z
+  .object({
+    name: z.string().min(1),
+    description: z.string().max(500).nullable(),
+  })
+  .partial();
+export type UpdateCollectionInput = z.infer<typeof updateCollectionSchema>;
+
 // --- Extracción de información estructurada (E12 / US-027..029) ---------------
 
 export {

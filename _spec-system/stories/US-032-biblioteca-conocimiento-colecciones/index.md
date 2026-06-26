@@ -3,7 +3,7 @@ id: US-032
 title: Biblioteca de conocimiento reutilizable y enlace a agentes
 epic: E13
 cycle: null
-status: Levantamiento de requerimientos
+status: Pendiente de pruebas
 priority: P0
 estimate: L
 owner: @diego
