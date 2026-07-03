@@ -15,6 +15,22 @@ import { z } from "zod";
 export const tenantRoleSchema = z.enum(["org:admin", "org:member"]);
 export type TenantRole = z.infer<typeof tenantRoleSchema>;
 
+/**
+ * Estado de la suscripción del tenant en el servicio OpenSolvex (SUB-E08).
+ * null en Me cuando no hay tenant activo o la integración está apagada.
+ */
+export const tenantSubscriptionSchema = z.object({
+  access: z.enum(["full", "restricted", "blocked"]),
+  reason: z.string(),
+  plan: z.string().nullable(),
+  seats: z.object({ contracted: z.number(), occupied: z.number() }),
+  // A dónde mandar al cliente a resolver el pago cuando access != full.
+  paymentUrl: z.string().nullable(),
+  // true si el servicio de suscripciones no respondió (valor de degradación).
+  degraded: z.boolean(),
+});
+export type TenantSubscription = z.infer<typeof tenantSubscriptionSchema>;
+
 /** Identidad del usuario autenticado + contexto de tenant activo. */
 export const meSchema = z.object({
   userId: z.string(),
@@ -23,6 +39,7 @@ export const meSchema = z.object({
   isAdmin: z.boolean(),
   // Rol de plataforma (por encima de los tenants): crea/bloquea organizaciones.
   isSuperAdmin: z.boolean(),
+  subscription: tenantSubscriptionSchema.nullable(),
 });
 export type Me = z.infer<typeof meSchema>;
 

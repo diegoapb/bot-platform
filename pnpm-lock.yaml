@@ -19,6 +19,9 @@ importers:
       '@hono/node-server':
         specifier: ^1.13.7
         version: 1.19.14(hono@4.12.23)
+      '@opensolvex/subscriptions-sdk':
+        specifier: link:../../../opensolvex-platform/packages/subscriptions-sdk
+        version: link:../../../opensolvex-platform/packages/subscriptions-sdk
       drizzle-orm:
         specifier: ^0.36.4
         version: 0.36.4(@types/react@18.3.31)(postgres@3.4.9)(react@18.3.1)

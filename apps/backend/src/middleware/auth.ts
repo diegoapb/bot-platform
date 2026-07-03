@@ -4,6 +4,7 @@ import { env } from "../env.js";
 import { clerk } from "../lib/clerk.js";
 import { db } from "../db/client.js";
 import { tenants } from "../db/schema.js";
+import { enforceSubscription } from "./subscription.js";
 
 export const ADMIN_ROLE = "org:admin";
 
@@ -86,6 +87,11 @@ export const requireTenant: MiddlewareHandler = async (c, next) => {
   if (t?.blocked) {
     return c.json({ ok: false, error: "Este tenant está bloqueado por la plataforma" }, 403);
   }
+
+  // SUB-E08: sin suscripción activa no se opera el panel; también ocupa la
+  // silla del usuario (idempotente) respetando el límite contratado.
+  const subscription = await enforceSubscription(c);
+  if (!subscription.allowed) return c.json(subscription.body, subscription.status);
 
   await next();
 };

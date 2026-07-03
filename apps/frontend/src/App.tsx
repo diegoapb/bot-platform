@@ -59,9 +59,53 @@ function Landing() {
   );
 }
 
+/** Suscripción bloqueada (SUB-E08): el panel no opera hasta resolver el pago. */
+function SubscriptionBlocked({ reason, paymentUrl }: { reason: string; paymentUrl: string | null }) {
+  const message =
+    reason === "no_subscription" || reason === "no_customer"
+      ? "Tu organización aún no tiene un plan contratado."
+      : "La suscripción de tu organización está suspendida.";
+  return (
+    <Centered>
+      <div className="max-w-md space-y-5 text-center">
+        <Eyebrow num="!!">Suscripción</Eyebrow>
+        <h1 className="font-display text-2xl font-medium text-fg">Acceso bloqueado</h1>
+        <p className="text-sm leading-relaxed text-fg2">
+          {message} El panel y tus bots quedan pausados hasta regularizarla; tus datos y
+          conversaciones se conservan.
+        </p>
+        {paymentUrl && (
+          <Button size="lg" onClick={() => window.open(paymentUrl, "_blank")}>
+            Resolver suscripción
+          </Button>
+        )}
+      </div>
+    </Centered>
+  );
+}
+
+/** Banner de gracia (past_due): se puede operar, pero hay un pago pendiente. */
+function SubscriptionBanner({ paymentUrl }: { paymentUrl: string | null }) {
+  return (
+    <div className="mb-4 flex items-center justify-between gap-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-fg">
+      <span>
+        Hay un pago pendiente en la suscripción de tu organización: si no se resuelve, el
+        acceso se suspenderá.
+      </span>
+      {paymentUrl && (
+        <a className="shrink-0 underline" href={paymentUrl} target="_blank" rel="noreferrer">
+          Pagar ahora →
+        </a>
+      )}
+    </div>
+  );
+}
+
 /**
  * Páginas que requieren tenant activo. Si no hay org: el super admin va al
  * dashboard de plataforma; cualquier otro usuario crea su tenant (y queda admin).
+ * Con tenant, aplica el estado de la suscripción (SUB-E08): bloqueada → pantalla
+ * de pago; en gracia → banner.
  */
 function TenantGate({ children }: { children: ReactNode }) {
   const { organization, isLoaded } = useOrganization();
@@ -89,7 +133,19 @@ function TenantGate({ children }: { children: ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  const subscription = me?.subscription;
+  if (subscription?.access === "blocked") {
+    return <SubscriptionBlocked reason={subscription.reason} paymentUrl={subscription.paymentUrl} />;
+  }
+
+  return (
+    <>
+      {subscription?.access === "restricted" && (
+        <SubscriptionBanner paymentUrl={subscription.paymentUrl} />
+      )}
+      {children}
+    </>
+  );
 }
 
 /** Páginas exclusivas de super admin de plataforma. */

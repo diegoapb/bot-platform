@@ -15,6 +15,7 @@ import { provisionChatwoot } from "./chatwoot-provisioning.js";
 import { ensureConversation, setMode } from "./conversation-state.js";
 import { onInboundMessage } from "./reply-engine.js";
 import { isBotActive } from "./bot-activation.js";
+import { getTenantEntitlements, reportUsage } from "../lib/subscriptions.js";
 
 /**
  * Sincronización bidireccional Evolution ↔ Chatwoot.
@@ -122,6 +123,10 @@ export async function handleInbound(bot: BotRow, data: any): Promise<void> {
 
   if (!(await tryMarkProcessed(bot, "evolution", messageId))) return;
 
+  // SUB-E08: consumo real del tenant. Mismo eventId que el dedupe local →
+  // idempotente también del lado del servicio de suscripciones.
+  reportUsage(bot.tenantId, "messages", `evo:${bot.id}:${messageId}`);
+
   let [link] = await db
     .select()
     .from(channelLinks)
@@ -166,8 +171,18 @@ export async function handleInbound(bot: BotRow, data: any): Promise<void> {
   // de Chatwoot (anti-loop) ni vuelve a entrar aquí (fromMe filtrado arriba).
   // E10: con el bot pausado el mensaje ya quedó en Chatwoot para atención
   // humana; el motor no se dispara.
+  // SUB-E08: con la suscripción bloqueada (suspended/cancelled) el bot no
+  // responde; el mensaje ya quedó en Chatwoot para no perder la conversación.
+  // `restricted` (past_due) sigue respondiendo durante la gracia.
   const convo = await ensureConversation(bot.tenantId, bot.id, link.id);
-  if (isBotActive(bot)) onInboundMessage(bot, convo, text);
+  if (isBotActive(bot)) {
+    const ent = await getTenantEntitlements(bot.tenantId);
+    if (ent?.access === "blocked") {
+      console.info(`[sync] bot ${bot.id}: suscripción ${ent.reason}; el bot no responde`);
+      return;
+    }
+    onInboundMessage(bot, convo, text);
+  }
 }
 
 /** Respuesta de agente en Chatwoot (webhook `message_created` outgoing) → WhatsApp. */

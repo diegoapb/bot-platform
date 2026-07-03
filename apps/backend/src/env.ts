@@ -41,6 +41,12 @@ const envSchema = z.object({
 
   WEBHOOK_SECRET: z.string().min(1),
 
+  // --- Servicio de suscripciones OpenSolvex (SUB-E08). Opcionales: sin estas
+  // variables la integración queda apagada y la plataforma opera como antes.
+  SUBSCRIPTIONS_API_URL: z.string().url().optional(),
+  SUBSCRIPTIONS_API_KEY: z.string().optional(),
+  SUBSCRIPTIONS_PRODUCT_ID: z.string().default("bot-plataform"),
+
   // --- IA (E05/E06/E07). Opcionales para no romper el arranque en entornos
   // sin keys; los servicios que las usan degradan con error claro si faltan.
   // Embeddings de la base de conocimiento (OpenAI text-embedding-3-small).
